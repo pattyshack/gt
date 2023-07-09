@@ -1,0 +1,5 @@
+bazel-bin
+bazel-bt
+bazel-out
+bazel-testlogs
+*.swp
