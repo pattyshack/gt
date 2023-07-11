@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+  name = "argparse",
+  importpath = "github.com/pattyshack/bt/go/argparse",
+  srcs = [
+    "command.go",
+    "commandline.go",
+    "enum.go",
+    "value.go",
+  ],
+  visibility = ["//visibility:public"],
+)
