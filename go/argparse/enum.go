@@ -53,8 +53,17 @@ func (enum *Enum[T]) ValidValueDescription() string {
   return "{" + strings.Join(values, ", ") + "}"
 }
 
-func (enum *Enum[T]) Suggest(valuePrefix string) []string {
-  return enum.valueStrings
+func (enum *Enum[T]) Suggest(valuePrefix string) []Suggestion {
+  suggestions := make([]Suggestion, 0, len(enum.valueStrings))
+  for _, value := range enum.valueStrings {
+    suggestions = append(
+      suggestions,
+      Suggestion{
+        Value: value,
+        IsPrefix: false,
+      })
+  }
+  return suggestions
 }
 
 func NewStringEnum(enumValues []string) *Enum[string] {
