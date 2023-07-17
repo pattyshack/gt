@@ -379,7 +379,7 @@ func (cmd *Command) StringEnumVar(
   value string,
   description string,
 ) {
-  enum := NewStringEnum(enumValues)
+  enum := NewStringEnum(enumValues...)
   cmd.Var(
     NewValue[string](ptr, value, stringMarshaler{}, enum),
     name,
@@ -432,7 +432,7 @@ func (cmd *Command) IntEnumVar(
   value int,
   description string,
 ) {
-  enum := NewIntEnum(enumValues)
+  enum := NewIntEnum(enumValues...)
   cmd.Var(
     NewValue[int](ptr, value, intMarshaler{}, enum),
     name,
@@ -485,7 +485,7 @@ func (cmd *Command) Int64EnumVar(
   value int64,
   description string,
 ) {
-  enum := NewInt64Enum(enumValues)
+  enum := NewInt64Enum(enumValues...)
   cmd.Var(
     NewValue[int64](ptr, value, int64Marshaler{}, enum),
     name,
@@ -538,7 +538,7 @@ func (cmd *Command) UintEnumVar(
   value uint,
   description string,
 ) {
-  enum := NewUintEnum(enumValues)
+  enum := NewUintEnum(enumValues...)
   cmd.Var(
     NewValue[uint](ptr, value, uintMarshaler{}, enum),
     name,
@@ -591,7 +591,7 @@ func (cmd *Command) Uint64EnumVar(
   value uint64,
   description string,
 ) {
-  enum := NewUint64Enum(enumValues)
+  enum := NewUint64Enum(enumValues...)
   cmd.Var(
     NewValue[uint64](ptr, value, uint64Marshaler{}, enum),
     name,
@@ -671,7 +671,7 @@ func (cmd *Command) DurationEnumVar(
   value time.Duration,
   description string,
 ) {
-  enum := NewDurationEnum(enumValues)
+  enum := NewDurationEnum(enumValues...)
   cmd.Var(
     NewValue[time.Duration](ptr, value, durationMarshaler{}, enum),
     name,

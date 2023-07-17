@@ -245,155 +245,6 @@ func (cmd *mainCmd) SetupCommand() {
     nil)
 }
 
-type subCmd1 struct {
-  *mainCmd
-  *argparse.Command
-
-  subFlag bool
-}
-
-func (cmd *subCmd1) SetupCommand() {
-  cmd.BoolVar(&cmd.subFlag, "sub-flag", false, "subcommand 1's bool flag")
-  cmd.SetCommandFunc(cmd.Execute)
-}
-
-func (cmd *subCmd1) Execute(args []string) error {
-  cmd.mainCmd.PrintFlags()
-  fmt.Println()
-  fmt.Println("sub1:")
-  fmt.Println("=====")
-  fmt.Println("sub1's flag:", cmd.subFlag)
-  fmt.Println("sub1's args:", args)
-  return nil
-}
-
-type subCmd2 struct {
-  *mainCmd
-  *argparse.Command
-
-  subFlag string
-}
-
-func (cmd *subCmd2) SetupCommand(varArgs bool) {
-  cmd.StringVar(
-    &cmd.subFlag,
-    "sub-flag",
-    "sub2",
-    "subcommand 2's string flag",
-    nil,
-    nil)
-  xEnum := argparse.NewStringEnum([]string{"x", "xx", "xxx", "xxxx"})
-  zEnum := argparse.NewStringEnum([]string{"z", "Z"})
-  cmd.SetCommandFunc(
-    cmd.Execute,
-    argparse.PositionalArgument{
-      Name: "x",
-      Description: "first arg (3x)",
-      NumExpected: 3,
-      ValueValidator: xEnum,
-      ValueSuggestor: xEnum,
-    },
-    argparse.PositionalArgument{
-      Name: "y",
-      Description: "second arg (2x)",
-      NumExpected: 2,
-    },
-    argparse.PositionalArgument{
-      Name: "z",
-      Description: "3rd arg (2x)",
-      NumExpected: 2,
-      VarArgs: varArgs,
-      ValueValidator: zEnum,
-      ValueSuggestor: zEnum,
-    })
-}
-
-func (cmd *subCmd2) Execute(args []string) error {
-  cmd.mainCmd.PrintFlags()
-  fmt.Println()
-  fmt.Println("sub2:")
-  fmt.Println("=====")
-  fmt.Println("sub2's flag:", cmd.subFlag)
-  fmt.Println("sub2's args:", args)
-  return nil
-}
-
-type subCmd3 struct {
-  *mainCmd
-  *argparse.Command
-
-  subFlag int
-  otherFlag string
-}
-
-func (cmd *subCmd3) SetupCommand() {
-  cmd.IntVar(
-    &cmd.subFlag,
-    "sub-flag",
-    123,
-    "subcommand 3's int flag",
-    nil,
-    nil)
-  cmd.StringVar(
-    &cmd.otherFlag,
-    "other-flag",
-    "foo",
-    "subcommand 3's other flag",
-    nil,
-    nil)
-}
-
-func (cmd *subCmd3) PrintFlags() {
-  cmd.mainCmd.PrintFlags()
-  fmt.Println()
-  fmt.Println("sub3:")
-  fmt.Println("=====")
-  fmt.Println("sub3's flag:", cmd.subFlag)
-  fmt.Println("sub3's other flag:", cmd.otherFlag)
-}
-
-type parentCmd interface {
-  PrintFlags()
-}
-
-type nestedSubCmd struct {
-  parentCmd
-  *argparse.Command
-
-  name string
-
-  nestedSubFlag time.Duration
-}
-
-func (cmd *nestedSubCmd) SetupCommand() {
-  cmd.DurationVar(
-    &cmd.nestedSubFlag,
-    "nested-sub-flag",
-    time.Second,
-    "nested-sub-command 3's duration flag",
-    nil,
-    nil)
-
-  cmd.SetCommandFunc(
-    cmd.Execute,
-    argparse.PositionalArgument{
-      Name: "varargs",
-      Description: "any string",
-      NumExpected: 0,
-      VarArgs: true,
-    })
-}
-
-func (cmd *nestedSubCmd) Execute(args []string) error {
-  cmd.parentCmd.PrintFlags()
-  fmt.Println()
-  fmt.Println("nested subcmd:", cmd.name)
-  fmt.Println("==============")
-  fmt.Println("nested subcmd's flag:", cmd.nestedSubFlag)
-  fmt.Println("nested subcmd's args:", args)
-  return nil
-}
-
 func main() {
   cmd := &mainCmd{
     Command: argparse.CommandLine,
@@ -407,51 +258,59 @@ func main() {
 
   cmd.SetupCommand()
 
-  subcmd1 := &subCmd1{
+  noPosArgs := &noPosArgsSubCmd{
     mainCmd: cmd,
     Command: cmd.AddSubcommand(
       "noargs",
       "no subcommands, cmd func with no positional args"),
   }
-  subcmd1.SetupCommand()
+  noPosArgs.SetupCommand()
 
-  subcmd2a := &subCmd2{
+  fixedPosArgs := &posArgsSubCmd{
     mainCmd: cmd,
     Command: cmd.AddSubcommand(
       "fixed-args",
       "no subcommands, cmd func with positional args with no varargs"),
   }
-  subcmd2a.SetupCommand(false)
+  fixedPosArgs.SetupCommand(false)
 
-  subcmd2b := &subCmd2{
+  varPosArgs := &posArgsSubCmd{
     mainCmd: cmd,
     Command: cmd.AddSubcommand(
       "varargs",
       "no subcommands, cmd func with varargs"),
   }
-  subcmd2b.SetupCommand(true)
+  varPosArgs.SetupCommand(true)
 
-  subcmd3 := &subCmd3{
+  nested := &nestedSubCmd{
     mainCmd: cmd,
     Command: cmd.AddSubcommand(
       "nested-subcommands",
       "nested subcommands, no cmd func"),
   }
-  subcmd3.SetupCommand()
+  nested.SetupCommand()
 
-  subcmd3a := &nestedSubCmd{
-    parentCmd: subcmd3,
-    Command: subcmd3.AddSubcommand("3a", "some nested subcommand"),
-    name: "3a",
+  nestedSub1 := &nestedSubSubCmd{
+    parentCmd: nested,
+    Command: nested.AddSubcommand("sub1", "some nested subcommand"),
+    name: "sub1",
   }
-  subcmd3a.SetupCommand()
+  nestedSub1.SetupCommand()
 
-  subcmd3b := &nestedSubCmd{
-    parentCmd: subcmd3,
-    Command: subcmd3.AddSubcommand("3b", "some other nested subcommand"),
-    name: "3b",
+  nestedSub2 := &nestedSubSubCmd{
+    parentCmd: nested,
+    Command: nested.AddSubcommand("sub2", "some other nested subcommand"),
+    name: "sub2",
   }
-  subcmd3b.SetupCommand()
+  nestedSub2.SetupCommand()
+
+  autoComplete := &autoCompleteSubCmd{
+    mainCmd: cmd,
+    Command: cmd.AddSubcommand(
+      "auto-complete-example",
+      "Auto complete example. All flag/positional args are auto-completeable"),
+  }
+  autoComplete.SetupCommand()
 
   err := argparse.Execute()
   if err != nil {

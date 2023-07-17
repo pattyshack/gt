@@ -3,7 +3,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary")
 go_binary(
   name = "example",
   srcs = [
+    "auto-complete-example.go",
     "main.go",
+    "nested-subcmds-example.go",
+    "pos-args-cmd-examples.go",
   ],
   deps = [
     "//go/argparse",

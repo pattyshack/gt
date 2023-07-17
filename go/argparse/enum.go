@@ -19,7 +19,7 @@ type Enum[T any] struct{
 
 func NewEnum[T any](
   marshaler ValueMarshaler[T],
-  values []T,
+  values ...T,
 ) *Enum[T] {
   valueStrings := make([]string, 0, len(values))
   for _, value := range values {
@@ -66,26 +66,26 @@ func (enum *Enum[T]) Suggest(valuePrefix string) []Suggestion {
   return suggestions
 }
 
-func NewStringEnum(enumValues []string) *Enum[string] {
-  return NewEnum[string](stringMarshaler{}, enumValues)
+func NewStringEnum(enumValues ...string) *Enum[string] {
+  return NewEnum[string](stringMarshaler{}, enumValues...)
 }
 
-func NewIntEnum(enumValues []int) *Enum[int] {
-  return NewEnum[int](intMarshaler{}, enumValues)
+func NewIntEnum(enumValues ...int) *Enum[int] {
+  return NewEnum[int](intMarshaler{}, enumValues...)
 }
 
-func NewInt64Enum(enumValues []int64) *Enum[int64] {
-  return NewEnum[int64](int64Marshaler{}, enumValues)
+func NewInt64Enum(enumValues ...int64) *Enum[int64] {
+  return NewEnum[int64](int64Marshaler{}, enumValues...)
 }
 
-func NewUintEnum(enumValues []uint) *Enum[uint] {
-  return NewEnum[uint](uintMarshaler{}, enumValues)
+func NewUintEnum(enumValues ...uint) *Enum[uint] {
+  return NewEnum[uint](uintMarshaler{}, enumValues...)
 }
 
-func NewUint64Enum(enumValues []uint64) *Enum[uint64] {
-  return NewEnum[uint64](uint64Marshaler{}, enumValues)
+func NewUint64Enum(enumValues ...uint64) *Enum[uint64] {
+  return NewEnum[uint64](uint64Marshaler{}, enumValues...)
 }
 
-func NewDurationEnum(enumValues []time.Duration) *Enum[time.Duration] {
-  return NewEnum[time.Duration](durationMarshaler{}, enumValues)
+func NewDurationEnum(enumValues ...time.Duration) *Enum[time.Duration] {
+  return NewEnum[time.Duration](durationMarshaler{}, enumValues...)
 }
