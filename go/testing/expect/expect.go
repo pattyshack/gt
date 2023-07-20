@@ -1,8 +1,5 @@
 package expect
 
-// Maybe switch to testify once bootstrapped and thirdparty lib story is
-// straighten out, but compile time type checking is nice to having ...
-
 import (
   "bytes"
   "fmt"
@@ -36,19 +33,15 @@ func writeTrace(buffer *bytes.Buffer) {
     return
   }
 
-  currentFuncName := currentFunc.Name()
-
-  idx := strings.LastIndex(currentFuncName, ".")
-  if idx == -1 {
+  if path.Ext(currentFunc.Name()) != ".writeTrace" {
     panic("This should never occur")
   }
 
-  if currentFuncName[idx+1:] != "writeTrace" {
+  testingParentPkg := path.Dir(currentFunc.Name())  // exclude "expect"
+
+  if path.Base(testingParentPkg) != "testing" {
     panic("This should never occur")
   }
-
-  // Include the dot as part of the prefix to tell part expect vs expect_test.
-  currentPackagePrefix := currentFuncName[:idx+1]
 
   skip := 1
   first := true
@@ -65,14 +58,21 @@ func writeTrace(buffer *bytes.Buffer) {
       break
     }
 
-    name := funcEntry.Name()
+    fullName := funcEntry.Name()
 
-    if strings.HasPrefix(name, currentPackagePrefix) {
-      continue
+    parentPkg := path.Dir(fullName)
+    name := path.Base(fullName)
+
+    // Skip printing out golang's test runner
+    if parentPkg == "." && strings.HasPrefix(name, "testing.") {
+      break
     }
 
-    if path.Base(funcEntry.Name()) == "testing.tRunner" {
-      break
+    if parentPkg == testingParentPkg {
+      pkgName, _, _ := strings.Cut(name, ".")
+      if !strings.HasSuffix(pkgName, "_test") {
+        continue
+      }
     }
 
     if first {
