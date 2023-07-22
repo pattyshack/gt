@@ -12,6 +12,110 @@ import (
   "github.com/pattyshack/bt/go/testing/suite"
 )
 
+// Create the following in the temp directory:
+// abc                  0644 abc
+// dir1/                0755
+// dir1/blah            0644 blah blah blah
+// dir1/dir2/           0755
+// dir1/dir2/dir3/      0755
+// dir1/dir2/dir3/junk  0600 junk
+// dir1/dir2/other.file 0604 other file
+// dir1/dir2/some.file  0640 some file
+// foo/                 0750
+// foo/bar/             0750
+// foo/bar/abc/         0755
+// foo/bar/abc/def/     0700
+// foo/bar/abc/def/ghi  0600 alphabets
+// foo/file1            0644 file 1's content
+// foo/file2            0640 file 2's content
+// hello.txt            0644 hello
+// world.txt            0604 world
+func setupLocalTest(t *testing.T) string {
+  testDir := t.TempDir()
+
+  err := os.WriteFile(
+    path.Join(testDir, "abc"),
+    []byte("abc"),
+    0666)
+  expect.Nil(t, err)
+
+  err = os.MkdirAll(
+    path.Join(testDir, "dir1/dir2/dir3"),
+    0755)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "dir1/blah"),
+    []byte("blah blah blah"),
+    0644)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "dir1/dir2/some.file"),
+    []byte("some file"),
+    0640)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "dir1/dir2/other.file"),
+    []byte("other file"),
+    0604)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "dir1/dir2/dir3/junk"),
+    []byte("junk"),
+    0600)
+  expect.Nil(t, err)
+
+  err = os.MkdirAll(
+    path.Join(testDir, "foo/bar"),
+    0750)
+  expect.Nil(t, err)
+
+  err = os.MkdirAll(
+    path.Join(testDir, "foo/bar/abc"),
+    0755)
+  expect.Nil(t, err)
+
+  err = os.MkdirAll(
+    path.Join(testDir, "foo/bar/abc/def"),
+    0700)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "foo/bar/abc/def/ghi"),
+    []byte("alphabets"),
+    0600)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "foo/file1"),
+    []byte("file 1's content"),
+    0666)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "foo/file2"),
+    []byte("file 2's content"),
+    0660)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "hello.txt"),
+    []byte("hello"),
+    0664)
+  expect.Nil(t, err)
+
+  err = os.WriteFile(
+    path.Join(testDir, "world.txt"),
+    []byte("world"),
+    0604)
+  expect.Nil(t, err)
+
+  return testDir
+}
+
 type testDirEntry struct {
   name string
   isDir bool
@@ -49,106 +153,8 @@ func (s *LocalSuite) toFsPath(t *testing.T, osPath string) string {
   return "/" + osPath[len(root):]
 }
 
-// Create the following in the temp directory:
-// abc                  0644 abc
-// dir1/                0755
-// dir1/blah            0644 blah blah blah
-// dir1/dir2/           0755
-// dir1/dir2/dir3/      0755
-// dir1/dir2/dir3/junk  0600 junk
-// dir1/dir2/other.file 0604 other file
-// dir1/dir2/some.file  0640 some file
-// foo/                 0750
-// foo/bar/             0750
-// foo/bar/abc/         0755
-// foo/bar/abc/def/     0700
-// foo/bar/abc/def/ghi  0600 alphabets
-// foo/file1            0644 file 1's content
-// foo/file2            0640 file 2's content
-// hello.txt            0644 hello
-// world.txt            0604 world
 func (s *LocalSuite) SetupTest(t *testing.T) {
-  s.testDir = t.TempDir()
-
-  err := os.WriteFile(
-    path.Join(s.testDir, "abc"),
-    []byte("abc"),
-    0666)
-  expect.Nil(t, err)
-
-  err = os.MkdirAll(
-    path.Join(s.testDir, "dir1/dir2/dir3"),
-    0755)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "dir1/blah"),
-    []byte("blah blah blah"),
-    0644)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "dir1/dir2/some.file"),
-    []byte("some file"),
-    0640)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "dir1/dir2/other.file"),
-    []byte("other file"),
-    0604)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "dir1/dir2/dir3/junk"),
-    []byte("junk"),
-    0600)
-  expect.Nil(t, err)
-
-  err = os.MkdirAll(
-    path.Join(s.testDir, "foo/bar"),
-    0750)
-  expect.Nil(t, err)
-
-  err = os.MkdirAll(
-    path.Join(s.testDir, "foo/bar/abc"),
-    0755)
-  expect.Nil(t, err)
-
-  err = os.MkdirAll(
-    path.Join(s.testDir, "foo/bar/abc/def"),
-    0700)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "foo/bar/abc/def/ghi"),
-    []byte("alphabets"),
-    0600)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "foo/file1"),
-    []byte("file 1's content"),
-    0666)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "foo/file2"),
-    []byte("file 2's content"),
-    0660)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "hello.txt"),
-    []byte("hello"),
-    0664)
-  expect.Nil(t, err)
-
-  err = os.WriteFile(
-    path.Join(s.testDir, "world.txt"),
-    []byte("world"),
-    0604)
-  expect.Nil(t, err)
+  s.testDir = setupLocalTest(t)
 }
 
 func (s *LocalSuite) TestAbs(t *testing.T) {
