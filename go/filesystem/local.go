@@ -2,14 +2,19 @@ package filesystem
 
 import (
   "context"
+  "fmt"
   "io/fs"
   "os"
   "path/filepath"
+  "strconv"
 )
 
 var Local FileSystem = NewLocalFileSystem()
 
 const (
+  localFileSystemName = "Local"
+  localOpenFileFlagOption = "OpenFileFlag"
+
   defaultLocalFilePerm = 0644
   defaultLocalDirPerm = 0755
 )
@@ -20,27 +25,52 @@ type localFileSystemParams struct {
   // file and dir perm need to be separate if we want to support Copy.
   filePerm FileMode
   dirPerm FileMode
+
+  err error
 }
 
-func (params *localFileSystemParams) SetContext(ctx context.Context) {
+func (options *localFileSystemParams) SetContext(ctx context.Context) {
   // Do nothing.
 }
 
-func (params *localFileSystemParams) SetFilePerm(perm FileMode) {
-  params.filePerm = perm
+func (options *localFileSystemParams) SetFilePerm(perm FileMode) {
+  options.filePerm = perm
 }
 
-func (params *localFileSystemParams) SetDirPerm(perm FileMode) {
-  params.dirPerm = perm
+func (options *localFileSystemParams) SetDirPerm(perm FileMode) {
+  options.dirPerm = perm
+}
+
+func (options *localFileSystemParams) SetOption(
+  fsImplName string,
+  optionName string,
+  optionValue string,
+) {
+  if fsImplName != localFileSystemName {
+    return
+  }
+
+  if optionName == localOpenFileFlagOption {
+    val, err := strconv.ParseInt(optionValue, 0, strconv.IntSize)
+    if err != nil {
+      options.err = fmt.Errorf(
+        "invalid open file flag option (%s): %w",
+        optionValue,
+        err)
+    } else {
+      options.openFileFlag = int(val)
+    }
+  }
 }
 
 // Applicable to Create Append, and WriteFile.
 func WithLocalOpenFileFlag(flag int) Option {
-  return func(params CommonOptions) {
-    options, ok := params.(*localFileSystemParams)
-    if ok {
-      options.openFileFlag = flag
-    }
+
+  return func(options Options) {
+    options.SetOption(
+      localFileSystemName,
+      localOpenFileFlagOption,
+      strconv.Itoa(flag))
   }
 }
 
@@ -71,7 +101,6 @@ func (local minLocalFileSystem) Open(
 }
 
 func (local minLocalFileSystem) openFile(
-  op string,
   filePath string,
   flag int,
   options []Option,
@@ -81,7 +110,7 @@ func (local minLocalFileSystem) openFile(
 ) {
   absPath, err := local.Abs(filePath)
   if err != nil {
-    return nil, WrapError(op, filePath, err)
+    return nil, err
   }
 
   params := &localFileSystemParams{
@@ -91,6 +120,10 @@ func (local minLocalFileSystem) openFile(
 
   for _, update := range options {
     update(params)
+  }
+
+  if params.err != nil {
+    return nil, params.err
   }
 
   return os.OpenFile(absPath, params.openFileFlag, params.filePerm)
@@ -103,11 +136,15 @@ func (local minLocalFileSystem) Create(
   FileWriter,
   error,
 ) {
-  return local.openFile(
-    "Create",
+  writer, err := local.openFile(
     filePath,
     os.O_CREATE | os.O_TRUNC | os.O_WRONLY,
     options)
+  if err != nil {
+    return nil, WrapError("Create", filePath, err)
+  }
+
+  return writer, nil
 }
 
 func (local minLocalFileSystem) Append(
@@ -117,11 +154,15 @@ func (local minLocalFileSystem) Append(
   FileWriter,
   error,
 ) {
-  return local.openFile(
-    "Append",
+  writer, err := local.openFile(
     filePath,
     os.O_CREATE | os.O_APPEND | os.O_WRONLY,
     options)
+  if err != nil {
+    return nil, WrapError("Append", filePath, err)
+  }
+
+  return writer, nil
 }
 
 func (local minLocalFileSystem) Mkdir(
@@ -139,6 +180,10 @@ func (local minLocalFileSystem) Mkdir(
 
   for _, update := range options {
     update(params)
+  }
+
+  if params.err != nil {
+    return WrapError("Mkdir", dirPath, params.err)
   }
 
   return os.Mkdir(absPath, params.dirPerm)
@@ -286,6 +331,10 @@ func (local localFileSystem) WriteFile(
     update(params)
   }
 
+  if params.err != nil {
+    return WrapError("WriteFile", filePath, params.err)
+  }
+
   return os.WriteFile(absPath, data, params.filePerm)
 }
 
@@ -320,6 +369,10 @@ func (local localFileSystem) MkdirAll(
 
   for _, update := range options {
     update(params)
+  }
+
+  if params.err != nil {
+    return WrapError("MkdirAll", dirPath, params.err)
   }
 
   return os.MkdirAll(absPath, params.dirPerm)

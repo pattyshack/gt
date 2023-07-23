@@ -317,6 +317,27 @@ func (s *LocalSuite) TestCreateTruncateExistingFile(t *testing.T) {
   expect.Equal(t, newContent, string(content))
 }
 
+func (s *LocalSuite) TestCreateWithCustomOpenFileFlag(t *testing.T) {
+  testOsFilePath := path.Join(s.testDir, "hello.txt")
+
+  writer, err := s.fsImpl.Create(
+    s.toFsPath(t, testOsFilePath),
+    WithLocalOpenFileFlag(os.O_CREATE | os.O_APPEND | os.O_WRONLY,))
+  expect.Nil(t, err)
+
+  newContent := " world. additional content"
+
+  _, err = writer.Write([]byte(newContent))
+  expect.Nil(t, err)
+
+  err = writer.Close()
+  expect.Nil(t, err)
+
+  content, err := os.ReadFile(testOsFilePath)
+  expect.Nil(t, err)
+  expect.Equal(t, "hello world. additional content", string(content))
+}
+
 func (s *LocalSuite) TestAppendToNewFileWithDefaultPerm(t *testing.T) {
   newOsFilePath := path.Join(s.testDir, "create-new-file")
 

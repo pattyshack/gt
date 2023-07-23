@@ -37,24 +37,30 @@ type FileReader = fs.ReadDirFile
 type FileWriter = io.WriteCloser
 
 // Standard options across all implementations.  (The implementation may
-// choose to ignore these options, but should expose the api anyway).
-type CommonOptions interface {
+// choose to ignore these options, but must expose the api anyway).
+type Options interface {
   SetContext(ctx context.Context)
 
   // File and dir permissions need to be separate in order to support Copy.
   SetFilePerm(perm FileMode)
   SetDirPerm(perm FileMode)
+
+  // All other file system implementation specific options should be set via
+  // this method (Standardizing the option setting interface simplifies
+  // file system api forwarding/proxying).  File system implementation should
+  // ignore unrelated options.
+  SetOption(fsImplName string, optionName string, optionValue string)
 }
 
 // Note that the user may pass in options not associated to the file system's
 // method implementation, in which case, the implementation should ignore the
 // option.
-type Option func(CommonOptions)
+type Option func(Options)
 
 // Applicable to all file system methods.
 func WithContext(ctx context.Context) Option {
-  return func(params CommonOptions) {
-    params.SetContext(ctx)
+  return func(options Options) {
+    options.SetContext(ctx)
   }
 }
 
@@ -62,8 +68,8 @@ func WithContext(ctx context.Context) Option {
 // and CopyAll).  File system implementation may place additional (umask)
 // restriction on the given permission.
 func WithFilePerm(perm FileMode) Option {
-  return func(params CommonOptions) {
-    params.SetFilePerm(perm & PermissionBits)
+  return func(options Options) {
+    options.SetFilePerm(perm & PermissionBits)
   }
 }
 
@@ -71,8 +77,8 @@ func WithFilePerm(perm FileMode) Option {
 // File system implementation may place additional (umask) restriction on the
 // given permission.
 func WithDirPerm(perm FileMode) Option {
-  return func(params CommonOptions) {
-    params.SetDirPerm(perm & PermissionBits)
+  return func(options Options) {
+    options.SetDirPerm(perm & PermissionBits)
   }
 }
 
