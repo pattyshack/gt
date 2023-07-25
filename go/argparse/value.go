@@ -8,8 +8,8 @@ import (
   "time"
 )
 
-type WithValidValueDescription interface {
-  ValidValueDescription() string
+type WithDescription interface {
+  Description() string
 }
 
 type TypedGetter interface {
@@ -18,10 +18,10 @@ type TypedGetter interface {
   flag.Getter
 }
 
-type TypeGetterWithValidValueDescription interface {
+type TypeGetterWithDescription interface {
   TypedGetter
 
-  WithValidValueDescription
+  WithDescription
 }
 
 type ValueMarshaler[T any] interface {
@@ -34,7 +34,7 @@ type ValueMarshaler[T any] interface {
 type ValueValidator[T any] interface {
   Validate(T) error
 
-  WithValidValueDescription
+  WithDescription
 }
 
 type value[T any] struct {
@@ -86,16 +86,16 @@ func (val *value[T]) Get() any {
   return *val.ptr
 }
 
-type valueWithValidValueDescription[T any] struct {
+type valueWithDescription[T any] struct {
   value[T]
 }
 
-func (val *valueWithValidValueDescription[T]) ValidValueDescription() string {
-  return val.validator.ValidValueDescription()
+func (val *valueWithDescription[T]) Description() string {
+  return val.validator.Description()
 }
 
 // This return a TypedGetter, which could specialize into
-// TypeGetterWithValidValueDescription if an validator was provided.
+// TypeGetterWithDescription if an validator was provided.
 func NewValue[T any](
   ptr *T,
   defaultValue T,
@@ -119,7 +119,7 @@ func NewValue[T any](
       err))
   }
 
-  return &valueWithValidValueDescription[T]{
+  return &valueWithDescription[T]{
     value: value[T]{
       ptr: ptr,
       marshaler: marshaler,

@@ -44,7 +44,7 @@ func (enum *Enum[T]) Validate(value T) error {
   return fmt.Errorf("invalid enum value")
 }
 
-func (enum *Enum[T]) ValidValueDescription() string {
+func (enum *Enum[T]) Description() string {
   values := make([]string, 0, len(enum.valueStrings))
   for _, value := range enum.valueStrings {
     values = append(values, fmt.Sprintf("%#v", value))

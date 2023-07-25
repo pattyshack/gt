@@ -32,6 +32,8 @@ type Suggestion struct {
 }
 
 type ValueSuggestor interface {
+  WithDescription
+
   Suggest(valuePrefix string) []Suggestion
 }
 
@@ -126,14 +128,19 @@ func (cmd *Command) UsageString() string {
     options += "  -" + flagDef.Name
 
     typeName := ""
-    validValueDescription := ""
+    typeDescription := ""
     typed, ok := flagDef.Value.(TypedGetter)
     if ok {
       typeName = typed.TypeName()
 
-      descriptor, ok := typed.(WithValidValueDescription)
+      descriptor, ok := typed.(WithDescription)
       if ok {
-        validValueDescription = descriptor.ValidValueDescription()
+        typeDescription = descriptor.Description()
+      } else {
+        suggestor, ok := cmd.flagValueSuggestors[flagDef.Name]
+        if ok {
+          typeDescription = suggestor.Description()
+        }
       }
     } else {
       // This flag was defined using the flag lib directly (probably by a
@@ -151,11 +158,11 @@ func (cmd *Command) UsageString() string {
       options += " " + typeName
     }
 
-    if validValueDescription != "" {
+    if typeDescription != "" {
       options += fmt.Sprintf(
-        " (default: %#v; valid values: %s)\n",
+        " (default: %#v; one of: %s)\n",
         flagDef.DefValue,
-        validValueDescription)
+        typeDescription)
     } else {
       options += fmt.Sprintf(" (default: %#v)\n", flagDef.DefValue)
     }
@@ -211,13 +218,20 @@ func (cmd *Command) UsageString() string {
         posArgsForm += " [<" + arg.Name + "> ...]"
       }
 
-      if arg.ValueValidator == nil {
+      typeDescription := ""
+      if arg.ValueValidator != nil {
+        typeDescription = arg.ValueValidator.Description()
+      } else if arg.ValueSuggestor != nil {
+        typeDescription = arg.ValueSuggestor.Description()
+      }
+
+      if typeDescription == "" {
         posArgs += "  " + arg.Name + "\n"
       } else {
         posArgs += fmt.Sprintf(
-          "  %s (valid values: %s)\n",
+          "  %s (one of: %s)\n",
           arg.Name,
-          arg.ValueValidator.ValidValueDescription())
+          typeDescription)
       }
 
       if arg.Description != "" {

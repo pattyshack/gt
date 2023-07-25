@@ -11,6 +11,7 @@ type autoCompleteSubCmd struct {
   *argparse.Command
 
   verboseLevel int
+  fdPath string
 }
 
 func (cmd *autoCompleteSubCmd) SetupCommand() {
@@ -20,6 +21,15 @@ func (cmd *autoCompleteSubCmd) SetupCommand() {
     []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
     0,
     "Log verbose level")
+
+  // Suggest values without value validation.
+  cmd.StringVar(
+    &cmd.fdPath,
+    "file-descriptor-path",
+    "stdout",
+    "file descriptor path",
+    nil,
+    argparse.NewStringEnum("stdin", "stdout", "stderr"))
 
   pets := argparse.NewStringEnum(
     "cat",
@@ -42,5 +52,6 @@ func (cmd *autoCompleteSubCmd) SetupCommand() {
 func (cmd *autoCompleteSubCmd) Execute(args []string) error {
   fmt.Println("Flags:")
   fmt.Println("  verbose level:", cmd.verboseLevel)
+  fmt.Println("  file descriptor path:", cmd.fdPath)
   return nil
 }
