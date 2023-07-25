@@ -17,9 +17,9 @@ func formatValue(value any) string {
 
   switch reflect.ValueOf(value).Type().Kind() {
   case reflect.Uintptr, reflect.Pointer, reflect.UnsafePointer:
-    return fmt.Sprintf("%p %#v", value, value)
+    return fmt.Sprintf("%p %#v (%v)", value, value, value)
   }
-  return fmt.Sprintf("%#v", value)
+  return fmt.Sprintf("%#v (%v)", value, value)
 }
 
 func writeTrace(buffer *bytes.Buffer) {

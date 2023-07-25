@@ -9,6 +9,7 @@ go_library(
     "filesystem.go",
     "local.go",
     "readonly.go",
+    "sub.go",
   ],
   visibility = ["//visibility:public"],
 )
@@ -20,6 +21,7 @@ go_test(
     "extensions_test.go",
     "local_test.go",
     "readonly_test.go",
+    "sub_test.go",
   ],
   embed = [
     ":filesystem",

@@ -140,7 +140,7 @@ type MinimalFileSystem interface {
   // This returns an error if Mkdir is not supported.
   // Note that Rename may not be an atomic operation (the implementation
   // could for example copy then delete).
-  Rename(srcPath string, descPath string, options ...Option) error
+  Rename(srcPath string, destPath string, options ...Option) error
 
   // This remove a file or an empty directory.
   //
@@ -199,7 +199,7 @@ type FileSystem interface {
 
   // Recursively copy src to dest.
   CopyAll(
-    srcePath string,
+    srcPath string,
     destPath string,
     options ...Option,
   ) error

@@ -36,7 +36,7 @@ func setupLocalTest(t *testing.T) string {
   err := os.WriteFile(
     path.Join(testDir, "abc"),
     []byte("abc"),
-    0666)
+    0644)
   expect.Nil(t, err)
 
   err = os.MkdirAll(
@@ -92,13 +92,13 @@ func setupLocalTest(t *testing.T) string {
   err = os.WriteFile(
     path.Join(testDir, "foo/file1"),
     []byte("file 1's content"),
-    0666)
+    0644)
   expect.Nil(t, err)
 
   err = os.WriteFile(
     path.Join(testDir, "foo/file2"),
     []byte("file 2's content"),
-    0660)
+    0640)
   expect.Nil(t, err)
 
   err = os.WriteFile(
@@ -511,7 +511,7 @@ func (s *LocalSuite) TestChmod(t *testing.T) {
 
   info, err := os.Stat(testFilePath)
   expect.Nil(t, err)
-  expect.Equal(t, 0644, info.Mode() & PermissionBits)
+  expect.Equal(t, 0644, info.Mode() & PermissionBits, info.Mode().String())
 
   err = s.fsImpl.Chmod(s.toFsPath(t, testFilePath), 0600)
   expect.Nil(t, err)

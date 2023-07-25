@@ -79,7 +79,7 @@ type minLocalFileSystem struct {}
 
 func (minLocalFileSystem) Abs(filePath string) (string, error) {
   if filePath == "" {
-    return "", NewInvalidArgumentError("", "", "empty path")
+    return "", NewInvalidArgumentError("Abs", "", "empty path")
   }
 
   return filepath.Abs(filePath)
