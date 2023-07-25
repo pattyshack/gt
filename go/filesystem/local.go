@@ -25,8 +25,6 @@ type localFileSystemParams struct {
   // file and dir perm need to be separate if we want to support Copy.
   filePerm FileMode
   dirPerm FileMode
-
-  err error
 }
 
 func (options *localFileSystemParams) SetContext(ctx context.Context) {
@@ -45,29 +43,31 @@ func (options *localFileSystemParams) SetOption(
   fsImplName string,
   optionName string,
   optionValue string,
-) {
+) error {
   if fsImplName != localFileSystemName {
-    return
+    return nil
   }
 
   if optionName == localOpenFileFlagOption {
     val, err := strconv.ParseInt(optionValue, 0, strconv.IntSize)
     if err != nil {
-      options.err = fmt.Errorf(
+      return fmt.Errorf(
         "invalid open file flag option (%s): %w",
         optionValue,
         err)
-    } else {
-      options.openFileFlag = int(val)
     }
+
+    options.openFileFlag = int(val)
   }
+
+  return nil
 }
 
 // Applicable to Create Append, and WriteFile.
 func WithLocalOpenFileFlag(flag int) Option {
 
-  return func(options Options) {
-    options.SetOption(
+  return func(options Options) error {
+    return options.SetOption(
       localFileSystemName,
       localOpenFileFlagOption,
       strconv.Itoa(flag))
@@ -119,11 +119,10 @@ func (local minLocalFileSystem) openFile(
   }
 
   for _, update := range options {
-    update(params)
-  }
-
-  if params.err != nil {
-    return nil, params.err
+    err = update(params)
+    if err != nil {
+      return nil, err
+    }
   }
 
   return os.OpenFile(absPath, params.openFileFlag, params.filePerm)
@@ -179,11 +178,10 @@ func (local minLocalFileSystem) Mkdir(
   }
 
   for _, update := range options {
-    update(params)
-  }
-
-  if params.err != nil {
-    return WrapError("Mkdir", dirPath, params.err)
+    err = update(params)
+    if err != nil {
+      return WrapError("Mkdir", dirPath, err)
+    }
   }
 
   return os.Mkdir(absPath, params.dirPerm)
@@ -328,11 +326,10 @@ func (local localFileSystem) WriteFile(
   }
 
   for _, update := range options {
-    update(params)
-  }
-
-  if params.err != nil {
-    return WrapError("WriteFile", filePath, params.err)
+    err = update(params)
+    if err != nil {
+      return WrapError("WriteFile", filePath, err)
+    }
   }
 
   return os.WriteFile(absPath, data, params.filePerm)
@@ -368,11 +365,10 @@ func (local localFileSystem) MkdirAll(
   }
 
   for _, update := range options {
-    update(params)
-  }
-
-  if params.err != nil {
-    return WrapError("MkdirAll", dirPath, params.err)
+    err = update(params)
+    if err != nil {
+      return WrapError("MkdirAll", dirPath, err)
+    }
   }
 
   return os.MkdirAll(absPath, params.dirPerm)

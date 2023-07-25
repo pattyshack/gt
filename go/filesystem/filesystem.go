@@ -48,19 +48,21 @@ type Options interface {
   // All other file system implementation specific options should be set via
   // this method (Standardizing the option setting interface simplifies
   // file system api forwarding/proxying).  File system implementation should
-  // ignore unrelated options.
-  SetOption(fsImplName string, optionName string, optionValue string)
+  // ignore unrelated options.  SetOption should only return error when
+  // optionValue is invalid.
+  SetOption(fsImplName string, optionName string, optionValue string) error
 }
 
 // Note that the user may pass in options not associated to the file system's
 // method implementation, in which case, the implementation should ignore the
 // option.
-type Option func(Options)
+type Option func(Options) error
 
 // Applicable to all file system methods.
 func WithContext(ctx context.Context) Option {
-  return func(options Options) {
+  return func(options Options) error {
     options.SetContext(ctx)
+    return nil
   }
 }
 
@@ -68,8 +70,9 @@ func WithContext(ctx context.Context) Option {
 // and CopyAll).  File system implementation may place additional (umask)
 // restriction on the given permission.
 func WithFilePerm(perm FileMode) Option {
-  return func(options Options) {
+  return func(options Options) error {
     options.SetFilePerm(perm & PermissionBits)
+    return nil
   }
 }
 
@@ -77,8 +80,9 @@ func WithFilePerm(perm FileMode) Option {
 // File system implementation may place additional (umask) restriction on the
 // given permission.
 func WithDirPerm(perm FileMode) Option {
-  return func(options Options) {
+  return func(options Options) error {
     options.SetDirPerm(perm & PermissionBits)
+    return nil
   }
 }
 
