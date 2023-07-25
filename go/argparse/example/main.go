@@ -87,132 +87,142 @@ func (cmd *mainCmd) PrintFlags() {
 }
 
 func (cmd *mainCmd) SetupCommand() {
-  argparse.BoolVar(&cmd.boolVarFlag, "bool-var",  true, "BoolVar()")
-  cmd.boolFlag = argparse.Bool("bool",  false, "Bool()")
+  argparse.BoolVar(&cmd.boolVarFlag, "bool.var-flag",  true, "BoolVar()")
+  cmd.boolFlag = argparse.Bool("bool.flag",  false, "Bool()")
 
   argparse.StringVar(
     &cmd.stringVarFlag,
-    "string-var",
+    "string.var-flag",
     "string var",
     "StringVar()",
     nil,
     nil)
-  cmd.stringFlag = argparse.String("string", "string", "String()", nil, nil)
+  cmd.stringFlag = argparse.String(
+    "string.flag",
+    "string",
+    "String()",
+    nil,
+    nil)
 
   argparse.StringEnumVar(
     &cmd.stringEnumVarFlag,
-    "string-enum-var",
+    "string.enum.var-flag",
     []string{"value1", "value2", "value3"},
     "value1",
     "StringEnumVar()")
   cmd.stringEnumFlag = argparse.StringEnum(
-    "string-enum",
+    "string.enum.flag",
     []string{"ccc", "bbb", "aaa", "ddd"},
     "bbb",
     "StringEnum()")
 
   argparse.IntVar(
     &cmd.intVarFlag,
-    "int-var",
+    "int.var-flag",
     10,
     "IntVar()",
     nil,
     nil)
-  cmd.intFlag = argparse.Int("int", 20, "Int()", nil, nil)
+  cmd.intFlag = argparse.Int("int.flag", 20, "Int()", nil, nil)
 
   argparse.IntEnumVar(
     &cmd.intEnumVarFlag,
-    "int-enum-var",
+    "int.enum.var-flag",
     []int{1, 2, 3, 4, 5},
     3,
     "IntEnumVar()")
   cmd.intEnumFlag = argparse.IntEnum(
-    "int-enum",
+    "int.enum.flag",
     []int{10, 20, 30, 40},
     20,
     "IntEnum()")
 
   argparse.Int64Var(
     &cmd.int64VarFlag,
-    "int64-var",
+    "int64.var-flag",
     300,
     "Int64Var()",
     nil,
     nil)
-  cmd.int64Flag = argparse.Int64("int64", 400, "Int64()", nil, nil)
+  cmd.int64Flag = argparse.Int64("int64.flag", 400, "Int64()", nil, nil)
 
   argparse.Int64EnumVar(
     &cmd.int64EnumVarFlag,
-    "int64-enum-var",
+    "int64.enum.var-flag",
     []int64{100, 200, 300, 400, 500},
     300,
     "Int64EnumVar()")
   cmd.int64EnumFlag = argparse.Int64Enum(
-    "int64-enum",
+    "int64.enum.flag",
     []int64{101, 201, 301, 401},
     201,
     "Int64Enum()")
 
   argparse.UintVar(
     &cmd.uintVarFlag,
-    "uint-var",
+    "uint.var-flag",
     4000,
     "UintVar()",
     nil,
     nil)
-  cmd.uintFlag = argparse.Uint("uint", 20, "Uint()", nil, nil)
+  cmd.uintFlag = argparse.Uint("uint.flag", 20, "Uint()", nil, nil)
 
   argparse.UintEnumVar(
     &cmd.uintEnumVarFlag,
-    "uint-enum-var",
+    "uint.enum.var-flag",
     []uint{1000, 2000, 3000, 4000, 5000},
     3000,
     "UintEnumVar()")
   cmd.uintEnumFlag = argparse.UintEnum(
-    "uint-enum",
+    "uint.enum.flag",
     []uint{1001, 2001, 3001, 4001},
     2001,
     "UintEnum()")
 
   argparse.Uint64Var(
     &cmd.uint64VarFlag,
-    "uint64-var",
+    "uint64.var-flag",
     50000,
     "Uint64Var()",
     nil,
     nil)
-  cmd.uint64Flag = argparse.Uint64("uint64", 400, "Uint64()", nil, nil)
+  cmd.uint64Flag = argparse.Uint64("uint64.flag", 400, "Uint64()", nil, nil)
 
   argparse.Uint64EnumVar(
     &cmd.uint64EnumVarFlag,
-    "uint64-enum-var",
+    "uint64.enum.var-flag",
     []uint64{10000, 20000, 30000, 40000, 50000},
     30000,
     "Uint64EnumVar()")
   cmd.uint64EnumFlag = argparse.Uint64Enum(
-    "uint64-enum",
+    "uint64.enum.flag",
     []uint64{10001, 20001, 30001, 40001},
     20001,
     "Uint64Enum()")
 
   argparse.Float64Var(
     &cmd.float64VarFlag,
-    "float64-var",
+    "float64.var-flag",
     3.14,
     "Float64Var()",
     nil,
     nil)
-  cmd.float64Flag = argparse.Float64("float64", 2.15, "Float64()", nil, nil)
+  cmd.float64Flag = argparse.Float64(
+    "float64.flag",
+    2.15,
+    "Float64()",
+    nil,
+    nil)
 
   argparse.DurationVar(
     &cmd.durationVarFlag,
-    "duration-var",
+    "duration.var-flag",
     time.Minute,
     "Duration()",
     nil,
     nil)
   cmd.durationFlag = argparse.Duration(
-    "duration",
+    "duration.flag",
     time.Hour,
     "Duration()",
     nil,
@@ -220,12 +230,12 @@ func (cmd *mainCmd) SetupCommand() {
 
   argparse.DurationEnumVar(
     &cmd.durationEnumVarFlag,
-    "duration-enum-var",
+    "duration.enum.var-flag",
     []time.Duration{time.Second, time.Minute, time.Hour},
     time.Second,
     "DurationEnumVar()")
   cmd.durationEnumFlag = argparse.DurationEnum(
-    "duration-enum",
+    "duration.enum.flag",
     []time.Duration{10 *time.Second, 10 *time.Minute, 10 * time.Hour},
     10 *time.Second,
     "DurationEnum()")
@@ -240,7 +250,7 @@ func (cmd *mainCmd) SetupCommand() {
       *defaultUrl,
       urlMarshaler{},
       nil),
-    "url-var",
+    "url.var-flag",
     "test custom flag var",
     nil)
 }

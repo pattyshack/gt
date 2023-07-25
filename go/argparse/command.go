@@ -896,60 +896,68 @@ func (cmd *Command) suggest(args []string) []Suggestion {
 }
 
 func (cmd *Command) suggestFlags(prefix string) []Suggestion {
-  fullName, valuePrefix, found := strings.Cut(prefix, "=")
-  name := fullName
-  if found {  // We need to suggest a values for a single flag
+  flagFullName, valuePrefix, found := strings.Cut(prefix, "=")
+  if found {
+    return cmd.suggestFlagValue(flagFullName, valuePrefix)
+  }
+
+  return cmd.suggestFlagNames(prefix)
+}
+
+func (cmd *Command) suggestFlagValue(
+  flagFullName string,
+  valuePrefix string,
+) []Suggestion {
+  // trim '-' or '--'
+  name := flagFullName[1:]
+  if len(name) > 0 && name[0] == '-' {
     name = name[1:]
-    if len(name) > 0 && name[0] == '-' {
-      name = name[1:]
+  }
+
+  suggestor := cmd.flagValueSuggestors[name]
+  if suggestor != nil {
+    suggestions := suggestor.Suggest(valuePrefix)
+    for i := 0; i < len(suggestions); i++ {
+      suggestions[i].Value = flagFullName + "=" + suggestions[i].Value
+      suggestions[i].IsFlagValueAssignment = true
     }
 
-    suggestor := cmd.flagValueSuggestors[name]
-    if suggestor != nil {
-      suggestions := suggestor.Suggest(valuePrefix)
-      for i := 0; i < len(suggestions); i++ {
-        suggestions[i].Value = fullName + "=" + suggestions[i].Value
-        suggestions[i].IsFlagValueAssignment = true
-      }
+    return suggestions
+  }
 
-      return suggestions
-    }
-
-    // We need to special case bool flag handling
-    flagDef := cmd.flagSet.Lookup(name)
-    if flagDef == nil {  // Invalid flag
-      return []Suggestion{}
-    }
-
-    maybeBoolFlag, ok := flagDef.Value.(boolFlag)
-    if ok && maybeBoolFlag.IsBoolFlag() {
-      return []Suggestion{
-        {
-          Value: fullName + "=true",
-          IsPrefix: false,
-        },
-        {
-          Value: fullName + "=false",
-          IsPrefix: false,
-        },
-      }
-    }
-
+  // We need to special case bool flag handling
+  flagDef := cmd.flagSet.Lookup(name)
+  if flagDef == nil {  // Invalid flag
     return []Suggestion{}
   }
 
-  // We need to suggest flag names (and false bool flag value).
-  suggestions := []Suggestion{
-    {
-      Value: "--",  // positional arg separator
-      IsPrefix: false,
-    },
+  maybeBoolFlag, ok := flagDef.Value.(boolFlag)
+  if ok && maybeBoolFlag.IsBoolFlag() {
+    return []Suggestion{
+      {
+        Value: flagFullName + "=true",
+        IsPrefix: false,
+      },
+      {
+        Value: flagFullName + "=false",
+        IsPrefix: false,
+      },
+    }
   }
 
+  return []Suggestion{}
+}
+
+func (cmd *Command) suggestFlagNames(prefix string) []Suggestion {
   flagPrefix := "-"
   if strings.HasPrefix(prefix, "--") {
     flagPrefix = "--"
   }
+
+  // Some binaries have an excessively large number of unrelated flags.  e.g.,
+  // `bazel test` has 800+ flag suggestions.  Group by dotted name prefix
+  // to reduce the number of unwanted suggestions.
+  prefixGroups := map[string][]string{}
 
   cmd.flagSet.VisitAll(func (flagDef *flag.Flag) {
     if flagDef.Name == autoSuggestFlagName {
@@ -957,34 +965,60 @@ func (cmd *Command) suggestFlags(prefix string) []Suggestion {
     }
 
     flagName := flagPrefix + flagDef.Name
+    if !strings.HasPrefix(flagName, prefix) {
+      return
+    }
+
+    flagSuggestion := flagName
 
     maybeBoolFlag, ok := flagDef.Value.(boolFlag)
-    if ok && maybeBoolFlag.IsBoolFlag() {
-      if flagDef.DefValue == "true" {
-        suggestions = append(
-          suggestions,
-          Suggestion{
-            Value: flagName + "=false",
-            IsPrefix: false,
-          })
-      } else {
-        suggestions = append(
-          suggestions,
-          Suggestion{
-            Value: flagName,
-            IsPrefix: false,
-          })
-      }
+    if ok && maybeBoolFlag.IsBoolFlag() && flagDef.DefValue == "true" {
+      flagSuggestion += "=false"
+    }
+
+    group, _, found := strings.Cut(flagSuggestion[len(prefix):], ".")
+    if found {
+      group += "."
+    }
+
+    group = prefix + group
+
+    prefixGroups[group] = append(prefixGroups[group], flagSuggestion)
+  })
+
+  suggestions := []Suggestion{}
+  if prefix == "-" || prefix == "--" {
+    suggestions = append(
+      suggestions,
+      Suggestion{
+        Value: "--",  // positional arg separator
+        IsPrefix: false,
+      })
+  }
+
+  for group, flagSuggestions := range prefixGroups {
+    if len(flagSuggestions) == 1 {
+      suggestions = append(
+        suggestions,
+        Suggestion{
+          Value: flagSuggestions[0],
+          IsPrefix: false,
+        })
     } else {
       suggestions = append(
         suggestions,
         Suggestion{
-          Value: flagName,
-          IsPrefix: false,
+          Value: group,
+          IsPrefix: true,
         })
     }
-  })
+  }
 
+  sort.Slice(
+    suggestions,
+    func(i int, j int) bool {
+      return suggestions[i].Value < suggestions[j].Value
+    })
   return suggestions
 }
 
