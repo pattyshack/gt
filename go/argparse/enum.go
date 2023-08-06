@@ -50,7 +50,7 @@ func (enum *Enum[T]) Description() string {
     values = append(values, fmt.Sprintf("%#v", value))
   }
 
-  return "{" + strings.Join(values, ", ") + "}"
+  return "one of {" + strings.Join(values, ", ") + "}"
 }
 
 func (enum *Enum[T]) Suggest(valuePrefix string) []Suggestion {

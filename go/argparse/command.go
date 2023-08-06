@@ -160,7 +160,7 @@ func (cmd *Command) UsageString() string {
 
     if typeDescription != "" {
       options += fmt.Sprintf(
-        " (default: %#v; one of: %s)\n",
+        " (default: %#v; %s)\n",
         flagDef.DefValue,
         typeDescription)
     } else {
@@ -229,7 +229,7 @@ func (cmd *Command) UsageString() string {
         posArgs += "  " + arg.Name + "\n"
       } else {
         posArgs += fmt.Sprintf(
-          "  %s (one of: %s)\n",
+          "  %s (%s)\n",
           arg.Name,
           typeDescription)
       }
