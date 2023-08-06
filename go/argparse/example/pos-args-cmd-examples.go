@@ -40,19 +40,16 @@ func (cmd *posArgsSubCmd) SetupCommand(varArgs bool) {
     &cmd.subFlag,
     "sub-flag",
     "sub2",
-    "subcommand 2's string flag",
-    nil,
-    nil)
-  xEnum := argparse.NewStringEnum("x", "xx", "xxx", "xxxx")
-  zEnum := argparse.NewStringEnum("z", "Z")
+    "subcommand 2's string flag")
+  xEnum := argparse.NewStringEnumType("x", "xx", "xxx", "xxxx")
+  zEnum := argparse.NewStringEnumType("z", "Z")
   cmd.SetCommandFunc(
     cmd.Execute,
     argparse.PositionalArgument{
       Name: "x",
       Description: "first arg (3x)",
       NumExpected: 3,
-      ValueValidator: xEnum,
-      ValueSuggestor: xEnum,
+      ValueType: xEnum,
     },
     argparse.PositionalArgument{
       Name: "y",
@@ -64,8 +61,7 @@ func (cmd *posArgsSubCmd) SetupCommand(varArgs bool) {
       Description: "3rd arg (2x)",
       NumExpected: 2,
       VarArgs: varArgs,
-      ValueValidator: zEnum,
-      ValueSuggestor: zEnum,
+      ValueType: zEnum,
     })
 }
 

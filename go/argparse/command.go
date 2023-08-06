@@ -21,22 +21,6 @@ type boolFlag interface {
   IsBoolFlag() bool
 }
 
-type Suggestion struct {
-  Value string
-
-  // Suggestions of the form --<flag>=<value suggestion>
-  IsFlagValueAssignment bool
-
-  // When true, don't add a trailing space to start a new argument
-  IsPrefix bool
-}
-
-type ValueSuggestor interface {
-  WithDescription
-
-  Suggest(valuePrefix string) []Suggestion
-}
-
 type PositionalArgument struct {
   Name string
   Description string
@@ -52,8 +36,7 @@ type PositionalArgument struct {
   // causes combinatorial explosion for auto suggestion.
   VarArgs bool
 
-  ValueValidator[string]  // optional
-  ValueSuggestor  // optional
+  ValueType[string]  // optional
 }
 
 type Command struct {
@@ -63,7 +46,6 @@ type Command struct {
   parentCommand *Command  // May be nil if it's a top level command.
 
   flagSet *flag.FlagSet
-  flagValueSuggestors map[string]ValueSuggestor
 
   subcommands map[string]*Command
 
@@ -86,7 +68,6 @@ func newCommand(
     Name:name,
     Description: description,
     flagSet: flagSet,
-    flagValueSuggestors: map[string]ValueSuggestor{},
     subcommands: map[string]*Command{},
   }
 
@@ -125,23 +106,18 @@ func (cmd *Command) UsageString() string {
 
   options := ""
   cmd.flagSet.VisitAll(func (flagDef *flag.Flag) {
+    if flagDef.Name == autoSuggestFlagName {
+      return
+    }
+
     options += "  -" + flagDef.Name
 
     typeName := ""
     typeDescription := ""
-    typed, ok := flagDef.Value.(TypedGetter)
+    typed, ok := flagDef.Value.(ValueTypeInfo)
     if ok {
       typeName = typed.TypeName()
-
-      descriptor, ok := typed.(WithDescription)
-      if ok {
-        typeDescription = descriptor.Description()
-      } else {
-        suggestor, ok := cmd.flagValueSuggestors[flagDef.Name]
-        if ok {
-          typeDescription = suggestor.Description()
-        }
-      }
+      typeDescription = typed.TypeDescription()
     } else {
       // This flag was defined using the flag lib directly (probably by a
       // thirdparty library).  Fallback to flag lib's guestimation.
@@ -219,10 +195,8 @@ func (cmd *Command) UsageString() string {
       }
 
       typeDescription := ""
-      if arg.ValueValidator != nil {
-        typeDescription = arg.ValueValidator.Description()
-      } else if arg.ValueSuggestor != nil {
-        typeDescription = arg.ValueSuggestor.Description()
+      if arg.ValueType != nil {
+        typeDescription = arg.ValueType.TypeDescription()
       }
 
       if typeDescription == "" {
@@ -322,16 +296,11 @@ func (cmd *Command) SetCommandFunc(
 }
 
 func (cmd *Command) Var(
-  value TypedGetter,
+  value flag.Getter,  // value should in general be a TypedGetter
   name string,
   description string,
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.flagSet.Var(value, name, description)
-
-  if suggestor != nil {
-    cmd.flagValueSuggestors[name] = suggestor
-  }
 }
 
 func (cmd *Command) BoolVar(
@@ -345,8 +314,7 @@ func (cmd *Command) BoolVar(
   cmd.Var(
     NewBoolValue(ptr, value, description),
     name,
-    description,
-    nil)
+    description)
 }
 
 func (cmd *Command) Bool(
@@ -364,25 +332,20 @@ func (cmd *Command) StringVar(
   name string,
   value string,
   description string,
-  validator ValueValidator[string],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[string](ptr, value, stringMarshaler{}, validator),
+    NewValue[string](ptr, value, StringType{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) String(
   name string,
   value string,
   description string,
-  validator ValueValidator[string],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *string {
   ptr := new(string)
-  cmd.StringVar(ptr, name, value, description, validator, suggestor)
+  cmd.StringVar(ptr, name, value, description)
   return ptr
 }
 
@@ -393,12 +356,11 @@ func (cmd *Command) StringEnumVar(
   value string,
   description string,
 ) {
-  enum := NewStringEnum(enumValues...)
+  enum := NewStringEnumType(enumValues...)
   cmd.Var(
-    NewValue[string](ptr, value, stringMarshaler{}, enum),
+    NewValue[string](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) StringEnum(
@@ -417,25 +379,20 @@ func (cmd *Command) IntVar(
   name string,
   value int,
   description string,
-  validator ValueValidator[int],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[int](ptr, value, intMarshaler{}, validator),
+    NewValue[int](ptr, value, IntType{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Int(
   name string,
   value int,
   description string,
-  validator ValueValidator[int],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *int {
   ptr := new(int)
-  cmd.IntVar(ptr, name, value, description, validator, suggestor)
+  cmd.IntVar(ptr, name, value, description)
   return ptr
 }
 
@@ -446,12 +403,11 @@ func (cmd *Command) IntEnumVar(
   value int,
   description string,
 ) {
-  enum := NewIntEnum(enumValues...)
+  enum := NewIntEnumType(enumValues...)
   cmd.Var(
-    NewValue[int](ptr, value, intMarshaler{}, enum),
+    NewValue[int](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) IntEnum(
@@ -470,25 +426,20 @@ func (cmd *Command) Int64Var(
   name string,
   value int64,
   description string,
-  validator ValueValidator[int64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[int64](ptr, value, int64Marshaler{}, validator),
+    NewValue[int64](ptr, value, Int64Type{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Int64(
   name string,
   value int64,
   description string,
-  validator ValueValidator[int64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *int64 {
   ptr := new(int64)
-  cmd.Int64Var(ptr, name, value, description, validator, suggestor)
+  cmd.Int64Var(ptr, name, value, description)
   return ptr
 }
 
@@ -499,12 +450,11 @@ func (cmd *Command) Int64EnumVar(
   value int64,
   description string,
 ) {
-  enum := NewInt64Enum(enumValues...)
+  enum := NewInt64EnumType(enumValues...)
   cmd.Var(
-    NewValue[int64](ptr, value, int64Marshaler{}, enum),
+    NewValue[int64](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) Int64Enum(
@@ -523,25 +473,20 @@ func (cmd *Command) UintVar(
   name string,
   value uint,
   description string,
-  validator ValueValidator[uint],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[uint](ptr, value, uintMarshaler{}, validator),
+    NewValue[uint](ptr, value, UintType{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Uint(
   name string,
   value uint,
   description string,
-  validator ValueValidator[uint],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *uint {
   ptr := new(uint)
-  cmd.UintVar(ptr, name, value, description, validator, suggestor)
+  cmd.UintVar(ptr, name, value, description)
   return ptr
 }
 
@@ -552,12 +497,11 @@ func (cmd *Command) UintEnumVar(
   value uint,
   description string,
 ) {
-  enum := NewUintEnum(enumValues...)
+  enum := NewUintEnumType(enumValues...)
   cmd.Var(
-    NewValue[uint](ptr, value, uintMarshaler{}, enum),
+    NewValue[uint](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) UintEnum(
@@ -576,25 +520,20 @@ func (cmd *Command) Uint64Var(
   name string,
   value uint64,
   description string,
-  validator ValueValidator[uint64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[uint64](ptr, value, uint64Marshaler{}, validator),
+    NewValue[uint64](ptr, value, Uint64Type{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Uint64(
   name string,
   value uint64,
   description string,
-  validator ValueValidator[uint64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *uint64 {
   ptr := new(uint64)
-  cmd.Uint64Var(ptr, name, value, description, validator, suggestor)
+  cmd.Uint64Var(ptr, name, value, description)
   return ptr
 }
 
@@ -605,12 +544,11 @@ func (cmd *Command) Uint64EnumVar(
   value uint64,
   description string,
 ) {
-  enum := NewUint64Enum(enumValues...)
+  enum := NewUint64EnumType(enumValues...)
   cmd.Var(
-    NewValue[uint64](ptr, value, uint64Marshaler{}, enum),
+    NewValue[uint64](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) Uint64Enum(
@@ -629,25 +567,20 @@ func (cmd *Command) Float64Var(
   name string,
   value float64,
   description string,
-  validator ValueValidator[float64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[float64](ptr, value, float64Marshaler{}, validator),
+    NewValue[float64](ptr, value, Float64Type{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Float64(
   name string,
   value float64,
   description string,
-  validator ValueValidator[float64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *float64 {
   ptr := new(float64)
-  cmd.Float64Var(ptr, name, value, description, validator, suggestor)
+  cmd.Float64Var(ptr, name, value, description)
   return ptr
 }
 
@@ -656,25 +589,20 @@ func (cmd *Command) DurationVar(
   name string,
   value time.Duration,
   description string,
-  validator ValueValidator[time.Duration],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
   cmd.Var(
-    NewValue[time.Duration](ptr, value, durationMarshaler{}, validator),
+    NewValue[time.Duration](ptr, value, DurationType{}),
     name,
-    description,
-    suggestor)
+    description)
 }
 
 func (cmd *Command) Duration(
   name string,
   value time.Duration,
   description string,
-  validator ValueValidator[time.Duration],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *time.Duration {
   ptr := new(time.Duration)
-  cmd.DurationVar(ptr, name, value, description, validator, suggestor)
+  cmd.DurationVar(ptr, name, value, description)
   return ptr
 }
 
@@ -685,12 +613,11 @@ func (cmd *Command) DurationEnumVar(
   value time.Duration,
   description string,
 ) {
-  enum := NewDurationEnum(enumValues...)
+  enum := NewDurationEnumType(enumValues...)
   cmd.Var(
-    NewValue[time.Duration](ptr, value, durationMarshaler{}, enum),
+    NewValue[time.Duration](ptr, value, enum),
     name,
-    description,
-    enum)
+    description)
 }
 
 func (cmd *Command) DurationEnum(
@@ -843,8 +770,8 @@ func (cmd *Command) suggest(args []string) []Suggestion {
     // The flag's value is not fully specified and only contains the value's
     // prefix.
 
-    suggestor := cmd.flagValueSuggestors[arg]
-    if suggestor == nil {
+    suggestor, ok := flagDef.Value.(ValueTypeInfo)
+    if !ok {
       return []Suggestion{}
     }
 
@@ -872,7 +799,7 @@ func (cmd *Command) suggest(args []string) []Suggestion {
     suggestions = append(suggestions, cmd.suggestSubcommands() ...)
 
     if len(cmd.positionalArgs) > 0 {
-      suggestor := cmd.positionalArgs[0].ValueSuggestor
+      suggestor := cmd.positionalArgs[0].ValueType
       if suggestor != nil {
         suggestions = append(suggestions, suggestor.Suggest(args[idx])...)
       }
@@ -914,23 +841,12 @@ func (cmd *Command) suggestFlagValue(
     name = name[1:]
   }
 
-  suggestor := cmd.flagValueSuggestors[name]
-  if suggestor != nil {
-    suggestions := suggestor.Suggest(valuePrefix)
-    for i := 0; i < len(suggestions); i++ {
-      suggestions[i].Value = flagFullName + "=" + suggestions[i].Value
-      suggestions[i].IsFlagValueAssignment = true
-    }
-
-    return suggestions
-  }
-
-  // We need to special case bool flag handling
   flagDef := cmd.flagSet.Lookup(name)
   if flagDef == nil {  // Invalid flag
     return []Suggestion{}
   }
 
+  // We need to special case bool flag handling
   maybeBoolFlag, ok := flagDef.Value.(boolFlag)
   if ok && maybeBoolFlag.IsBoolFlag() {
     return []Suggestion{
@@ -945,7 +861,18 @@ func (cmd *Command) suggestFlagValue(
     }
   }
 
-  return []Suggestion{}
+  suggestor, ok := flagDef.Value.(ValueTypeInfo)
+  if !ok {
+    return []Suggestion{}
+  }
+
+  suggestions := suggestor.Suggest(valuePrefix)
+  for i := 0; i < len(suggestions); i++ {
+    suggestions[i].Value = flagFullName + "=" + suggestions[i].Value
+    suggestions[i].IsFlagValueAssignment = true
+  }
+
+  return suggestions
 }
 
 func (cmd *Command) suggestFlagNames(prefix string) []Suggestion {
@@ -1050,11 +977,11 @@ func (cmd *Command) suggestPositionalArg(args []string) []Suggestion {
       continue
     }
 
-    if pos.ValueSuggestor == nil {
+    if pos.ValueType == nil {
       return []Suggestion{}
     }
 
-    return pos.ValueSuggestor.Suggest(args[len(args) - 1])
+    return pos.Suggest(args[len(args) - 1])
   }
 
   // Too many positional arguments.  This is an invalid command.
@@ -1132,7 +1059,7 @@ func (cmd *Command) parseAction(args []string) (
     return nil, nil, fmt.Errorf("no subcommand specified")
   }
 
-  err := cmd.validateCommandFunc(args)
+  err := cmd.validateCommandFuncArgs(args)
   if err != nil {
     return nil, nil, err
   }
@@ -1140,7 +1067,7 @@ func (cmd *Command) parseAction(args []string) (
   return cmd.cmdFunc, args, nil
 }
 
-func (cmd *Command) validateCommandFunc(args []string) error {
+func (cmd *Command) validateCommandFuncArgs(args []string) error {
   totalExpected := 0
   hasVarArgs := false
   for _, param := range cmd.positionalArgs {
@@ -1156,7 +1083,7 @@ func (cmd *Command) validateCommandFunc(args []string) error {
 
   idx := 0
   for _, param := range cmd.positionalArgs {
-    if param.ValueValidator == nil {
+    if param.ValueType == nil {
       if param.VarArgs {  // i.e., last arg
         break  // no need to check the remaining arguments
       }
@@ -1171,7 +1098,7 @@ func (cmd *Command) validateCommandFunc(args []string) error {
     }
 
     for i := 0; i < numExpected; i++ {
-      err := param.ValueValidator.Validate(args[idx])
+      err := param.Validate(args[idx])
       if err != nil {
         return fmt.Errorf(
           "invalid value for argument <%s> at positional index %d (%#v): %w",

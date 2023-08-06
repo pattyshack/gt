@@ -20,16 +20,12 @@ func (cmd *nestedSubCmd) SetupCommand() {
     &cmd.subFlag,
     "sub-flag",
     123,
-    "subcommand 3's int flag",
-    nil,
-    nil)
+    "subcommand 3's int flag")
   cmd.StringVar(
     &cmd.otherFlag,
     "other-flag",
     "foo",
-    "subcommand 3's other flag",
-    nil,
-    nil)
+    "subcommand 3's other flag")
 }
 
 func (cmd *nestedSubCmd) PrintFlags() {
@@ -59,9 +55,7 @@ func (cmd *nestedSubSubCmd) SetupCommand() {
     &cmd.nestedSubFlag,
     "nested-sub-flag",
     time.Second,
-    "nested-sub-command 3's duration flag",
-    nil,
-    nil)
+    "nested-sub-command 3's duration flag")
 
   cmd.SetCommandFunc(
     cmd.Execute,

@@ -6,6 +6,19 @@ import (
   "github.com/pattyshack/bt/go/argparse"
 )
 
+// Suggest values without validation.
+type fileDescriptorType struct {
+  *argparse.EnumType[string]
+}
+
+func (fdt fileDescriptorType) TypeDescription() string {
+  return fdt.EnumType.TypeDescription() + " or a file descriptor"
+}
+
+func (fileDescriptorType) Validate(value string) error {
+  return nil
+}
+
 type autoCompleteSubCmd struct {
   *mainCmd
   *argparse.Command
@@ -22,16 +35,17 @@ func (cmd *autoCompleteSubCmd) SetupCommand() {
     0,
     "Log verbose level")
 
-  // Suggest values without value validation.
-  cmd.StringVar(
-    &cmd.fdPath,
+  cmd.Var(
+    argparse.NewValue[string](
+      &cmd.fdPath,
+      "stdout",
+      &fileDescriptorType{
+        EnumType: argparse.NewStringEnumType("stdin", "stdout", "stderr"),
+      }),
     "file-descriptor-path",
-    "stdout",
-    "file descriptor path",
-    nil,
-    argparse.NewStringEnum("stdin", "stdout", "stderr"))
+    "file descriptor path")
 
-  pets := argparse.NewStringEnum(
+  pets := argparse.NewStringEnumType(
     "cat",
     "dog",
     "bunny",
@@ -44,8 +58,7 @@ func (cmd *autoCompleteSubCmd) SetupCommand() {
       Name: "pet-type",
       Description: "A pet type",
       NumExpected: 1,
-      ValueValidator: pets,
-      ValueSuggestor: pets,
+      ValueType: pets,
     })
 }
 
@@ -53,5 +66,6 @@ func (cmd *autoCompleteSubCmd) Execute(args []string) error {
   fmt.Println("Flags:")
   fmt.Println("  verbose level:", cmd.verboseLevel)
   fmt.Println("  file descriptor path:", cmd.fdPath)
+  fmt.Println("Args:", args)
   return nil
 }

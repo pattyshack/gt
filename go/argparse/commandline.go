@@ -17,12 +17,11 @@ func AddSubcommand(name string, description string) *Command {
 }
 
 func Var(
-  value TypedGetter,
+  value flag.Getter,
   name string,
   description string,
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.Var(value, name, description, suggestor)
+  CommandLine.Var(value, name, description)
 }
 
 func BoolVar(
@@ -48,20 +47,16 @@ func StringVar(
   name string,
   value string,
   description string,
-  validator ValueValidator[string],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.StringVar(ptr, name, value, description, validator, suggestor)
+  CommandLine.StringVar(ptr, name, value, description)
 }
 
 func String(
   name string,
   value string,
   description string,
-  validator ValueValidator[string],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *string {
-  return CommandLine.String(name, value, description, validator, suggestor)
+  return CommandLine.String(name, value, description)
 }
 
 func StringEnumVar(
@@ -88,20 +83,16 @@ func IntVar(
   name string,
   value int,
   description string,
-  validator ValueValidator[int],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.IntVar(ptr, name, value, description, validator, suggestor)
+  CommandLine.IntVar(ptr, name, value, description)
 }
 
 func Int(
   name string,
   value int,
   description string,
-  validator ValueValidator[int],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *int {
-  return CommandLine.Int(name, value, description, validator, suggestor)
+  return CommandLine.Int(name, value, description)
 }
 
 func IntEnumVar(
@@ -128,20 +119,16 @@ func Int64Var(
   name string,
   value int64,
   description string,
-  validator ValueValidator[int64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.Int64Var(ptr, name, value, description, validator, suggestor)
+  CommandLine.Int64Var(ptr, name, value, description)
 }
 
 func Int64(
   name string,
   value int64,
   description string,
-  validator ValueValidator[int64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *int64 {
-  return CommandLine.Int64(name, value, description, validator, suggestor)
+  return CommandLine.Int64(name, value, description)
 }
 
 func Int64EnumVar(
@@ -168,20 +155,16 @@ func UintVar(
   name string,
   value uint,
   description string,
-  validator ValueValidator[uint],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.UintVar(ptr, name, value, description, validator, suggestor)
+  CommandLine.UintVar(ptr, name, value, description)
 }
 
 func Uint(
   name string,
   value uint,
   description string,
-  validator ValueValidator[uint],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *uint {
-  return CommandLine.Uint(name, value, description, validator, suggestor)
+  return CommandLine.Uint(name, value, description)
 }
 
 func UintEnumVar(
@@ -208,20 +191,16 @@ func Uint64Var(
   name string,
   value uint64,
   description string,
-  validator ValueValidator[uint64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.Uint64Var(ptr, name, value, description, validator, suggestor)
+  CommandLine.Uint64Var(ptr, name, value, description)
 }
 
 func Uint64(
   name string,
   value uint64,
   description string,
-  validator ValueValidator[uint64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *uint64 {
-  return CommandLine.Uint64(name, value, description, validator, suggestor)
+  return CommandLine.Uint64(name, value, description)
 }
 
 func Uint64EnumVar(
@@ -248,20 +227,16 @@ func Float64Var(
   name string,
   value float64,
   description string,
-  validator ValueValidator[float64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.Float64Var(ptr, name, value, description, validator, suggestor)
+  CommandLine.Float64Var(ptr, name, value, description)
 }
 
 func Float64(
   name string,
   value float64,
   description string,
-  validator ValueValidator[float64],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *float64 {
-  return CommandLine.Float64(name, value, description, validator, suggestor)
+  return CommandLine.Float64(name, value, description)
 }
 
 func DurationVar(
@@ -269,20 +244,16 @@ func DurationVar(
   name string,
   value time.Duration,
   description string,
-  validator ValueValidator[time.Duration],  // optional
-  suggestor ValueSuggestor,  // optional
 ) {
-  CommandLine.DurationVar(ptr, name, value, description, validator, suggestor)
+  CommandLine.DurationVar(ptr, name, value, description)
 }
 
 func Duration(
   name string,
   value time.Duration,
   description string,
-  validator ValueValidator[time.Duration],  // optional
-  suggestor ValueSuggestor,  // optional
 ) *time.Duration {
-  return CommandLine.Duration(name, value, description, validator, suggestor)
+  return CommandLine.Duration(name, value, description)
 }
 
 func DurationEnumVar(

@@ -9,19 +9,35 @@ import (
   "github.com/pattyshack/bt/go/argparse"
 )
 
-type urlMarshaler struct {}
+type urlType struct {}
 
-func (urlMarshaler) Marshal(url url.URL) string {
+func (urlType) TypeName() string {
+  return "url.URL"
+}
+
+func (urlType) TypeDescription() string {
+  return ""
+}
+
+func (urlType) Marshal(url url.URL) string {
   return url.String()
 }
 
-func (urlMarshaler) Unmarshal(value string) (url.URL, error) {
+func (urlType) Unmarshal(value string) (url.URL, error) {
   u, err := url.Parse(value)
   if err != nil {
     return url.URL{}, err
   }
 
   return *u, nil
+}
+
+func (urlType) Validate(url url.URL) error {
+  return nil
+}
+
+func (urlType) Suggest(prefix string) []argparse.Suggestion {
+  return nil
 }
 
 type mainCmd struct {
@@ -94,15 +110,8 @@ func (cmd *mainCmd) SetupCommand() {
     &cmd.stringVarFlag,
     "string.var-flag",
     "string var",
-    "StringVar()",
-    nil,
-    nil)
-  cmd.stringFlag = argparse.String(
-    "string.flag",
-    "string",
-    "String()",
-    nil,
-    nil)
+    "StringVar()")
+  cmd.stringFlag = argparse.String("string.flag", "string", "String()")
 
   argparse.StringEnumVar(
     &cmd.stringEnumVarFlag,
@@ -116,14 +125,8 @@ func (cmd *mainCmd) SetupCommand() {
     "bbb",
     "StringEnum()")
 
-  argparse.IntVar(
-    &cmd.intVarFlag,
-    "int.var-flag",
-    10,
-    "IntVar()",
-    nil,
-    nil)
-  cmd.intFlag = argparse.Int("int.flag", 20, "Int()", nil, nil)
+  argparse.IntVar(&cmd.intVarFlag, "int.var-flag", 10, "IntVar()")
+  cmd.intFlag = argparse.Int("int.flag", 20, "Int()")
 
   argparse.IntEnumVar(
     &cmd.intEnumVarFlag,
@@ -137,14 +140,8 @@ func (cmd *mainCmd) SetupCommand() {
     20,
     "IntEnum()")
 
-  argparse.Int64Var(
-    &cmd.int64VarFlag,
-    "int64.var-flag",
-    300,
-    "Int64Var()",
-    nil,
-    nil)
-  cmd.int64Flag = argparse.Int64("int64.flag", 400, "Int64()", nil, nil)
+  argparse.Int64Var(&cmd.int64VarFlag, "int64.var-flag", 300, "Int64Var()")
+  cmd.int64Flag = argparse.Int64("int64.flag", 400, "Int64()")
 
   argparse.Int64EnumVar(
     &cmd.int64EnumVarFlag,
@@ -158,14 +155,8 @@ func (cmd *mainCmd) SetupCommand() {
     201,
     "Int64Enum()")
 
-  argparse.UintVar(
-    &cmd.uintVarFlag,
-    "uint.var-flag",
-    4000,
-    "UintVar()",
-    nil,
-    nil)
-  cmd.uintFlag = argparse.Uint("uint.flag", 20, "Uint()", nil, nil)
+  argparse.UintVar(&cmd.uintVarFlag, "uint.var-flag", 4000, "UintVar()")
+  cmd.uintFlag = argparse.Uint("uint.flag", 20, "Uint()")
 
   argparse.UintEnumVar(
     &cmd.uintEnumVarFlag,
@@ -183,10 +174,8 @@ func (cmd *mainCmd) SetupCommand() {
     &cmd.uint64VarFlag,
     "uint64.var-flag",
     50000,
-    "Uint64Var()",
-    nil,
-    nil)
-  cmd.uint64Flag = argparse.Uint64("uint64.flag", 400, "Uint64()", nil, nil)
+    "Uint64Var()")
+  cmd.uint64Flag = argparse.Uint64("uint64.flag", 400, "Uint64()")
 
   argparse.Uint64EnumVar(
     &cmd.uint64EnumVarFlag,
@@ -204,29 +193,15 @@ func (cmd *mainCmd) SetupCommand() {
     &cmd.float64VarFlag,
     "float64.var-flag",
     3.14,
-    "Float64Var()",
-    nil,
-    nil)
-  cmd.float64Flag = argparse.Float64(
-    "float64.flag",
-    2.15,
-    "Float64()",
-    nil,
-    nil)
+    "Float64Var()")
+  cmd.float64Flag = argparse.Float64("float64.flag", 2.15, "Float64()")
 
   argparse.DurationVar(
     &cmd.durationVarFlag,
     "duration.var-flag",
     time.Minute,
-    "Duration()",
-    nil,
-    nil)
-  cmd.durationFlag = argparse.Duration(
-    "duration.flag",
-    time.Hour,
-    "Duration()",
-    nil,
-    nil)
+    "Duration()")
+  cmd.durationFlag = argparse.Duration("duration.flag", time.Hour, "Duration()")
 
   argparse.DurationEnumVar(
     &cmd.durationEnumVarFlag,
@@ -248,11 +223,9 @@ func (cmd *mainCmd) SetupCommand() {
     argparse.NewValue[url.URL](
       &cmd.urlFlag,
       *defaultUrl,
-      urlMarshaler{},
-      nil),
+      urlType{}),
     "url.var-flag",
-    "test custom flag var",
-    nil)
+    "test custom flag var")
 }
 
 func main() {
