@@ -7,7 +7,11 @@ go_library(
     "command.go",
     "commandline.go",
     "enum.go",
+    "file.go",
     "value.go",
+  ],
+  deps = [
+    "//go/filesystem",
   ],
   visibility = ["//visibility:public"],
 )

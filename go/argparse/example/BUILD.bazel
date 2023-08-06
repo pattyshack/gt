@@ -10,5 +10,6 @@ go_binary(
   ],
   deps = [
     "//go/argparse",
+    "//go/filesystem",
   ],
 )

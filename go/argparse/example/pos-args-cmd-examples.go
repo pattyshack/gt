@@ -4,6 +4,7 @@ import (
   "fmt"
 
   "github.com/pattyshack/bt/go/argparse"
+  "github.com/pattyshack/bt/go/filesystem"
 )
 
 type noPosArgsSubCmd struct {
@@ -42,7 +43,6 @@ func (cmd *posArgsSubCmd) SetupCommand(varArgs bool) {
     "sub2",
     "subcommand 2's string flag")
   xEnum := argparse.NewStringEnumType("x", "xx", "xxx", "xxxx")
-  zEnum := argparse.NewStringEnumType("z", "Z")
   cmd.SetCommandFunc(
     cmd.Execute,
     argparse.PositionalArgument{
@@ -55,13 +55,14 @@ func (cmd *posArgsSubCmd) SetupCommand(varArgs bool) {
       Name: "y",
       Description: "second arg (2x)",
       NumExpected: 2,
+      ValueType: argparse.NewFilePathType(filesystem.Local, true),
     },
     argparse.PositionalArgument{
       Name: "z",
       Description: "3rd arg (2x)",
       NumExpected: 2,
       VarArgs: varArgs,
-      ValueType: zEnum,
+      ValueType: argparse.NewFilePathType(filesystem.Local, false),
     })
 }
 
