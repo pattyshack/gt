@@ -972,7 +972,7 @@ func (cmd *Command) suggestSubcommands() []Suggestion {
 func (cmd *Command) suggestPositionalArg(args []string) []Suggestion {
   idx := 0
   for _, pos := range cmd.positionalArgs {
-    if !pos.VarArgs && idx + pos.NumExpected < len(args) - 1 {
+    if !pos.VarArgs && idx + pos.NumExpected < len(args) {
       idx += pos.NumExpected
       continue
     }
