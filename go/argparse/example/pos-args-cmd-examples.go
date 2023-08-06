@@ -68,3 +68,14 @@ func (cmd *posArgsSubCmd) SetupCommand(varArgs bool) {
       ValueSuggestor: zEnum,
     })
 }
+
+func (cmd *posArgsSubCmd) Execute(args []string) error {
+  cmd.mainCmd.PrintFlags()
+  fmt.Println()
+  fmt.Println("sub1:")
+  fmt.Println("=====")
+  fmt.Println("sub1's flag:", cmd.subFlag)
+  fmt.Println("sub1's args:", args)
+  return nil
+}
+
