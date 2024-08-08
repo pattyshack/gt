@@ -1,11 +1,9 @@
-load("@rules_go//go:def.bzl", "go_library")
+load("//:bt.bzl", "bt_go_package")
 
-go_library(
+bt_go_package(
   name = "argparse",
-  importpath = "github.com/pattyshack/bt/go/argparse",
-  srcs = glob(include=["*.go"], exclude=["*_test.go"]),
+  path = "go/argparse",
   deps = [
     "//go/filesystem",
   ],
-  visibility = ["//visibility:public"],
 )

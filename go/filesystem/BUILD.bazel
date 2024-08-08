@@ -1,22 +1,10 @@
-load("@rules_go//go:def.bzl", "go_library", "go_test")
+load("//:bt.bzl", "bt_go_package")
 
-go_library(
+bt_go_package(
   name = "filesystem",
-  importpath = "github.com/pattyshack/bt/go/filesystem",
-  srcs=glob(include=["*.go"], exclude=["*_test.go"]),
-  visibility = ["//visibility:public"],
-)
-
-go_test(
-  name = "filesystem_test",
-  importpath = "github.com/pattyshack/bt/go/filesystem",
-  srcs=glob(include=["*_test.go"]),
-  embed = [
-    ":filesystem",
-  ],
-  deps = [
+  path = "go/filesystem",
+  test_deps = [
     "//go/testing/expect",
     "//go/testing/suite",
   ],
-  size="small",
 )

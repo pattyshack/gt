@@ -1,17 +1,6 @@
-load("@rules_go//go:def.bzl", "go_library", "go_test")
+load("//:bt.bzl", "bt_go_package")
 
-go_library(
+bt_go_package(
   name = "expect",
-  importpath = "github.com/pattyshack/bt/go/testing/expect",
-  srcs = glob(include=["*.go"], exclude=["*_test.go"]),
-  visibility = ["//visibility:public"],
-)
-
-go_test(
-  name = "expect_test",
-  importpath = "github.com/pattyshack/bt/go/testing/expect",
-  srcs = glob(include=["*_test.go"]),
-  embed = [
-    ":expect",
-  ],
+  path = "go/testing/expect",
 )

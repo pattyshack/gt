@@ -1,10 +1,12 @@
-load("@rules_go//go:def.bzl", "go_binary")
+load("//:bt.bzl", "bt_go_package")
 
-go_binary(
+bt_go_package(
   name = "example",
-  srcs = glob(include=["*.go"], exclude=["*_test.go"]),
+  path = "go/argparse/example",
   deps = [
     "//go/argparse",
     "//go/filesystem",
   ],
+  is_binary = True,
 )
+
