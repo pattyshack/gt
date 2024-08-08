@@ -3,13 +3,7 @@ load("@rules_go//go:def.bzl", "go_library")
 go_library(
   name = "argparse",
   importpath = "github.com/pattyshack/bt/go/argparse",
-  srcs = [
-    "command.go",
-    "commandline.go",
-    "enum.go",
-    "file.go",
-    "value.go",
-  ],
+  srcs = glob(include=["*.go"], exclude=["*_test.go"]),
   deps = [
     "//go/filesystem",
   ],

@@ -3,18 +3,14 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
   name = "expect",
   importpath = "github.com/pattyshack/bt/go/testing/expect",
-  srcs = [
-    "expect.go",
-  ],
+  srcs = glob(include=["*.go"], exclude=["*_test.go"]),
   visibility = ["//visibility:public"],
 )
 
 go_test(
   name = "expect_test",
   importpath = "github.com/pattyshack/bt/go/testing/expect",
-  srcs = [
-    "expect_test.go",
-  ],
+  srcs = glob(include=["*_test.go"]),
   embed = [
     ":expect",
   ],
