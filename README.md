@@ -1,3 +1,1 @@
-# bt
-
-Built tool for a multi-language development environment.
+go utility libraries and tools
