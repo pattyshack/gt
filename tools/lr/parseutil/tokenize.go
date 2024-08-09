@@ -255,6 +255,11 @@ func MaybeTokenizeIdentifier(
 				return "", Location{}, nil
 			}
 
+			// first char in the identifier can't be a number
+			if '0' <= char && char <= '9' {
+				return "", Location{}, nil
+			}
+
 			checkIdx = 1
 		}
 
