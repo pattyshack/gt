@@ -6,7 +6,7 @@ import (
 	_fmt "fmt"
 	_io "io"
 
-	lr "github.com/pattyshack/bt/tools/lr/internal"
+	lr "github.com/pattyshack/gt/tools/lr/internal"
 )
 
 type File struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 type ParseContext struct {

@@ -4,7 +4,7 @@ import (
   "fmt"
   "strings"
 
-  "github.com/pattyshack/bt/filesystem"
+  "github.com/pattyshack/gt/filesystem"
 )
 
 type FilePathType struct {

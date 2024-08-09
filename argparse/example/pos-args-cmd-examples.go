@@ -3,8 +3,8 @@ package main
 import (
   "fmt"
 
-  "github.com/pattyshack/bt/argparse"
-  "github.com/pattyshack/bt/filesystem"
+  "github.com/pattyshack/gt/argparse"
+  "github.com/pattyshack/gt/filesystem"
 )
 
 type noPosArgsSubCmd struct {

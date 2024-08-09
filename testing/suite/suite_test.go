@@ -3,8 +3,8 @@ package suite_test
 import (
 	"testing"
 
-	"github.com/pattyshack/bt/testing/expect"
-	"github.com/pattyshack/bt/testing/suite"
+	"github.com/pattyshack/gt/testing/expect"
+	"github.com/pattyshack/gt/testing/suite"
 )
 
 // Note: suite's struct name is not included in the test's full name.

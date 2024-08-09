@@ -8,7 +8,7 @@ import __yyfmt__ "fmt"
 //line grammar.y:2
 
 import (
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 //line grammar.y:9

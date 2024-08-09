@@ -3,7 +3,7 @@ package template
 import (
 	"fmt"
 
-	"github.com/pattyshack/bt/tools/lr/parseutil"
+	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 type ReducerImpl struct{}

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pattyshack/bt/codegenutil"
-	lr "github.com/pattyshack/bt/tools/lr/internal"
-	"github.com/pattyshack/bt/tools/lr/internal/code_gen/rust_template"
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/codegenutil"
+	lr "github.com/pattyshack/gt/tools/lr/internal"
+	"github.com/pattyshack/gt/tools/lr/internal/code_gen/rust_template"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 func populateRustCodeGenVariables(

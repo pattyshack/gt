@@ -3,7 +3,7 @@ package yacc
 import (
 	"fmt"
 
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 func LRSymbolTypeToYaccTokenNum(tt parser.LRSymbolId) int {

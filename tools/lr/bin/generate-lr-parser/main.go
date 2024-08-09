@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"runtime/pprof"
 
-	lr "github.com/pattyshack/bt/tools/lr/internal"
-	"github.com/pattyshack/bt/tools/lr/internal/code_gen"
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
-	"github.com/pattyshack/bt/tools/lr/internal/parser/yacc"
+	lr "github.com/pattyshack/gt/tools/lr/internal"
+	"github.com/pattyshack/gt/tools/lr/internal/code_gen"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/tools/lr/internal/parser/yacc"
 )
 
 func main() {

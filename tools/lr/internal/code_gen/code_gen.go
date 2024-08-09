@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	lr "github.com/pattyshack/bt/tools/lr/internal"
+	lr "github.com/pattyshack/gt/tools/lr/internal"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"go/format"
 	"io"
 
-	"github.com/pattyshack/bt/tools/template/internal"
+	"github.com/pattyshack/gt/tools/template/internal"
 )
 
 type Template struct {

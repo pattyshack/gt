@@ -3,8 +3,8 @@ package manual_codegen
 import (
 	"io"
 
-	"github.com/pattyshack/bt/codegenutil"
-	"github.com/pattyshack/bt/tools/template/internal"
+	"github.com/pattyshack/gt/codegenutil"
+	"github.com/pattyshack/gt/tools/template/internal"
 )
 
 type Template struct {

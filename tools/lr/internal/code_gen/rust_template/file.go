@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	lr "github.com/pattyshack/bt/tools/lr/internal"
-	"github.com/pattyshack/bt/tools/lr/internal/code_gen/debug_template"
-	parser "github.com/pattyshack/bt/tools/lr/internal/parser"
+	lr "github.com/pattyshack/gt/tools/lr/internal"
+	"github.com/pattyshack/gt/tools/lr/internal/code_gen/debug_template"
+	parser "github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 type File struct {

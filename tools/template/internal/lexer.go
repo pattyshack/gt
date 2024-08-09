@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/pattyshack/bt/tools/lr/parseutil"
+	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	_fmt "fmt"
 	_io "io"
 
-	"github.com/pattyshack/bt/tools/template/internal"
+	"github.com/pattyshack/gt/tools/template/internal"
 )
 
 type Switch struct {

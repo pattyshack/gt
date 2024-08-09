@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	template "github.com/pattyshack/bt/tools/template/internal"
-	"github.com/pattyshack/bt/tools/template/internal/manual_codegen"
-	"github.com/pattyshack/bt/tools/template/internal/templated_codegen"
+	template "github.com/pattyshack/gt/tools/template/internal"
+	"github.com/pattyshack/gt/tools/template/internal/manual_codegen"
+	"github.com/pattyshack/gt/tools/template/internal/templated_codegen"
 )
 
 func main() {

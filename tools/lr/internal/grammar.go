@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pattyshack/bt/tools/lr/internal/parser"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 
 	"gopkg.in/yaml.v3"
 )

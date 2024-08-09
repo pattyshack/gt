@@ -8,8 +8,8 @@ import (
   "strings"
   "testing"
 
-  "github.com/pattyshack/bt/testing/expect"
-  "github.com/pattyshack/bt/testing/suite"
+  "github.com/pattyshack/gt/testing/expect"
+  "github.com/pattyshack/gt/testing/suite"
 )
 
 // Create the following in the temp directory:

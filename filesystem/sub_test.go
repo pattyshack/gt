@@ -5,8 +5,8 @@ import (
   "path"
   "testing"
 
-  "github.com/pattyshack/bt/testing/expect"
-  "github.com/pattyshack/bt/testing/suite"
+  "github.com/pattyshack/gt/testing/expect"
+  "github.com/pattyshack/gt/testing/suite"
 )
 
 type SubLocalSuite struct {

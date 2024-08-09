@@ -1,7 +1,7 @@
 package templated_codegen
 
 import (
-    "github.com/pattyshack/bt/tools/template/internal"
+    "github.com/pattyshack/gt/tools/template/internal"
 )
 
 template If{

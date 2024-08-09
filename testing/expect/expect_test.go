@@ -4,7 +4,7 @@ import (
   "fmt"
   "testing"
 
-  "github.com/pattyshack/bt/testing/expect"
+  "github.com/pattyshack/gt/testing/expect"
 )
 
 type testStruct struct {

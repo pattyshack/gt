@@ -6,7 +6,7 @@ import (
   "time"
   "net/url"
 
-  "github.com/pattyshack/bt/argparse"
+  "github.com/pattyshack/gt/argparse"
 )
 
 type urlType struct {}
@@ -215,7 +215,7 @@ func (cmd *mainCmd) SetupCommand() {
     10 *time.Second,
     "DurationEnum()")
 
-  defaultUrl, err := url.Parse("https://github.com/pattyshack/bt")
+  defaultUrl, err := url.Parse("https://github.com/pattyshack/gt")
   if err != nil {
     panic(err)
   }

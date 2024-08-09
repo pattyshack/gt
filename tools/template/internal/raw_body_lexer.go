@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pattyshack/bt/tools/lr/parseutil"
+	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
   "fmt"
   "time"
 
-  "github.com/pattyshack/bt/argparse"
+  "github.com/pattyshack/gt/argparse"
 )
 
 type nestedSubCmd struct {

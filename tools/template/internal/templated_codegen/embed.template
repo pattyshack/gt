@@ -2,7 +2,7 @@ package templated_codegen
 
 import (
     "strings"
-    "github.com/pattyshack/bt/tools/template/internal"
+    "github.com/pattyshack/gt/tools/template/internal"
 )
 
 template Embed {

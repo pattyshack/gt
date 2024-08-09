@@ -3,7 +3,7 @@ package filesystem
 import (
   "testing"
 
-  "github.com/pattyshack/bt/testing/suite"
+  "github.com/pattyshack/gt/testing/suite"
 )
 
 func TestExtendedMinimalLocalFileSystem(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/pattyshack/bt
+module github.com/pattyshack/gt
 
 go 1.22.6
 
