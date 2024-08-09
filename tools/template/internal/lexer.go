@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
@@ -24,6 +25,8 @@ type LexerImpl struct {
 	reader *parseutil.LocationReader
 
 	currentLexer
+
+	internPool *stringutil.InternPool
 }
 
 func NewLexer(filename string, input io.Reader) (Lexer, error) {
@@ -35,10 +38,15 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 	content = stripHeaderComments(content)
 
 	reader := parseutil.NewLocationReader(filename, bytes.NewBuffer(content))
+	internPool := stringutil.NewInternPool()
 
 	return &LexerImpl{
-		reader:       reader,
-		currentLexer: &headerLexer{reader},
+		reader: reader,
+		currentLexer: &headerLexer{
+			reader:     reader,
+			internPool: internPool,
+		},
+		internPool: internPool,
 	}, nil
 }
 
@@ -54,7 +62,10 @@ func (lexer *LexerImpl) Next() (Token, error) {
 
 	if token.Id() == SectionMarkerToken {
 		lexer.currentLexer = &bodyLexer{
-			raw: &rawBodyLexer{lexer.reader},
+			raw: &rawBodyLexer{
+				reader:     lexer.reader,
+				internPool: lexer.internPool,
+			},
 		}
 	}
 
@@ -62,7 +73,8 @@ func (lexer *LexerImpl) Next() (Token, error) {
 }
 
 type headerLexer struct {
-	reader *parseutil.LocationReader
+	reader     *parseutil.LocationReader
+	internPool *stringutil.InternPool
 }
 
 func (lexer *headerLexer) Next() (Token, error) {
@@ -71,7 +83,9 @@ func (lexer *headerLexer) Next() (Token, error) {
 		return nil, err
 	}
 
-	val, loc, err := parseutil.MaybeTokenizeIdentifier(lexer.reader)
+	val, loc, err := parseutil.MaybeTokenizeIdentifier(
+		lexer.reader,
+		lexer.internPool)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +126,9 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 		return nil, err
 	}
 
-	val, _, err := parseutil.MaybeTokenizeIdentifier(lexer.reader)
+	val, _, err := parseutil.MaybeTokenizeIdentifier(
+		lexer.reader,
+		lexer.internPool)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +179,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		return nil, err
 	}
 
-	templateName, _, err := parseutil.MaybeTokenizeIdentifier(lexer.reader)
+	templateName, _, err := parseutil.MaybeTokenizeIdentifier(
+		lexer.reader,
+		lexer.internPool)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +252,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		lineReader := parseutil.NewLocationReader("", bytes.NewBuffer(line))
 		lineReader.Location = parseutil.Location(loc)
 
-		argName, _, err := parseutil.MaybeTokenizeIdentifier(lineReader)
+		argName, _, err := parseutil.MaybeTokenizeIdentifier(
+			lineReader,
+			lexer.internPool)
 		if err != nil {
 			return nil, err
 		}

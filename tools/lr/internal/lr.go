@@ -85,10 +85,11 @@ func (item *Item) String() string {
 }
 
 // sort order:
-//  kernel items before non-kernel items
-//  clause sort id
-//  dot position
-//  lookahead string
+//
+//	kernel items before non-kernel items
+//	clause sort id
+//	dot position
+//	lookahead string
 func (this *Item) Compare(other *Item) int {
 	if this.IsKernel {
 		if !other.IsKernel {

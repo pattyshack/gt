@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
@@ -30,6 +31,8 @@ type rawLexer struct {
 	reader *parseutil.LocationReader
 
 	sorted parseutil.Symbols
+
+	internPool *stringutil.InternPool
 }
 
 func newRawLexer(filename string, reader io.Reader) *rawLexer {
@@ -39,7 +42,11 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 	}
 	sort.Sort(sorted)
 
-	return &rawLexer{parseutil.NewLocationReader(filename, reader), sorted}
+	return &rawLexer{
+		reader:     parseutil.NewLocationReader(filename, reader),
+		sorted:     sorted,
+		internPool: stringutil.NewInternPool(),
+	}
 }
 
 func (lexer *rawLexer) Next() (LRToken, error) {
@@ -109,7 +116,9 @@ func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
 }
 
 func (lexer *rawLexer) maybeTokenizeIdentifier() (LRToken, error) {
-	value, loc, err := parseutil.MaybeTokenizeIdentifier(lexer.reader)
+	value, loc, err := parseutil.MaybeTokenizeIdentifier(
+		lexer.reader,
+		lexer.internPool)
 	if err != nil {
 		return nil, err
 	}

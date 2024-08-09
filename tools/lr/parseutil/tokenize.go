@@ -3,6 +3,8 @@ package parseutil
 import (
 	"io"
 	"unicode/utf8"
+
+	"github.com/pattyshack/gt/stringutil"
 )
 
 var (
@@ -226,7 +228,10 @@ func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
 
 // If the reader's leading bytes are an identifer, those bytes off the reader
 // and return the value.  Otherwise, return a nil slice.
-func MaybeTokenizeIdentifier(reader *LocationReader) (string, Location, error) {
+func MaybeTokenizeIdentifier(
+	reader *LocationReader,
+	internPool *stringutil.InternPool,
+) (string, Location, error) {
 	peekRange := 32
 	prevLen := 0
 	checkIdx := 0
@@ -284,5 +289,5 @@ func MaybeTokenizeIdentifier(reader *LocationReader) (string, Location, error) {
 		panic(err) // should never happen
 	}
 
-	return string(bytes), loc, nil
+	return internPool.InternBytes(bytes), loc, nil
 }

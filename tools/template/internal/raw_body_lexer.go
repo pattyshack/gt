@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
@@ -60,6 +61,8 @@ type BodyToken interface {
 
 type rawBodyLexer struct {
 	reader *parseutil.LocationReader
+
+	internPool *stringutil.InternPool
 }
 
 func (lexer *rawBodyLexer) CurrentLocation() Location {
@@ -224,7 +227,9 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			trimTrailing), nil
 	}
 
-	id, _, err := parseutil.MaybeTokenizeIdentifier(directiveReader)
+	id, _, err := parseutil.MaybeTokenizeIdentifier(
+		directiveReader,
+		lexer.internPool)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -237,7 +242,9 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	param := ""
 	// check for "else if" compound identifier
 	if id == "else" {
-		second, _, err := parseutil.MaybeTokenizeIdentifier(directiveReader)
+		second, _, err := parseutil.MaybeTokenizeIdentifier(
+			directiveReader,
+			lexer.internPool)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
@@ -347,7 +354,9 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 				panic(err) // Should never happen
 			}
 
-			value, _, err := parseutil.MaybeTokenizeIdentifier(lexer.reader)
+			value, _, err := parseutil.MaybeTokenizeIdentifier(
+				lexer.reader,
+				lexer.internPool)
 			if err != nil {
 				return nil, err
 			}

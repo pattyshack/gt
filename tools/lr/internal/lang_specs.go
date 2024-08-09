@@ -13,8 +13,8 @@ type GoSpec struct {
 }
 
 type RustSpec struct {
-	UseList    []string          `yaml:"use_list"`
-	ValueTypes map[string]string `yaml:"value_types"`
+	UseList                   []string          `yaml:"use_list"`
+	ValueTypes                map[string]string `yaml:"value_types"`
 	OutputDebugNonKernelItems bool              `yaml:"output_debug_non_kernel_items"`
 }
 
