@@ -1,4 +1,4 @@
-package codegenutil
+package codegen
 
 import (
 	"bytes"

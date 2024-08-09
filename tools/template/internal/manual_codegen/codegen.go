@@ -3,7 +3,7 @@ package manual_codegen
 import (
 	"io"
 
-	"github.com/pattyshack/gt/codegenutil"
+	"github.com/pattyshack/gt/codegen"
 	"github.com/pattyshack/gt/tools/template/internal"
 )
 
@@ -18,8 +18,8 @@ func NewTemplate(source string, spec *template.File) io.WriterTo {
 
 func (temp *Template) WriteTo(output io.Writer) (int64, error) {
 	spec := temp.spec
-	builder := codegenutil.NewCodeBuilder()
-	imports := codegenutil.NewGoImports()
+	builder := codegen.NewCodeBuilder()
+	imports := codegen.NewGoImports()
 
 	l := builder.Line
 
@@ -92,13 +92,13 @@ func (temp *Template) WriteTo(output io.Writer) (int64, error) {
 	builder.PopIndent()
 	l("}")
 
-	return codegenutil.NewFormattedGoSource(builder).WriteTo(output)
+	return codegen.NewFormattedGoSource(builder).WriteTo(output)
 }
 
 func buildBody(
 	body []template.Statement,
-	builder *codegenutil.CodeBuilder,
-	imports *codegenutil.GoImports) {
+	builder *codegen.CodeBuilder,
+	imports *codegen.GoImports) {
 
 	l := builder.Line
 	push := builder.PushIndent

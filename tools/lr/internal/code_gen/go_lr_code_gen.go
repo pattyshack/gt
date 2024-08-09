@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/pattyshack/gt/codegenutil"
+	"github.com/pattyshack/gt/codegen"
 	lr "github.com/pattyshack/gt/tools/lr/internal"
 	"github.com/pattyshack/gt/tools/lr/internal/code_gen/go_template"
 	"github.com/pattyshack/gt/tools/lr/internal/parser"
@@ -77,14 +77,14 @@ func populateGoCodeGenVariables(
 				suffix = "Token"
 			}
 			term.CodeGenSymbolConst = nameGen.Public(
-				codegenutil.SnakeToCamel(term.Name) + suffix)
+				codegen.SnakeToCamel(term.Name) + suffix)
 		}
 
 		for _, clause := range term.Clauses {
 			reducerName := nameGen.Add(
-				codegenutil.SnakeToCamel(clause.Label) +
+				codegen.SnakeToCamel(clause.Label) +
 					"To" +
-					codegenutil.SnakeToCamel(term.Name))
+					codegen.SnakeToCamel(term.Name))
 			clause.CodeGenReducerName = reducerName
 			clause.CodeGenReducerNameConst = nameGen.Internal(
 				"Reduce" + reducerName)
@@ -118,7 +118,7 @@ func GenerateGoLRCode(
 		return nil, fmt.Errorf("package name not specified")
 	}
 
-	imports := codegenutil.NewGoImports()
+	imports := codegen.NewGoImports()
 	nameGen := NewNameGenerator(cfg.Prefix)
 
 	endSymbol := nameGen.Internal("EndMarker")
@@ -226,5 +226,5 @@ func GenerateGoLRCode(
 		OutputDebugNonKernelItems: cfg.OutputDebugNonKernelItems,
 	}
 
-	return codegenutil.NewFormattedGoSource(file), nil
+	return codegen.NewFormattedGoSource(file), nil
 }

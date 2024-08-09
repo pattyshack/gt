@@ -10,7 +10,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/pattyshack/gt/codegenutil"
+	"github.com/pattyshack/gt/codegen"
 	lr "github.com/pattyshack/gt/tools/lr/internal"
 	"github.com/pattyshack/gt/tools/lr/internal/code_gen/debug_template"
 	parser "github.com/pattyshack/gt/tools/lr/internal/parser"
@@ -1076,7 +1076,7 @@ type `))
 				} else {
 					// hack: append "_" to the end of the name ensures the
 					// name is never a go keyword
-					paramName = codegenutil.SnakeToCamel(term.Name) + "_"
+					paramName = codegen.SnakeToCamel(term.Name) + "_"
 				}
 
 				paramNameCount[paramName] += 1
@@ -1527,7 +1527,7 @@ func `))
 
 		parseSuffix := ""
 		if len(Grammar.Starts) > 1 {
-			parseSuffix = codegenutil.SnakeToCamel(start.Name)
+			parseSuffix = codegen.SnakeToCamel(start.Name)
 		}
 
 		// file.template:250:6

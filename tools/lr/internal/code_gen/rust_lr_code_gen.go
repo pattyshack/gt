@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pattyshack/gt/codegenutil"
+	"github.com/pattyshack/gt/codegen"
 	lr "github.com/pattyshack/gt/tools/lr/internal"
 	"github.com/pattyshack/gt/tools/lr/internal/code_gen/rust_template"
 	"github.com/pattyshack/gt/tools/lr/internal/parser"
@@ -16,14 +16,14 @@ func populateRustCodeGenVariables(
 
 	for _, term := range grammar.Terminals {
 		if term.SymbolId == parser.LRIdentifierToken {
-			term.CodeGenSymbolConst = codegenutil.SnakeToCamel(term.Name)
+			term.CodeGenSymbolConst = codegen.SnakeToCamel(term.Name)
 		}
 
 		term.CodeGenType = term.ValueType
 	}
 
 	for _, term := range grammar.NonTerminals {
-		term.CodeGenSymbolConst = codegenutil.SnakeToCamel(term.Name)
+		term.CodeGenSymbolConst = codegen.SnakeToCamel(term.Name)
 		term.CodeGenType = term.ValueType
 
 		for _, clause := range term.Clauses {
@@ -32,7 +32,7 @@ func populateRustCodeGenVariables(
 				clause.CodeGenReducerName = clause.CodeGenReducerName[1:]
 			}
 
-			clause.CodeGenReducerNameConst = codegenutil.SnakeToCamel(
+			clause.CodeGenReducerNameConst = codegen.SnakeToCamel(
 				clause.CodeGenReducerName)
 		}
 	}
