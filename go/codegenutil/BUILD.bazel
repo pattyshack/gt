@@ -1,6 +1,0 @@
-load("//:bt.bzl", "bt_go_package")
-
-bt_go_package(
-  name = "codegenutil",
-  path = "go/codegenutil",
-)

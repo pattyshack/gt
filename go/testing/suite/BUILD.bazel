@@ -1,9 +1,0 @@
-load("//:bt.bzl", "bt_go_package")
-
-bt_go_package(
-  name = "suite",
-  path = "go/testing/suite",
-  test_deps = [
-    "//go/testing/expect",
-  ],
-)
