@@ -127,7 +127,7 @@ func (_template *File) WriteTo(
 		}
 
 		if term.SymbolId != parser.LRIdentifierToken {
-			return "SymbolKind::AsciiCharToken(" + term.Name + ")"
+			return "SymbolKind::CharToken(" + term.Name + ")"
 		}
 
 		return "SymbolKind::" + term.CodeGenSymbolConst + "Token"
@@ -205,7 +205,7 @@ pub enum SymbolKind {
   // Token symbols.
   //
   EofToken,
-  AsciiCharToken(char),
+  CharToken(char),
 `))
 		_numWritten += int64(_n)
 		if _err != nil {
@@ -424,7 +424,7 @@ impl SymbolKind {
 	// file.template:111:8
 	{
 		_n, _err := _output.Write([]byte(`
-      SymbolKind::AsciiCharToken(c) => panic!("Unexpected token '{}'", c),
+      SymbolKind::CharToken(c) => panic!("Unexpected token '{}'", c),
     }.to_string()
   }
 }

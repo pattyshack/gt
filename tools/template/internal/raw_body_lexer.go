@@ -338,11 +338,8 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 		return lexer.tokenizeNonSubstituteDirective()
 
 	} else if content[0] == '$' {
-		if 'a' <= content[1] && content[1] <= 'z' ||
-			'A' <= content[1] && content[1] <= 'Z' ||
-			content[1] == '_' {
-			// $<identifier>
-
+		_, ok := parseutil.NonIdentifierChars[content[1]]
+		if !ok { // $<identifier>
 			loc := lexer.reader.Location
 
 			_, err := lexer.reader.ReadByte()
@@ -375,10 +372,10 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 		} else if content[1] == '$' {
 			panic("Programming error")
 		} else {
-            return nil, fmt.Errorf(
-                "invalid substitute directive (%s)",
-			    lexer.reader.Location)
-        }
+			return nil, fmt.Errorf(
+				"invalid substitute directive (%s)",
+				lexer.reader.Location)
+		}
 	}
 
 	panic("Programming error")
@@ -387,7 +384,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 // Search for the first occurence of terminal starting from startIdx.  The
 // terminal must start with one of the following characters: ']' ')' '}' '\n'.
 // This respect golang scoping, string, char and comments, i.e.,
-// {} [] () `` "" '' /**/ //
+// {} [] () “ "" ” /**/ //
 func readDirective(
 	reader *parseutil.LocationReader,
 	startIdx int,

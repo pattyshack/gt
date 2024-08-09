@@ -2,7 +2,18 @@ package parseutil
 
 import (
 	"io"
+	"unicode/utf8"
 )
+
+var (
+	NonIdentifierChars = map[byte]struct{}{}
+)
+
+func init() {
+	for _, c := range "`~!@#$%^&*()-=+{[]}\\|;:'\",<.>/? \t\n" {
+		NonIdentifierChars[byte(c)] = struct{}{}
+	}
+}
 
 func IsWhitespace(char byte) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
@@ -168,11 +179,7 @@ func MaybeTokenizeSymbol(
 // '\t' for escaped characters), pop those bytes off the reader and return
 // the value.  Otherwise, return a nil slice.
 func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
-	bytes, err := reader.Peek(4)
-	if err != nil {
-		return "", Location{}, err
-	}
-
+	bytes, err := reader.Peek(6)
 	if len(bytes) < 3 {
 		return "", Location{}, nil
 	}
@@ -181,8 +188,8 @@ func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
 		return "", Location{}, nil
 	}
 
-	numBytes := 3
-	if bytes[1] == '\\' { // c escape
+	numBytes := 4
+	if bytes[1] == '\\' {
 		if len(bytes) < 4 || bytes[3] != '\'' {
 			return "", Location{}, nil
 		}
@@ -192,34 +199,18 @@ func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
 		default:
 			return "", Location{}, nil
 		}
-
-		numBytes = 4
 	} else {
-		if bytes[2] != '\'' {
+		r, size := utf8.DecodeRune(bytes[1:])
+		if len(bytes) < size+2 || bytes[size+1] != '\'' {
 			return "", Location{}, nil
 		}
 
-		valid := false
-
-		char := bytes[1]
-		if ('a' <= char && char <= 'z') ||
-			('A' <= char && char <= 'Z') ||
-			('0' <= char && char <= '9') {
-
-			valid = true
-		} else {
-			switch char {
-			case '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
-				'-', '_', '=', '+', '[', '{', ']', '}', '|', ';', ':', '"',
-				',', '<', '.', '>', '/', '?', ' ':
-				valid = true
-
-			}
-		}
-
-		if !valid {
+		switch r {
+		case '\t', '\n', '\'', '\\':
 			return "", Location{}, nil
 		}
+
+		numBytes = size + 2
 	}
 
 	loc := reader.Location
@@ -233,9 +224,8 @@ func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
 	return string(bytes), loc, nil
 }
 
-// If the reader's leading bytes are identifer of the form [a-zA-Z_]\w* ,
-// pop those bytes off the reader and return the value.  Otherwise, return a
-// nil slice.
+// If the reader's leading bytes are an identifer, those bytes off the reader
+// and return the value.  Otherwise, return a nil slice.
 func MaybeTokenizeIdentifier(reader *LocationReader) (string, Location, error) {
 	peekRange := 32
 	prevLen := 0
@@ -255,10 +245,8 @@ func MaybeTokenizeIdentifier(reader *LocationReader) (string, Location, error) {
 
 		if checkIdx == 0 {
 			char := bytes[0]
-			if !(('a' <= char && char <= 'z') ||
-				('A' <= char && char <= 'Z') ||
-				char == '_') {
-
+			_, ok := NonIdentifierChars[char]
+			if ok {
 				return "", Location{}, nil
 			}
 
@@ -272,11 +260,8 @@ func MaybeTokenizeIdentifier(reader *LocationReader) (string, Location, error) {
 		foundEnd := false
 		for checkIdx < len(bytes) {
 			char := bytes[checkIdx]
-			if !(('a' <= char && char <= 'z') ||
-				('A' <= char && char <= 'Z') ||
-				('0' <= char && char <= '9') ||
-				char == '_') {
-
+			_, ok := NonIdentifierChars[char]
+			if ok {
 				foundEnd = true
 				break
 			}

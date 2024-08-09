@@ -54,7 +54,7 @@ template File {
     }
 
     if term.SymbolId != parser.LRIdentifierToken {
-      return "SymbolKind::AsciiCharToken(" + term.Name + ")"
+      return "SymbolKind::CharToken(" + term.Name + ")"
     }
 
     return "SymbolKind::" + term.CodeGenSymbolConst + "Token"
@@ -75,7 +75,7 @@ pub enum SymbolKind {
   // Token symbols.
   //
   EofToken,
-  AsciiCharToken(char),
+  CharToken(char),
 
 [[-for _, term := range Grammar.Terminals-]]
   [[-if term.SymbolId == parser.LRIdentifierToken]]
@@ -109,7 +109,7 @@ impl SymbolKind {
 [[for _, term := range Grammar.NonTerminals]]
       $(rustSymbolKind(term.Name)) => "$(term.Name)",
 [[-end]]
-      SymbolKind::AsciiCharToken(c) => panic!("Unexpected token '{}'", c),
+      SymbolKind::CharToken(c) => panic!("Unexpected token '{}'", c),
     }.to_string()
   }
 }

@@ -3,8 +3,9 @@ package go_template
 import (
     "fmt"
     "io"
+    "unicode/utf8"
 
-    "github.com/pattyshack/gt/tools/lr/codegenutil"
+    "github.com/pattyshack/gt/codegenutil"
     lr "github.com/pattyshack/gt/tools/lr/internal"
     parser "github.com/pattyshack/gt/tools/lr/internal/parser"
    "github.com/pattyshack/gt/tools/lr/internal/code_gen/debug_template"
@@ -80,11 +81,40 @@ package $Package
 type $SymbolIdType int
 
 const (
-[[-$ nextId := 256 -]]
+[[-$
+charIds := map[int]struct{}{}
+charTermToIds := map[string]int{}
+for _, term := range Grammar.Terminals {
+  if term.SymbolId == parser.LRCharacterToken {
+    rune, _ := utf8.DecodeRuneInString(term.Name[1:len(term.Name)-1])
+    charIds[int(rune)] = struct{}{}
+    charTermToIds[term.Name] = int(rune)
+  }
+}
+
+_nextId := 256
+nextId := func() int {
+  for {
+    id := _nextId
+    _, ok := charIds[id]
+
+    _nextId += 1
+
+    if !ok {
+      return id
+    }
+  }
+}
+
+-]]
+[[-for _, term := range Grammar.Terminals-]]
+    [[-if term.SymbolId != parser.LRIdentifierToken]]
+    // char token $(term.Name) = $(SymbolIdType)($(charTermToIds[term.Name]))
+    [[-end-]]
+[[-end]]
 [[-for _, term := range Grammar.Terminals-]]
     [[-if term.SymbolId == parser.LRIdentifierToken]]
-    $(term.CodeGenSymbolConst) = $(SymbolIdType)($nextId)
-        [[-$ nextId += 1 -]]
+    $(term.CodeGenSymbolConst) = $(SymbolIdType)($(nextId()))
     [[-end-]]
 [[-end]]
 )

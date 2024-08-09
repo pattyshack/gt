@@ -11,6 +11,10 @@ import (
 type LRSymbolId int
 
 const (
+	// char token '<' = LRSymbolId(60)
+	// char token '>' = LRSymbolId(62)
+	// char token '|' = LRSymbolId(124)
+	// char token ';' = LRSymbolId(59)
 	LRTokenToken          = LRSymbolId(256)
 	LRTypeToken           = LRSymbolId(257)
 	LRStartToken          = LRSymbolId(258)
