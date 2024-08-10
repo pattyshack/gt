@@ -45,6 +45,9 @@ func NewBufferedReaderWithStatsCollector[T any](
 	initialBufferSize int,
 	statsCollector StatsCollector[T],
 ) *BufferedReader[T] {
+	if initialBufferSize < 0 {
+		initialBufferSize = 0
+	}
 	return newBufferedReader[T](
 		base,
 		make([]T, initialBufferSize),
@@ -220,14 +223,14 @@ type BufferedByteLocationReader struct {
 func NewBufferedByteLocationReader(
 	fileName string,
 	reader io.Reader,
-	initBufferSize int,
+	initialBufferSize int,
 ) BufferedByteLocationReader {
 	collector := NewLocationStatsCollector(fileName)
 
 	return BufferedByteLocationReader{
 		BufferedReader: NewBufferedReaderWithStatsCollector[byte](
 			reader,
-			initBufferSize,
+			initialBufferSize,
 			collector),
 		LocationStatsCollector: collector,
 	}
