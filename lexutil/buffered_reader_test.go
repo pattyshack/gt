@@ -436,19 +436,50 @@ func (s *BufferedReaderSuite) TestReadZeroNum(t *testing.T) {
 	expect.Equal(t, 3, s.buffered.numBuffered)
 }
 
+func (s *BufferedReaderSuite) TestFromSlice(t *testing.T) {
+	s.content = "0123456789"
+	s.buffered = NewBufferedReaderFromSlice([]byte(s.content))
+
+	expect.Equal(t, s.content, string(s.buffered.buffer))
+	expect.Equal(t, 0, s.buffered.startIdx)
+	expect.Equal(t, 10, s.buffered.numBuffered)
+
+	bytes, err := s.buffered.Peek(10)
+	expect.Nil(t, err)
+	expect.Equal(t, s.content, string(bytes))
+	expect.Equal(t, s.content, string(s.buffered.buffer))
+	expect.Equal(t, 0, s.buffered.startIdx)
+	expect.Equal(t, 10, s.buffered.numBuffered)
+
+	numDiscarded, err := s.buffered.Discard(9)
+	expect.Nil(t, err)
+	expect.Equal(t, 9, numDiscarded)
+	expect.Equal(t, s.content, string(s.buffered.buffer))
+	expect.Equal(t, 9, s.buffered.startIdx)
+	expect.Equal(t, 1, s.buffered.numBuffered)
+
+	result := make([]byte, 2)
+	numRead, err := s.buffered.Read(result)
+	expect.Equal(t, io.EOF, err)
+	expect.Equal(t, 1, numRead)
+	expect.Equal(t, '9', result[0])
+	expect.Equal(t, "9123456789", string(s.buffered.buffer))
+	expect.Equal(t, 0, s.buffered.startIdx)
+	expect.Equal(t, 0, s.buffered.numBuffered)
+}
+
 func TestBufferedReader(t *testing.T) {
 	suite.RunTests(t, &BufferedReaderSuite{})
 }
 
 func TestLocationStatsCollector(t *testing.T) {
 	file := "file"
-	reader := NewBufferedByteLocationReader(
+	reader := NewBufferedByteLocationReaderFromSlice(
 		file,
-		bytes.NewBufferString(`0123456789
+		[]byte(`0123456789
 abcdef
 ABCDEFGHIJKLM
-xyz`),
-		100)
+xyz`))
 
 	expect.Equal(t, Location{file, 1, 0}, reader.Location)
 

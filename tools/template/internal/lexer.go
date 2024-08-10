@@ -1,7 +1,6 @@
 package template
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,10 +37,9 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 
 	content = stripHeaderComments(content)
 
-	reader := lexutil.NewBufferedByteLocationReader(
+	reader := lexutil.NewBufferedByteLocationReaderFromSlice(
 		filename,
-		bytes.NewBuffer(content),
-		1024*1024)
+    content)
 	internPool := stringutil.NewInternPool()
 
 	return &LexerImpl{
@@ -221,8 +219,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 	body = body[:len(body)-1]
 
-	buffer := bytes.NewBuffer(body)
-	declReader := lexutil.NewBufferedByteLocationReader("", buffer, 1024)
+	declReader := lexutil.NewBufferedByteLocationReaderFromSlice("", body)
 	declReader.Location = lexutil.Location(loc)
 
 	args := []Argument{}
@@ -253,10 +250,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		line = line[:len(line)-1]
-		lineReader := lexutil.NewBufferedByteLocationReader(
-			"",
-			bytes.NewBuffer(line),
-			1024)
+		lineReader := lexutil.NewBufferedByteLocationReaderFromSlice("", line)
 		lineReader.Location = lexutil.Location(loc)
 
 		argName, _, err := parseutil.MaybeTokenizeIdentifier(

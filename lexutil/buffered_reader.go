@@ -10,6 +10,12 @@ type Reader[T any] interface {
 	Read(T []T) (int, error)
 }
 
+type eofReader[T any] struct{}
+
+func (eofReader[T]) Read(output []T) (int, error) {
+	return 0, io.EOF
+}
+
 type StatsCollector[T any] interface {
 	// Collect stats from items about to be discard/read from the BufferedReader.
 	CollectStats([]T, error)
@@ -39,11 +45,41 @@ func NewBufferedReaderWithStatsCollector[T any](
 	initialBufferSize int,
 	statsCollector StatsCollector[T],
 ) *BufferedReader[T] {
+	return newBufferedReader[T](
+		base,
+		make([]T, initialBufferSize),
+		0,
+		statsCollector)
+}
+
+func NewBufferedReaderFromSlice[T any](
+	content []T,
+) *BufferedReader[T] {
+	return NewBufferedReaderWithStatsCollectorFromSlice[T](content, nil)
+}
+
+func NewBufferedReaderWithStatsCollectorFromSlice[T any](
+	content []T,
+	statsCollector StatsCollector[T],
+) *BufferedReader[T] {
+	return newBufferedReader[T](
+		eofReader[T]{},
+		content,
+		len(content),
+		statsCollector)
+}
+
+func newBufferedReader[T any](
+	base Reader[T],
+	content []T,
+	numBuffered int,
+	statsCollector StatsCollector[T],
+) *BufferedReader[T] {
 	return &BufferedReader[T]{
 		base:           base,
-		buffer:         make([]T, initialBufferSize),
+		buffer:         content,
 		startIdx:       0,
-		numBuffered:    0,
+		numBuffered:    numBuffered,
 		statsCollector: statsCollector,
 	}
 }
@@ -192,6 +228,20 @@ func NewBufferedByteLocationReader(
 		BufferedReader: NewBufferedReaderWithStatsCollector[byte](
 			reader,
 			initBufferSize,
+			collector),
+		LocationStatsCollector: collector,
+	}
+}
+
+func NewBufferedByteLocationReaderFromSlice(
+	fileName string,
+	content []byte,
+) BufferedByteLocationReader {
+	collector := NewLocationStatsCollector(fileName)
+
+	return BufferedByteLocationReader{
+		BufferedReader: NewBufferedReaderWithStatsCollectorFromSlice[byte](
+			content,
 			collector),
 		LocationStatsCollector: collector,
 	}

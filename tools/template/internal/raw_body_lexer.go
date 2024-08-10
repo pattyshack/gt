@@ -197,10 +197,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		content = content[:len(content)-1]
 	}
 
-	directiveReader := lexutil.NewBufferedByteLocationReader(
-		"",
-		bytes.NewBuffer(content),
-		1024)
+	directiveReader := lexutil.NewBufferedByteLocationReaderFromSlice("", content)
 	directiveReader.Location = lexutil.Location(loc)
 
 	err = parseutil.StripLeadingWhitespaces(directiveReader)
