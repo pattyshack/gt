@@ -10,6 +10,11 @@ type Reader[T any] interface {
 	Read(T []T) (int, error)
 }
 
+type StatsCollector[T any] interface {
+	// Collect stats from items about to be discard/read from the BufferedReader.
+	CollectStats([]T, error)
+}
+
 type BufferedReader[T any] struct {
 	base Reader[T]
 
@@ -18,17 +23,28 @@ type BufferedReader[T any] struct {
 	// buffer[startIdx:startIdx+numBuffered] holds the unconsumed buffered data
 	startIdx    int
 	numBuffered int
+
+	statsCollector StatsCollector[T]
 }
 
 func NewBufferedReader[T any](
 	base Reader[T],
 	initialBufferSize int,
 ) *BufferedReader[T] {
+	return NewBufferedReaderWithStatsCollector[T](base, initialBufferSize, nil)
+}
+
+func NewBufferedReaderWithStatsCollector[T any](
+	base Reader[T],
+	initialBufferSize int,
+	statsCollector StatsCollector[T],
+) *BufferedReader[T] {
 	return &BufferedReader[T]{
-		base:        base,
-		buffer:      make([]T, initialBufferSize),
-		startIdx:    0,
-		numBuffered: 0,
+		base:           base,
+		buffer:         make([]T, initialBufferSize),
+		startIdx:       0,
+		numBuffered:    0,
+		statsCollector: statsCollector,
 	}
 }
 
@@ -98,7 +114,12 @@ func (reader *BufferedReader[T]) discard(num int) int {
 }
 
 func (reader *BufferedReader[T]) Discard(num int) (int, error) {
-	_, err := reader.fill(num)
+	peeked, err := reader.Peek(num)
+
+	if reader.statsCollector != nil {
+		reader.statsCollector.CollectStats(peeked, err)
+	}
+
 	numDiscarded := reader.discard(num)
 	return numDiscarded, err
 }
@@ -107,6 +128,63 @@ func (reader *BufferedReader[T]) Read(output []T) (int, error) {
 	peeked, err := reader.Peek(len(output))
 	copy(output, peeked)
 
+	if reader.statsCollector != nil {
+		reader.statsCollector.CollectStats(peeked, err)
+	}
+
 	numDiscarded := reader.discard(len(peeked))
 	return numDiscarded, err
+}
+
+type Location struct {
+	Line int // 1 based
+
+	// Note: We'll use byte position within the line instead of unicode symbol
+	// position since some unicode symbols are composed of multiple unicode
+	// runes.  It's too much work to figure out all the cases.
+	Position int // 0 based
+}
+
+type LocationStatsCollector struct {
+	Location
+}
+
+func NewLocationStatsCollector() *LocationStatsCollector {
+	return &LocationStatsCollector{
+		Location: Location{
+			Line:     1,
+			Position: 0,
+		},
+	}
+}
+
+func (collector *LocationStatsCollector) CollectStats(bytes []byte, err error) {
+	for _, b := range bytes {
+		if b == '\n' {
+			collector.Line += 1
+			collector.Position = 0
+		} else {
+			collector.Position += 1
+		}
+	}
+}
+
+type BufferedByteLocationReader struct {
+	*BufferedReader[byte]
+	*LocationStatsCollector
+}
+
+func NewBufferedByteLocationReader(
+	reader io.Reader,
+	initBufferSize int,
+) BufferedByteLocationReader {
+	collector := NewLocationStatsCollector()
+
+	return BufferedByteLocationReader{
+		BufferedReader: NewBufferedReaderWithStatsCollector[byte](
+			reader,
+			initBufferSize,
+			collector),
+		LocationStatsCollector: collector,
+	}
 }

@@ -439,3 +439,63 @@ func (s *BufferedReaderSuite) TestReadZeroNum(t *testing.T) {
 func TestBufferedReader(t *testing.T) {
 	suite.RunTests(t, &BufferedReaderSuite{})
 }
+
+func TestLocationStatsCollector(t *testing.T) {
+	reader := NewBufferedByteLocationReader(
+		bytes.NewBufferString(`0123456789
+abcdef
+ABCDEFGHIJKLM
+xyz`),
+		100)
+
+	expect.Equal(t, Location{1, 0}, reader.Location)
+
+	num, err := reader.Discard(3)
+	expect.Nil(t, err)
+	expect.Equal(t, 3, num)
+	expect.Equal(t, Location{1, 3}, reader.Location)
+
+	bytes := make([]byte, 10)
+	num, err = reader.Read(bytes)
+	expect.Nil(t, err)
+	expect.Equal(t, 10, num)
+	expect.Equal(t, "3456789\nab", string(bytes))
+	expect.Equal(t, Location{2, 2}, reader.Location)
+
+	peeked, err := reader.Peek(3)
+	expect.Nil(t, err)
+	expect.Equal(t, "cde", string(peeked))
+	expect.Equal(t, Location{2, 2}, reader.Location)
+
+	num, err = reader.Read(bytes)
+	expect.Nil(t, err)
+	expect.Equal(t, 10, num)
+	expect.Equal(t, "cdef\nABCDE", string(bytes))
+	expect.Equal(t, Location{3, 5}, reader.Location)
+
+	num, err = reader.Discard(6)
+	expect.Nil(t, err)
+	expect.Equal(t, 6, num)
+	expect.Equal(t, Location{3, 11}, reader.Location)
+
+	peeked, err = reader.Peek(4)
+	expect.Nil(t, err)
+	expect.Equal(t, "LM\nx", string(peeked))
+	expect.Equal(t, Location{3, 11}, reader.Location)
+
+	num, err = reader.Discard(3)
+	expect.Nil(t, err)
+	expect.Equal(t, 3, num)
+	expect.Equal(t, Location{4, 0}, reader.Location)
+
+	num, err = reader.Read(bytes)
+	expect.Equal(t, io.EOF, err)
+	expect.Equal(t, 3, num)
+	expect.Equal(t, "xyz", string(bytes[:3]))
+	expect.Equal(t, Location{4, 3}, reader.Location)
+
+	num, err = reader.Discard(20)
+	expect.Equal(t, io.EOF, err)
+	expect.Equal(t, 0, num)
+	expect.Equal(t, Location{4, 3}, reader.Location)
+}
