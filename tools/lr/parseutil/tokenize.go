@@ -4,6 +4,7 @@ import (
 	"io"
 	"unicode/utf8"
 
+	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
 )
 
@@ -21,7 +22,9 @@ func IsWhitespace(char byte) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
 }
 
-func stripLeadingWhitespaces(reader *LocationReader) (bool, error) {
+func stripLeadingWhitespaces(
+	reader lexutil.BufferedByteLocationReader,
+) (bool, error) {
 	consumedBytes := false
 
 	for {
@@ -32,7 +35,7 @@ func stripLeadingWhitespaces(reader *LocationReader) (bool, error) {
 
 		char := bytes[0]
 		if IsWhitespace(char) {
-			_, err = reader.ReadByte()
+			_, err = reader.Discard(1)
 			if err != nil {
 				panic(err) // should never happen
 			}
@@ -47,15 +50,20 @@ func stripLeadingWhitespaces(reader *LocationReader) (bool, error) {
 }
 
 // Strip all leading whitespaces
-func StripLeadingWhitespaces(reader *LocationReader) error {
+func StripLeadingWhitespaces(reader lexutil.BufferedByteLocationReader) error {
 	_, err := stripLeadingWhitespaces(reader)
 	return err
 }
 
 // Strip all leading whitespaces as well as golang style comments
 // (i.e., /* */  and //)
-func StripLeadingWhitespacesAndComments(reader *LocationReader) error {
+func StripLeadingWhitespacesAndComments(
+	reader lexutil.BufferedByteLocationReader,
+) error {
 	modified := true
+
+	singleByte := [1]byte{}
+
 	for modified {
 		modified = false
 
@@ -69,12 +77,12 @@ func StripLeadingWhitespacesAndComments(reader *LocationReader) error {
 
 		if string(bytes) == "//" {
 			for {
-				char, err := reader.ReadByte()
-				if err != nil {
+				numRead, err := reader.Read(singleByte[:])
+				if err != nil || numRead == 0 {
 					return err
 				}
 
-				if char == '\n' {
+				if singleByte[0] == '\n' {
 					break
 				}
 			}
@@ -104,7 +112,7 @@ func StripLeadingWhitespacesAndComments(reader *LocationReader) error {
 					break
 				}
 
-				_, err = reader.ReadByte()
+				_, err = reader.Discard(1)
 				if err != nil {
 					panic(err)
 				}
@@ -139,11 +147,13 @@ func (s Symbols) Less(i int, j int) bool {
 }
 
 func MaybeTokenizeSymbol(
-	reader *LocationReader,
-	sortedSymbols Symbols) (
+	reader lexutil.BufferedByteLocationReader,
+	sortedSymbols Symbols,
+) (
 	*Symbol,
-	Location,
-	error) {
+	lexutil.Location,
+	error,
+) {
 
 	var bytes []byte
 	var err error
@@ -152,7 +162,7 @@ func MaybeTokenizeSymbol(
 			bytes, err = reader.Peek(len(symbol.Value))
 			if err != nil {
 				if err != io.EOF || len(bytes) == 0 {
-					return nil, Location{}, err
+					return nil, lexutil.Location{}, err
 				}
 			}
 		}
@@ -174,42 +184,44 @@ func MaybeTokenizeSymbol(
 		}
 	}
 
-	return nil, Location{}, nil
+	return nil, lexutil.Location{}, nil
 }
 
 // If the reader's leading bytes are ascii character of the form 'x' (or
 // '\t' for escaped characters), pop those bytes off the reader and return
 // the value.  Otherwise, return a nil slice.
-func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
+func MaybeTokenizeCharacter(
+	reader lexutil.BufferedByteLocationReader,
+) (string, lexutil.Location, error) {
 	bytes, err := reader.Peek(6)
 	if len(bytes) < 3 {
-		return "", Location{}, nil
+		return "", lexutil.Location{}, nil
 	}
 
 	if bytes[0] != '\'' {
-		return "", Location{}, nil
+		return "", lexutil.Location{}, nil
 	}
 
 	numBytes := 4
 	if bytes[1] == '\\' {
 		if len(bytes) < 4 || bytes[3] != '\'' {
-			return "", Location{}, nil
+			return "", lexutil.Location{}, nil
 		}
 
 		switch bytes[2] {
 		case 't', 'n', '\'', '\\':
 		default:
-			return "", Location{}, nil
+			return "", lexutil.Location{}, nil
 		}
 	} else {
 		r, size := utf8.DecodeRune(bytes[1:])
 		if len(bytes) < size+2 || bytes[size+1] != '\'' {
-			return "", Location{}, nil
+			return "", lexutil.Location{}, nil
 		}
 
 		switch r {
 		case '\t', '\n', '\'', '\\':
-			return "", Location{}, nil
+			return "", lexutil.Location{}, nil
 		}
 
 		numBytes = size + 2
@@ -229,9 +241,9 @@ func MaybeTokenizeCharacter(reader *LocationReader) (string, Location, error) {
 // If the reader's leading bytes are an identifer, those bytes off the reader
 // and return the value.  Otherwise, return a nil slice.
 func MaybeTokenizeIdentifier(
-	reader *LocationReader,
+	reader lexutil.BufferedByteLocationReader,
 	internPool *stringutil.InternPool,
-) (string, Location, error) {
+) (string, lexutil.Location, error) {
 	peekRange := 32
 	prevLen := 0
 	checkIdx := 0
@@ -241,23 +253,23 @@ func MaybeTokenizeIdentifier(
 	for {
 		bytes, err = reader.Peek(peekRange)
 		if err != nil && err != io.EOF {
-			return "", Location{}, err
+			return "", lexutil.Location{}, err
 		}
 
 		if len(bytes) == 0 {
-			return "", Location{}, nil
+			return "", lexutil.Location{}, nil
 		}
 
 		if checkIdx == 0 {
 			char := bytes[0]
 			_, ok := NonIdentifierChars[char]
 			if ok {
-				return "", Location{}, nil
+				return "", lexutil.Location{}, nil
 			}
 
 			// first char in the identifier can't be a number
 			if '0' <= char && char <= '9' {
-				return "", Location{}, nil
+				return "", lexutil.Location{}, nil
 			}
 
 			checkIdx = 1

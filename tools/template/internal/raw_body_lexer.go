@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
@@ -60,7 +61,7 @@ type BodyToken interface {
 }
 
 type rawBodyLexer struct {
-	reader *parseutil.LocationReader
+	reader lexutil.BufferedByteLocationReader
 
 	internPool *stringutil.InternPool
 }
@@ -196,10 +197,11 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		content = content[:len(content)-1]
 	}
 
-	directiveReader := parseutil.NewLocationReader(
+	directiveReader := lexutil.NewBufferedByteLocationReader(
 		"",
-		bytes.NewBuffer(content))
-	directiveReader.Location = parseutil.Location(loc)
+		bytes.NewBuffer(content),
+		1024)
+	directiveReader.Location = lexutil.Location(loc)
 
 	err = parseutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
@@ -349,7 +351,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 		if !ok { // $<identifier>
 			loc := lexer.reader.Location
 
-			_, err := lexer.reader.ReadByte()
+			_, err := lexer.reader.Discard(1)
 			if err != nil {
 				panic(err) // Should never happen
 			}
@@ -395,12 +397,14 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 // This respect golang scoping, string, char and comments, i.e.,
 // {} [] () “ "" ” /**/ //
 func readDirective(
-	reader *parseutil.LocationReader,
+	reader lexutil.BufferedByteLocationReader,
 	startIdx int,
-	terminal string) (
+	terminal string,
+) (
 	[]byte,
 	Location,
-	error) {
+	error,
+) {
 
 	if terminal == "" {
 		return nil, Location{}, fmt.Errorf("Invalid terminal")

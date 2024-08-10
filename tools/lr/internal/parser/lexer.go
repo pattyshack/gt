@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
@@ -28,7 +29,7 @@ var (
 )
 
 type rawLexer struct {
-	reader *parseutil.LocationReader
+	reader lexutil.BufferedByteLocationReader
 
 	sorted parseutil.Symbols
 
@@ -43,7 +44,10 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 	sort.Sort(sorted)
 
 	return &rawLexer{
-		reader:     parseutil.NewLocationReader(filename, reader),
+		reader: lexutil.NewBufferedByteLocationReader(
+			filename,
+			reader,
+			1024*1024),
 		sorted:     sorted,
 		internPool: stringutil.NewInternPool(),
 	}
@@ -95,7 +99,10 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
 		return nil, nil
 	}
 
-	return &LRGenericSymbol{LRSymbolId(symbol.Id), LRLocation(loc)}, nil
+	return &LRGenericSymbol{
+		LRSymbolId: LRSymbolId(symbol.Id),
+		LRLocation: LRLocation(loc),
+	}, nil
 }
 
 func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
@@ -153,6 +160,7 @@ func (lexer *rawLexer) maybeTokenizeSectionContent() (LRToken, error) {
 
 	buffer := bytes.NewBuffer(nil)
 
+	singleByte := [1]byte{}
 	for {
 		peek, err = lexer.reader.Peek(3)
 		if err != nil {
@@ -168,12 +176,12 @@ func (lexer *rawLexer) maybeTokenizeSectionContent() (LRToken, error) {
 			break
 		}
 
-		char, err := lexer.reader.ReadByte()
-		if err != nil {
+		numRead, err := lexer.reader.Read(singleByte[:])
+		if err != nil || numRead == 0 {
 			panic(err)
 		}
 
-		buffer.WriteByte(char)
+		buffer.WriteByte(singleByte[0])
 	}
 
 	token.Value = string(buffer.Bytes())

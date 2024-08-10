@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
@@ -22,7 +23,7 @@ type currentLexer interface {
 }
 
 type LexerImpl struct {
-	reader *parseutil.LocationReader
+	reader lexutil.BufferedByteLocationReader
 
 	currentLexer
 
@@ -37,7 +38,10 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 
 	content = stripHeaderComments(content)
 
-	reader := parseutil.NewLocationReader(filename, bytes.NewBuffer(content))
+	reader := lexutil.NewBufferedByteLocationReader(
+		filename,
+		bytes.NewBuffer(content),
+		1024*1024)
 	internPool := stringutil.NewInternPool()
 
 	return &LexerImpl{
@@ -73,7 +77,7 @@ func (lexer *LexerImpl) Next() (Token, error) {
 }
 
 type headerLexer struct {
-	reader     *parseutil.LocationReader
+	reader     lexutil.BufferedByteLocationReader
 	internPool *stringutil.InternPool
 }
 
@@ -218,8 +222,8 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	body = body[:len(body)-1]
 
 	buffer := bytes.NewBuffer(body)
-	declReader := parseutil.NewLocationReader("", buffer)
-	declReader.Location = parseutil.Location(loc)
+	declReader := lexutil.NewBufferedByteLocationReader("", buffer, 1024)
+	declReader.Location = lexutil.Location(loc)
 
 	args := []Argument{}
 	for {
@@ -249,8 +253,11 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		line = line[:len(line)-1]
-		lineReader := parseutil.NewLocationReader("", bytes.NewBuffer(line))
-		lineReader.Location = parseutil.Location(loc)
+		lineReader := lexutil.NewBufferedByteLocationReader(
+			"",
+			bytes.NewBuffer(line),
+			1024)
+		lineReader.Location = lexutil.Location(loc)
 
 		argName, _, err := parseutil.MaybeTokenizeIdentifier(
 			lineReader,

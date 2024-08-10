@@ -1,4 +1,4 @@
-package lexer
+package lexutil
 
 import (
 	"fmt"
@@ -137,23 +137,30 @@ func (reader *BufferedReader[T]) Read(output []T) (int, error) {
 }
 
 type Location struct {
+	FileName string
+
 	Line int // 1 based
 
 	// Note: We'll use byte position within the line instead of unicode symbol
 	// position since some unicode symbols are composed of multiple unicode
 	// runes.  It's too much work to figure out all the cases.
-	Position int // 0 based
+	Column int // 0 based
+}
+
+func (loc Location) String() string {
+	return fmt.Sprintf("%s:%v:%v", loc.FileName, loc.Line, loc.Column)
 }
 
 type LocationStatsCollector struct {
 	Location
 }
 
-func NewLocationStatsCollector() *LocationStatsCollector {
+func NewLocationStatsCollector(fileName string) *LocationStatsCollector {
 	return &LocationStatsCollector{
 		Location: Location{
+			FileName: fileName,
 			Line:     1,
-			Position: 0,
+			Column:   0,
 		},
 	}
 }
@@ -162,9 +169,9 @@ func (collector *LocationStatsCollector) CollectStats(bytes []byte, err error) {
 	for _, b := range bytes {
 		if b == '\n' {
 			collector.Line += 1
-			collector.Position = 0
+			collector.Column = 0
 		} else {
-			collector.Position += 1
+			collector.Column += 1
 		}
 	}
 }
@@ -175,10 +182,11 @@ type BufferedByteLocationReader struct {
 }
 
 func NewBufferedByteLocationReader(
+	fileName string,
 	reader io.Reader,
 	initBufferSize int,
 ) BufferedByteLocationReader {
-	collector := NewLocationStatsCollector()
+	collector := NewLocationStatsCollector(fileName)
 
 	return BufferedByteLocationReader{
 		BufferedReader: NewBufferedReaderWithStatsCollector[byte](
