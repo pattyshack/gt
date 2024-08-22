@@ -27,8 +27,8 @@
 
 %type <Rule> rule
 
-%type <Clause> labeled_clause
-%type <Clauses> labeled_clauses
+%type <Clause> clause
+%type <Clauses> clauses
 
 %type <AdditionalSection> additional_section
 %type <AdditionalSections> additional_sections
@@ -63,8 +63,8 @@ def ->
     rule       : rule
 
 rword ->
-    token : TOKEN |
-    type  : TYPE
+    TOKEN |
+    TYPE
 
 nonempty_ident_list ->
     add   : nonempty_ident_list IDENTIFIER |
@@ -80,15 +80,15 @@ id_or_char_list ->
     list : nonempty_id_or_char_list |
     nil  :
 
-rule ->
-    unlabeled_clause : RULE_DEF id_or_char_list |
-    clauses          : RULE_DEF labeled_clauses
+rule -> RULE_DEF clauses
 
-labeled_clauses ->
-    add    : labeled_clauses '|' labeled_clause |
-    clause : labeled_clause
+clause ->
+  unlabeled: id_or_char_list |
+  labeled: LABEL id_or_char_list
 
-labeled_clause -> LABEL id_or_char_list
+clauses ->
+    add    : clauses '|' clause |
+    clause : clause
 
 %%lang_specs{
 # The additional lang_specs section is specified in yaml

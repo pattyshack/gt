@@ -2,7 +2,7 @@
 package yacc
 
 import (
-    "github.com/pattyshack/abc/src/lr/internal/parser"
+    "github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 %}
 
@@ -56,8 +56,8 @@ import (
 
 %type <Rule> rule
 
-%type <Clause> labeled_clause
-%type <Clauses> labeled_clauses
+%type <Clause> clause
+%type <Clauses> clauses
 
 %type <AdditionalSection> additional_section
 %type <AdditionalSections> additional_sections
@@ -178,28 +178,32 @@ id_or_char_list:
     ;
 
 rule:
-    RULE_DEF id_or_char_list {
-        $$, _ = Lrlex.(*ParseContext).UnlabeledClauseToRule($1, $2)
-    }
-    |
-    RULE_DEF labeled_clauses {
-        $$, _ = Lrlex.(*ParseContext).ClausesToRule($1, $2)
-    }
-    ;
-
-labeled_clauses:
-    labeled_clauses '|' labeled_clause {
-        $$, _ = Lrlex.(*ParseContext).AddToLabeledClauses($1, nil, $3)
-    }
-    |
-    labeled_clause {
-        $$, _ = Lrlex.(*ParseContext).ClauseToLabeledClauses($1)
+    RULE_DEF clauses {
+        var err error
+        $$, err = Lrlex.(*ParseContext).ToRule($1, $2)
+        if err != nil {
+            panic(err)
+        }
     }
     ;
 
-labeled_clause:
+clause:
+    id_or_char_list {
+        $$, _ = Lrlex.(*ParseContext).UnlabeledToClause($1)
+    }
+    |
     LABEL id_or_char_list {
-        $$, _ = Lrlex.(*ParseContext).ToLabeledClause($1, $2)
+        $$, _ = Lrlex.(*ParseContext).LabeledToClause($1, $2)
+    }
+    ;
+
+clauses:
+    clauses '|' clause {
+        $$, _ = Lrlex.(*ParseContext).AddToClauses($1, nil, $3)
+    }
+    |
+    clause {
+        $$, _ = Lrlex.(*ParseContext).ClauseToClauses($1)
     }
     ;
 

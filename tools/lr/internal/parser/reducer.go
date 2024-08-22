@@ -1,5 +1,9 @@
 package parser
 
+import (
+	"fmt"
+)
+
 var _ LRReducer = &Reducer{}
 
 type Reducer struct {
@@ -166,16 +170,34 @@ func (Reducer) UnlabeledClauseToRule(
 	return NewRule(ruleName, []*Clause{NewClause(nil, clauseBody)}), nil
 }
 
-func (Reducer) ClausesToRule(
+func (Reducer) ToRule(
 	ruleName *Token,
 	clauses []*Clause) (
 	*Rule,
 	error) {
 
+	if len(clauses) > 1 {
+		for idx, clause := range clauses {
+			if clause.Label != nil { // explicitly labelled
+				continue
+			}
+
+			if len(clause.Body) == 1 && clause.Body[0].Id() == LRIdentifierToken {
+				clause.Label = clause.Body[0]
+			} else {
+				return nil, fmt.Errorf(
+					"rule %s (%s) clause %d must be explicitly named",
+					ruleName.Value,
+					ruleName.Loc(),
+					idx)
+			}
+		}
+	}
+
 	return NewRule(ruleName, clauses), nil
 }
 
-func (Reducer) AddToLabeledClauses(
+func (Reducer) AddToClauses(
 	clauses []*Clause,
 	or *LRGenericSymbol,
 	clause *Clause) (
@@ -184,11 +206,18 @@ func (Reducer) AddToLabeledClauses(
 	return append(clauses, clause), nil
 }
 
-func (Reducer) ClauseToLabeledClauses(clause *Clause) ([]*Clause, error) {
+func (Reducer) ClauseToClauses(clause *Clause) ([]*Clause, error) {
 	return []*Clause{clause}, nil
 }
 
-func (Reducer) ToLabeledClause(
+func (Reducer) UnlabeledToClause(
+	clauseBody []*Token) (
+	*Clause,
+	error) {
+	return NewClause(nil, clauseBody), nil
+}
+
+func (Reducer) LabeledToClause(
 	label *Token,
 	clauseBody []*Token) (
 	*Clause,

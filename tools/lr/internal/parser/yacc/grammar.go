@@ -70,14 +70,14 @@ const LrEofCode = 1
 const LrErrCode = 2
 const LrInitialStackSize = 16
 
-//line grammar.y:206
+//line grammar.y:210
 
 func init() {
 	LrErrorVerbose = true
 }
 
 //line yacctab:1
-var LrExca = [...]int{
+var LrExca = [...]int8{
 	-1, 1,
 	1, -1,
 	-2, 0,
@@ -95,53 +95,53 @@ const LrPrivate = 57344
 
 const LrLast = 43
 
-var LrAct = [...]int{
-	22, 23, 15, 32, 35, 14, 16, 17, 27, 37,
-	13, 24, 20, 16, 17, 12, 16, 17, 29, 30,
-	34, 31, 28, 19, 7, 8, 5, 33, 9, 26,
-	24, 1, 3, 10, 36, 11, 38, 25, 21, 6,
+var LrAct = [...]int8{
+	24, 15, 21, 32, 35, 14, 16, 17, 27, 37,
+	13, 22, 23, 12, 16, 17, 16, 17, 29, 30,
+	34, 31, 28, 19, 26, 33, 7, 8, 5, 3,
+	9, 1, 11, 10, 22, 36, 38, 25, 20, 6,
 	2, 18, 4,
 }
 
-var LrPact = [...]int{
-	20, -1000, 20, 1, -5, 12, -1000, -1000, -1000, 2,
-	19, -6, -1000, 11, -1000, 7, -1000, -1000, 10, -1000,
-	7, -14, -1000, -1000, 5, -1000, 9, -1000, -12, -1000,
-	-1000, -1000, 21, 7, -4, 5, -1000, -1000, -1000,
+var LrPact = [...]int16{
+	22, -1000, 22, -1, -5, 12, -1000, -1000, -1000, 3,
+	14, -6, -1000, 11, -1000, 7, -1000, -1000, 10, -1000,
+	-14, -1000, 7, 5, -1000, -1000, 9, -1000, -12, -1000,
+	-1000, -1000, 3, 7, -4, 5, -1000, -1000, -1000,
 }
 
-var LrPgo = [...]int{
-	0, 42, 41, 0, 2, 32, 40, 39, 1, 38,
+var LrPgo = [...]int8{
+	0, 42, 41, 0, 1, 29, 40, 39, 2, 38,
 	37, 33, 31,
 }
 
-var LrR1 = [...]int{
+var LrR1 = [...]int8{
 	0, 12, 11, 11, 10, 6, 6, 6, 6, 5,
 	5, 5, 5, 1, 1, 2, 2, 3, 3, 3,
-	3, 4, 4, 7, 7, 9, 9, 8,
+	3, 4, 4, 7, 8, 8, 9, 9,
 }
 
-var LrR2 = [...]int{
+var LrR2 = [...]int8{
 	0, 2, 2, 0, 3, 2, 3, 1, 2, 5,
 	2, 2, 1, 1, 1, 2, 1, 2, 2, 1,
-	1, 1, 0, 2, 2, 3, 1, 2,
+	1, 1, 0, 2, 1, 2, 3, 1,
 }
 
-var LrChk = [...]int{
+var LrChk = [...]int16{
 	-1000, -12, -6, -5, -1, 6, -7, 4, 5, 8,
 	-11, -5, 14, 15, -3, -4, 11, 12, -2, 11,
-	-4, -9, -3, -8, 9, -10, 10, 14, 11, 11,
+	-9, -8, -4, 9, -3, -10, 10, 14, 11, 11,
 	12, 11, 17, -4, 11, 16, -8, 13, -3,
 }
 
-var LrDef = [...]int{
+var LrDef = [...]int8{
 	0, -2, 3, 7, 0, 0, 12, 13, 14, 22,
 	1, 5, 8, 0, -2, 0, 19, 20, 11, 16,
-	23, 24, 21, 26, 22, 2, 0, 6, 0, 17,
-	18, 15, 0, 27, 0, 0, 25, 4, -2,
+	23, 27, 24, 22, 21, 2, 0, 6, 0, 17,
+	18, 15, 22, 25, 0, 0, 26, 4, -2,
 }
 
-var LrTok1 = [...]int{
+var LrTok1 = [...]int8{
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -157,12 +157,12 @@ var LrTok1 = [...]int{
 	3, 3, 3, 3, 17,
 }
 
-var LrTok2 = [...]int{
+var LrTok2 = [...]int8{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13,
 }
 
-var LrTok3 = [...]int{
+var LrTok3 = [...]int8{
 	0,
 }
 
@@ -244,9 +244,9 @@ func LrErrorMessage(state, lookAhead int) string {
 	expected := make([]int, 0, 4)
 
 	// Look for shiftable tokens.
-	base := LrPact[state]
+	base := int(LrPact[state])
 	for tok := TOKSTART; tok-1 < len(LrToknames); tok++ {
-		if n := base + tok; n >= 0 && n < LrLast && LrChk[LrAct[n]] == tok {
+		if n := base + tok; n >= 0 && n < LrLast && int(LrChk[int(LrAct[n])]) == tok {
 			if len(expected) == cap(expected) {
 				return res
 			}
@@ -256,13 +256,13 @@ func LrErrorMessage(state, lookAhead int) string {
 
 	if LrDef[state] == -2 {
 		i := 0
-		for LrExca[i] != -1 || LrExca[i+1] != state {
+		for LrExca[i] != -1 || int(LrExca[i+1]) != state {
 			i += 2
 		}
 
 		// Look for tokens that we accept or reduce.
 		for i += 2; LrExca[i] >= 0; i += 2 {
-			tok := LrExca[i]
+			tok := int(LrExca[i])
 			if tok < TOKSTART || LrExca[i+1] == 0 {
 				continue
 			}
@@ -293,30 +293,30 @@ func Lrlex1(lex LrLexer, lval *LrSymType) (char, token int) {
 	token = 0
 	char = lex.Lex(lval)
 	if char <= 0 {
-		token = LrTok1[0]
+		token = int(LrTok1[0])
 		goto out
 	}
 	if char < len(LrTok1) {
-		token = LrTok1[char]
+		token = int(LrTok1[char])
 		goto out
 	}
 	if char >= LrPrivate {
 		if char < LrPrivate+len(LrTok2) {
-			token = LrTok2[char-LrPrivate]
+			token = int(LrTok2[char-LrPrivate])
 			goto out
 		}
 	}
 	for i := 0; i < len(LrTok3); i += 2 {
-		token = LrTok3[i+0]
+		token = int(LrTok3[i+0])
 		if token == char {
-			token = LrTok3[i+1]
+			token = int(LrTok3[i+1])
 			goto out
 		}
 	}
 
 out:
 	if token == 0 {
-		token = LrTok2[1] /* unknown char */
+		token = int(LrTok2[1]) /* unknown char */
 	}
 	if LrDebug >= 3 {
 		__yyfmt__.Printf("lex %s(%d)\n", LrTokname(token), uint(char))
@@ -371,7 +371,7 @@ Lrstack:
 	LrS[Lrp].yys = Lrstate
 
 Lrnewstate:
-	Lrn = LrPact[Lrstate]
+	Lrn = int(LrPact[Lrstate])
 	if Lrn <= LrFlag {
 		goto Lrdefault /* simple state */
 	}
@@ -382,8 +382,8 @@ Lrnewstate:
 	if Lrn < 0 || Lrn >= LrLast {
 		goto Lrdefault
 	}
-	Lrn = LrAct[Lrn]
-	if LrChk[Lrn] == Lrtoken { /* valid shift */
+	Lrn = int(LrAct[Lrn])
+	if int(LrChk[Lrn]) == Lrtoken { /* valid shift */
 		Lrrcvr.char = -1
 		Lrtoken = -1
 		LrVAL = Lrrcvr.lval
@@ -396,7 +396,7 @@ Lrnewstate:
 
 Lrdefault:
 	/* default state action */
-	Lrn = LrDef[Lrstate]
+	Lrn = int(LrDef[Lrstate])
 	if Lrn == -2 {
 		if Lrrcvr.char < 0 {
 			Lrrcvr.char, Lrtoken = Lrlex1(Lrlex, &Lrrcvr.lval)
@@ -405,18 +405,18 @@ Lrdefault:
 		/* look through exception table */
 		xi := 0
 		for {
-			if LrExca[xi+0] == -1 && LrExca[xi+1] == Lrstate {
+			if LrExca[xi+0] == -1 && int(LrExca[xi+1]) == Lrstate {
 				break
 			}
 			xi += 2
 		}
 		for xi += 2; ; xi += 2 {
-			Lrn = LrExca[xi+0]
+			Lrn = int(LrExca[xi+0])
 			if Lrn < 0 || Lrn == Lrtoken {
 				break
 			}
 		}
-		Lrn = LrExca[xi+1]
+		Lrn = int(LrExca[xi+1])
 		if Lrn < 0 {
 			goto ret0
 		}
@@ -438,10 +438,10 @@ Lrdefault:
 
 			/* find a state where "error" is a legal shift action */
 			for Lrp >= 0 {
-				Lrn = LrPact[LrS[Lrp].yys] + LrErrCode
+				Lrn = int(LrPact[LrS[Lrp].yys]) + LrErrCode
 				if Lrn >= 0 && Lrn < LrLast {
-					Lrstate = LrAct[Lrn] /* simulate a shift of "error" */
-					if LrChk[Lrstate] == LrErrCode {
+					Lrstate = int(LrAct[Lrn]) /* simulate a shift of "error" */
+					if int(LrChk[Lrstate]) == LrErrCode {
 						goto Lrstack
 					}
 				}
@@ -477,7 +477,7 @@ Lrdefault:
 	Lrpt := Lrp
 	_ = Lrpt // guard against "declared and not used"
 
-	Lrp -= LrR2[Lrn]
+	Lrp -= int(LrR2[Lrn])
 	// Lrp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
 	if Lrp+1 >= len(LrS) {
@@ -488,16 +488,16 @@ Lrdefault:
 	LrVAL = LrS[Lrp+1]
 
 	/* consult goto table to find next state */
-	Lrn = LrR1[Lrn]
-	Lrg := LrPgo[Lrn]
+	Lrn = int(LrR1[Lrn])
+	Lrg := int(LrPgo[Lrn])
 	Lrj := Lrg + LrS[Lrp].yys + 1
 
 	if Lrj >= LrLast {
-		Lrstate = LrAct[Lrg]
+		Lrstate = int(LrAct[Lrg])
 	} else {
-		Lrstate = LrAct[Lrj]
-		if LrChk[Lrstate] != -Lrn {
-			Lrstate = LrAct[Lrg]
+		Lrstate = int(LrAct[Lrj])
+		if int(LrChk[Lrstate]) != -Lrn {
+			Lrstate = int(LrAct[Lrg])
 		}
 	}
 	// dummy call; replaced with literal code
@@ -639,31 +639,35 @@ Lrdefault:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
 //line grammar.y:181
 		{
-			LrVAL.Rule, _ = Lrlex.(*ParseContext).UnlabeledClauseToRule(LrDollar[1].Token, LrDollar[2].Tokens)
+			var err error
+			LrVAL.Rule, err = Lrlex.(*ParseContext).ToRule(LrDollar[1].Token, LrDollar[2].Clauses)
+			if err != nil {
+				panic(err)
+			}
 		}
 	case 24:
-		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:185
-		{
-			LrVAL.Rule, _ = Lrlex.(*ParseContext).ClausesToRule(LrDollar[1].Token, LrDollar[2].Clauses)
-		}
-	case 25:
-		LrDollar = LrS[Lrpt-3 : Lrpt+1]
+		LrDollar = LrS[Lrpt-1 : Lrpt+1]
 //line grammar.y:191
 		{
-			LrVAL.Clauses, _ = Lrlex.(*ParseContext).AddToLabeledClauses(LrDollar[1].Clauses, nil, LrDollar[3].Clause)
+			LrVAL.Clause, _ = Lrlex.(*ParseContext).UnlabeledToClause(LrDollar[1].Tokens)
 		}
-	case 26:
-		LrDollar = LrS[Lrpt-1 : Lrpt+1]
+	case 25:
+		LrDollar = LrS[Lrpt-2 : Lrpt+1]
 //line grammar.y:195
 		{
-			LrVAL.Clauses, _ = Lrlex.(*ParseContext).ClauseToLabeledClauses(LrDollar[1].Clause)
+			LrVAL.Clause, _ = Lrlex.(*ParseContext).LabeledToClause(LrDollar[1].Token, LrDollar[2].Tokens)
 		}
-	case 27:
-		LrDollar = LrS[Lrpt-2 : Lrpt+1]
+	case 26:
+		LrDollar = LrS[Lrpt-3 : Lrpt+1]
 //line grammar.y:201
 		{
-			LrVAL.Clause, _ = Lrlex.(*ParseContext).ToLabeledClause(LrDollar[1].Token, LrDollar[2].Tokens)
+			LrVAL.Clauses, _ = Lrlex.(*ParseContext).AddToClauses(LrDollar[1].Clauses, nil, LrDollar[3].Clause)
+		}
+	case 27:
+		LrDollar = LrS[Lrpt-1 : Lrpt+1]
+//line grammar.y:205
+		{
+			LrVAL.Clauses, _ = Lrlex.(*ParseContext).ClauseToClauses(LrDollar[1].Clause)
 		}
 	}
 	goto Lrstack /* stack new state and value */
