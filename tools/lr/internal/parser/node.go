@@ -134,19 +134,32 @@ func (clause *Clause) String() string {
 	return result
 }
 
+type RuleDef struct {
+	Name      *Token
+	ValueType *Token
+}
+
+func (RuleDef) Id() LRSymbolId {
+	return LRRuleDefToken
+}
+
+func (def *RuleDef) Loc() LRLocation {
+	return def.Name.Loc()
+}
+
 type Rule struct {
-	Name    *Token
+	*RuleDef
 	Clauses []*Clause
 }
 
-func NewRule(name *Token, clauses []*Clause) *Rule {
+func NewRule(name *RuleDef, clauses []*Clause) *Rule {
 	rule := &Rule{
-		Name:    name,
+		RuleDef: name,
 		Clauses: clauses,
 	}
 
 	for _, clause := range clauses {
-		loc := name.LRLocation
+		loc := name.Loc()
 		if clause.Label != nil {
 			loc = clause.Label.LRLocation
 		} else if len(clause.Body) > 0 {

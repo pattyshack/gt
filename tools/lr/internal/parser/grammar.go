@@ -130,7 +130,7 @@ type LRReducer interface {
 	NilToIdOrCharList() ([]*Token, error)
 
 	// 83:8: rule -> ...
-	ToRule(RuleDef_ *Token, Clauses_ []*Clause) (*Rule, error)
+	ToRule(RuleDef_ *RuleDef, Clauses_ []*Clause) (*Rule, error)
 
 	// 86:2: clause -> unlabeled: ...
 	UnlabeledToClause(IdOrCharList_ []*Token) (*Clause, error)
@@ -511,6 +511,7 @@ type LRSymbol struct {
 	Definitions        []Definition
 	Grammar            *Grammar
 	Rule               *Rule
+	RuleDef            *RuleDef
 	Token              *Token
 	Tokens             []*Token
 }
@@ -533,7 +534,17 @@ func NewSymbol(token LRToken) (*LRSymbol, error) {
 				token.Loc())
 		}
 		symbol.Generic_ = val
-	case LRRuleDefToken, LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
+	case LRRuleDefToken:
+		val, ok := token.(*RuleDef)
+		if !ok {
+			return nil, fmt.Errorf(
+				"Invalid value type for token %s.  "+
+					"Expecting *RuleDef (%v)",
+				token.Id(),
+				token.Loc())
+		}
+		symbol.RuleDef = val
+	case LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
 		val, ok := token.(*Token)
 		if !ok {
 			return nil, fmt.Errorf(
@@ -596,7 +607,12 @@ func (s *LRSymbol) Loc() LRLocation {
 		if ok {
 			return loc.Loc()
 		}
-	case LRRuleDefToken, LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
+	case LRRuleDefToken:
+		loc, ok := interface{}(s.RuleDef).(locator)
+		if ok {
+			return loc.Loc()
+		}
+	case LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
 		loc, ok := interface{}(s.Token).(locator)
 		if ok {
 			return loc.Loc()
@@ -788,7 +804,7 @@ func (act *_LRAction) ReduceSymbol(
 		args := stack[len(stack)-2:]
 		stack = stack[:len(stack)-2]
 		symbol.SymbolId_ = LRRuleType
-		symbol.Rule, err = reducer.ToRule(args[0].Token, args[1].Clauses)
+		symbol.Rule, err = reducer.ToRule(args[0].RuleDef, args[1].Clauses)
 	case _LRReduceUnlabeledToClause:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]

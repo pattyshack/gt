@@ -209,10 +209,11 @@ func (lexer *Lexer) Next() (LRToken, error) {
 
 	next := tokens[1]
 	if next.Id() == Arrow {
-		curr.(*Token).LRSymbolId = LRRuleDefToken
-
 		lexer.buffered.Discard(2)
-		return curr, nil
+
+		return &RuleDef{
+			Name: curr.(*Token),
+		}, nil
 	} else if next.Id() == ':' {
 		curr.(*Token).LRSymbolId = LRLabelToken
 

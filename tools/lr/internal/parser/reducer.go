@@ -162,7 +162,7 @@ func (Reducer) NilToIdOrCharList() ([]*Token, error) {
 }
 
 func (Reducer) UnlabeledClauseToRule(
-	ruleName *Token,
+	ruleName *RuleDef,
 	clauseBody []*Token) (
 	*Rule,
 	error) {
@@ -171,7 +171,7 @@ func (Reducer) UnlabeledClauseToRule(
 }
 
 func (Reducer) ToRule(
-	ruleName *Token,
+	ruleDef *RuleDef,
 	clauses []*Clause) (
 	*Rule,
 	error) {
@@ -187,14 +187,14 @@ func (Reducer) ToRule(
 			} else {
 				return nil, fmt.Errorf(
 					"rule %s (%s) clause %d must be explicitly named",
-					ruleName.Value,
-					ruleName.Loc(),
+					ruleDef.Name.Value,
+					ruleDef.Loc(),
 					idx)
 			}
 		}
 	}
 
-	return NewRule(ruleName, clauses), nil
+	return NewRule(ruleDef, clauses), nil
 }
 
 func (Reducer) AddToClauses(

@@ -22,6 +22,7 @@ type LrSymType struct {
 	parser.Definition // interface
 	Definitions       []parser.Definition
 
+	*parser.RuleDef
 	*parser.Rule
 
 	Clause  *parser.Clause
@@ -70,7 +71,7 @@ const LrEofCode = 1
 const LrErrCode = 2
 const LrInitialStackSize = 16
 
-//line grammar.y:210
+//line grammar.y:211
 
 func init() {
 	LrErrorVerbose = true
@@ -505,167 +506,167 @@ Lrdefault:
 
 	case 1:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:74
+//line grammar.y:75
 		{
 			Lrlex.(*ParseContext).Grammar, _ = Lrlex.(*ParseContext).ToGrammar(LrDollar[1].Definitions, LrDollar[2].AdditionalSections)
 		}
 	case 2:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:80
+//line grammar.y:81
 		{
 			LrVAL.AdditionalSections, _ = Lrlex.(*ParseContext).AddToAdditionalSections(LrDollar[1].AdditionalSections, LrDollar[2].AdditionalSection)
 		}
 	case 3:
 		LrDollar = LrS[Lrpt-0 : Lrpt+1]
-//line grammar.y:84
+//line grammar.y:85
 		{
 			LrVAL.AdditionalSections, _ = Lrlex.(*ParseContext).NilToAdditionalSections()
 		}
 	case 4:
 		LrDollar = LrS[Lrpt-3 : Lrpt+1]
-//line grammar.y:90
+//line grammar.y:91
 		{
 			LrVAL.AdditionalSection, _ = Lrlex.(*ParseContext).ToAdditionalSection(LrDollar[1].Generic_, LrDollar[2].Token, LrDollar[3].Token)
 		}
 	case 5:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:96
+//line grammar.y:97
 		{
 			LrVAL.Definitions, _ = Lrlex.(*ParseContext).AddToDefs(LrDollar[1].Definitions, LrDollar[2].Definition)
 		}
 	case 6:
 		LrDollar = LrS[Lrpt-3 : Lrpt+1]
-//line grammar.y:100
+//line grammar.y:101
 		{
 			LrVAL.Definitions, _ = Lrlex.(*ParseContext).AddExplicitToDefs(LrDollar[1].Definitions, LrDollar[2].Definition, nil)
 		}
 	case 7:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:104
+//line grammar.y:105
 		{
 			LrVAL.Definitions, _ = Lrlex.(*ParseContext).DefToDefs(LrDollar[1].Definition)
 		}
 	case 8:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:108
+//line grammar.y:109
 		{
 			LrVAL.Definitions, _ = Lrlex.(*ParseContext).ExplicitDefToDefs(LrDollar[1].Definition, nil)
 		}
 	case 9:
 		LrDollar = LrS[Lrpt-5 : Lrpt+1]
-//line grammar.y:116
+//line grammar.y:117
 		{
 			LrVAL.Definition, _ = Lrlex.(*ParseContext).TermDeclToDef(LrDollar[1].Generic_, nil, LrDollar[3].Token, nil, LrDollar[5].Tokens)
 		}
 	case 10:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:120
+//line grammar.y:121
 		{
 			LrVAL.Definition, _ = Lrlex.(*ParseContext).UntypedTermDeclToDef(LrDollar[1].Generic_, LrDollar[2].Tokens)
 		}
 	case 11:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:125
+//line grammar.y:126
 		{
 			LrVAL.Definition, _ = Lrlex.(*ParseContext).StartDeclToDef(LrDollar[1].Generic_, LrDollar[2].Tokens)
 		}
 	case 12:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:128
+//line grammar.y:129
 		{
 			LrVAL.Definition, _ = Lrlex.(*ParseContext).RuleToDef(LrDollar[1].Rule)
 		}
 	case 13:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:134
+//line grammar.y:135
 		{
 			LrVAL.Generic_, _ = Lrlex.(*ParseContext).TokenToRword(LrDollar[1].Generic_)
 		}
 	case 14:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:138
+//line grammar.y:139
 		{
 			LrVAL.Generic_, _ = Lrlex.(*ParseContext).TypeToRword(LrDollar[1].Generic_)
 		}
 	case 15:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:144
+//line grammar.y:145
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).AddToNonemptyIdentList(LrDollar[1].Tokens, LrDollar[2].Token)
 		}
 	case 16:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:148
+//line grammar.y:149
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).IdentToNonemptyIdentList(LrDollar[1].Token)
 		}
 	case 17:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:154
+//line grammar.y:155
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).AddIdToNonemptyIdOrCharList(LrDollar[1].Tokens, LrDollar[2].Token)
 		}
 	case 18:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:158
+//line grammar.y:159
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).AddCharToNonemptyIdOrCharList(LrDollar[1].Tokens, LrDollar[2].Token)
 		}
 	case 19:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:162
+//line grammar.y:163
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).IdToNonemptyIdOrCharList(LrDollar[1].Token)
 		}
 	case 20:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:166
+//line grammar.y:167
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).CharToNonemptyIdOrCharList(LrDollar[1].Token)
 		}
 	case 21:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:172
+//line grammar.y:173
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).ListToIdOrCharList(LrDollar[1].Tokens)
 		}
 	case 22:
 		LrDollar = LrS[Lrpt-0 : Lrpt+1]
-//line grammar.y:175
+//line grammar.y:176
 		{
 			LrVAL.Tokens, _ = Lrlex.(*ParseContext).NilToIdOrCharList()
 		}
 	case 23:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:181
+//line grammar.y:182
 		{
 			var err error
-			LrVAL.Rule, err = Lrlex.(*ParseContext).ToRule(LrDollar[1].Token, LrDollar[2].Clauses)
+			LrVAL.Rule, err = Lrlex.(*ParseContext).ToRule(LrDollar[1].RuleDef, LrDollar[2].Clauses)
 			if err != nil {
 				panic(err)
 			}
 		}
 	case 24:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:191
+//line grammar.y:192
 		{
 			LrVAL.Clause, _ = Lrlex.(*ParseContext).UnlabeledToClause(LrDollar[1].Tokens)
 		}
 	case 25:
 		LrDollar = LrS[Lrpt-2 : Lrpt+1]
-//line grammar.y:195
+//line grammar.y:196
 		{
 			LrVAL.Clause, _ = Lrlex.(*ParseContext).LabeledToClause(LrDollar[1].Token, LrDollar[2].Tokens)
 		}
 	case 26:
 		LrDollar = LrS[Lrpt-3 : Lrpt+1]
-//line grammar.y:201
+//line grammar.y:202
 		{
 			LrVAL.Clauses, _ = Lrlex.(*ParseContext).AddToClauses(LrDollar[1].Clauses, nil, LrDollar[3].Clause)
 		}
 	case 27:
 		LrDollar = LrS[Lrpt-1 : Lrpt+1]
-//line grammar.y:205
+//line grammar.y:206
 		{
 			LrVAL.Clauses, _ = Lrlex.(*ParseContext).ClauseToClauses(LrDollar[1].Clause)
 		}

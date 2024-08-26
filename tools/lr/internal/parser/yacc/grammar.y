@@ -15,6 +15,7 @@ import (
     parser.Definition  // interface
     Definitions []parser.Definition
 
+    *parser.RuleDef
     *parser.Rule
 
     Clause *parser.Clause
@@ -37,7 +38,7 @@ import (
 
 // <identifier> followed by -> (ignoring whitespace and comment), tokenized as a
 // single token by the lexer.  Equivalent to C_IDENTIFIER in yacc
-%token <Token> RULE_DEF
+%token <RuleDef> RULE_DEF
 
 // <identifier> followed by : (ignoring whitespace and comment), tokenized as
 // a single token by the lexer.
