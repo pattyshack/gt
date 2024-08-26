@@ -180,15 +180,38 @@ func bindTerms(
 
 	errStrs := []string{}
 
+	// Unlike yacc, each rule implicitly define %type
 	for name, rule := range rules {
 		term, ok := terms[name]
 		if !ok {
+			valueType := Generic
+			if rule.ValueType != nil {
+				valueType = rule.ValueType.Value
+			}
+
+			terms[name] = &Term{
+				Name:       rule.Name.Value,
+				LRLocation: rule.Loc(),
+				SymbolId:   rule.Name.Id(),
+				IsTerminal: false,
+				ValueType:  valueType,
+				Reachable:  false,
+			}
+		} else if rule.ValueType != nil &&
+			term.ValueType != rule.ValueType.Value {
+
 			errStrs = append(
 				errStrs,
-				fmt.Sprintf("Undefined type: %s %v", name, rule.Loc()))
-			continue
+				fmt.Sprintf(
+					"Rule has conflicting value type declarations: %s %v vs %v",
+					name,
+					term.LRLocation,
+					rule.Loc().ShortString()))
 		}
+	}
 
+	for name, rule := range rules {
+    term := terms[name]
 		term.RuleLocation = rule.Loc()
 
 		clauses := []*Clause{}

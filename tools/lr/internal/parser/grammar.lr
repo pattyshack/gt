@@ -19,42 +19,25 @@
 
 %token <Token> SECTION_CONTENT
 
-%type rword
-%type <Tokens> nonempty_ident_list nonempty_id_or_char_list id_or_char_list
-
-%type <Definition> def
-%type <Definitions> defs
-
-%type <Rule> rule
-
-%type <Clause> clause
-%type <Clauses> clauses
-
-%type <AdditionalSection> additional_section
-%type <AdditionalSections> additional_sections
-
-%type <Grammar>  grammar
-
 %start grammar
 
 // NOTE: there's no tail and section separator, line terminator ';' is optional
 
-grammar -> defs additional_sections
+grammar<Grammar> -> defs additional_sections
 
-additional_sections ->
+additional_sections<AdditionalSections> ->
     add : additional_sections additional_section |
     nil :
 
-additional_section -> SECTION_MARKER IDENTIFIER SECTION_CONTENT
+additional_section<AdditionalSection> -> SECTION_MARKER IDENTIFIER SECTION_CONTENT
 
-defs ->
+defs<Definitions> ->
     add          : defs def |
     add_explicit : defs def ';' |
     def          : def |
     explicit_def : def ';'
 
-// TODO: handle language specific boiler plate, union/struct
-def ->
+def<Definition> ->
     // type / token declaration
     term_decl  : rword '<' IDENTIFIER '>' nonempty_id_or_char_list |
     untyped_term_decl  : rword nonempty_id_or_char_list |
@@ -66,27 +49,27 @@ rword ->
     TOKEN |
     TYPE
 
-nonempty_ident_list ->
+nonempty_ident_list<Tokens> ->
     add   : nonempty_ident_list IDENTIFIER |
     ident : IDENTIFIER
 
-nonempty_id_or_char_list ->
+nonempty_id_or_char_list<Tokens> ->
     add_id   : nonempty_id_or_char_list IDENTIFIER |
     add_char : nonempty_id_or_char_list CHARACTER |
     id       : IDENTIFIER |
     char     : CHARACTER
 
-id_or_char_list ->
+id_or_char_list<Tokens> ->
     list : nonempty_id_or_char_list |
     nil  :
 
 rule<Rule> -> RULE_DEF clauses
 
-clause ->
+clause<Clause> ->
   unlabeled: id_or_char_list |
   labeled: LABEL id_or_char_list
 
-clauses ->
+clauses<Clauses> ->
     add    : clauses '|' clause |
     clause : clause
 
