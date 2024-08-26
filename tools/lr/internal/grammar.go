@@ -211,7 +211,7 @@ func bindTerms(
 	}
 
 	for name, rule := range rules {
-    term := terms[name]
+		term := terms[name]
 		term.RuleLocation = rule.Loc()
 
 		clauses := []*Clause{}

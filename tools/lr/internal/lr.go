@@ -434,6 +434,8 @@ func (set *ItemSet) compress() {
 		if count > max {
 			max = count
 			maxKey = key
+		} else if count == max && maxKey > key {
+			maxKey = key
 		}
 	}
 
