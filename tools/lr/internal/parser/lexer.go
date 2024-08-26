@@ -196,7 +196,7 @@ type Lexer struct {
 // This merges LRIdentifierSymbol Arrow token pairs into a single RULE_DEF
 // token and LRIdentifierSymbol Colon token pairs into a single LABEL token.
 func (lexer *Lexer) Next() (LRToken, error) {
-	tokens, err := lexer.buffered.Peek(4)
+	tokens, err := lexer.buffered.Peek(5)
 	if len(tokens) < 1 {
 		return nil, err
 	}
@@ -219,6 +219,19 @@ func (lexer *Lexer) Next() (LRToken, error) {
 
 		lexer.buffered.Discard(2)
 		return curr, nil
+	} else if next.Id() == '<' &&
+		len(tokens) == 5 &&
+		tokens[2].Id() == LRIdentifierToken &&
+		tokens[3].Id() == '>' &&
+		tokens[4].Id() == Arrow {
+
+		def := &RuleDef{
+			Name:      curr.(*Token),
+			ValueType: tokens[2].(*Token),
+		}
+
+		lexer.buffered.Discard(5)
+		return def, nil
 	}
 
 	lexer.buffered.Discard(1)

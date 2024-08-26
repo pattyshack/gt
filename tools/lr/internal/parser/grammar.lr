@@ -80,7 +80,7 @@ id_or_char_list ->
     list : nonempty_id_or_char_list |
     nil  :
 
-rule -> RULE_DEF clauses
+rule<Rule> -> RULE_DEF clauses
 
 clause ->
   unlabeled: id_or_char_list |
