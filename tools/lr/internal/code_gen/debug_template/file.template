@@ -110,3 +110,6 @@ Number of shift actions: $gotoCount
 Number of reduce actions: $reduceCount
 Number of shift/reduce conflicts: $shiftReduceCount
 Number of reduce/reduce conflicts: $reduceReduceCount
+Number of unoptimized states: $(States.NumPreMergedStates)
+Number of unoptimized shift actions: $(States.NumPreMergedShift)
+Number of unoptimized reduce actions: $(States.NumPreMergedReduce)

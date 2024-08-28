@@ -550,6 +550,66 @@ Number of reduce/reduce conflicts: `))
 	// file.template:112:53
 	{
 		_n, _err := _output.Write([]byte(`
+Number of unoptimized states: `))
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:113:30
+	{
+		_n, _err := _template.writeValue(
+			_output,
+			(States.NumPreMergedStates),
+			"file.template:113:30")
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:113:58
+	{
+		_n, _err := _output.Write([]byte(`
+Number of unoptimized shift actions: `))
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:114:37
+	{
+		_n, _err := _template.writeValue(
+			_output,
+			(States.NumPreMergedShift),
+			"file.template:114:37")
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:114:64
+	{
+		_n, _err := _output.Write([]byte(`
+Number of unoptimized reduce actions: `))
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:115:38
+	{
+		_n, _err := _template.writeValue(
+			_output,
+			(States.NumPreMergedReduce),
+			"file.template:115:38")
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:115:66
+	{
+		_n, _err := _output.Write([]byte(`
 `))
 		_numWritten += int64(_n)
 		if _err != nil {

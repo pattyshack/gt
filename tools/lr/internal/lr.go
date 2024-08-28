@@ -500,6 +500,10 @@ type LRStates struct {
 	States        map[string]*ItemSet
 	OrderedStates []*ItemSet
 
+	NumPreMergedStates int
+	NumPreMergedShift  int
+	NumPreMergedReduce int
+
 	ShiftReduceConflictsCount  int
 	ReduceReduceConflictsCount int
 }
@@ -593,6 +597,10 @@ func (states *LRStates) generateStates() {
 			}
 
 			state.computeConflictSymbols()
+
+			states.NumPreMergedStates += 1
+			states.NumPreMergedShift += len(state.Goto)
+			states.NumPreMergedReduce += len(state.Reduce)
 
 			// NOTE: it's safe to drop the lookahead symbol from shift items
 			// once the goto states for the current states are initialized
