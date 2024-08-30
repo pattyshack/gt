@@ -116,7 +116,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 	}
 
 	if symbol != nil {
-		return &GenericSymbol{SectionMarkerToken, Location(loc)}, nil
+		return GenericSymbol{SectionMarkerToken, Location(loc)}, nil
 	}
 
 	return nil, fmt.Errorf("Unexpected character at %s", lexer.reader.Location)

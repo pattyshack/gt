@@ -58,13 +58,13 @@ type GenericSymbol struct {
 	Location
 }
 
-func (t *GenericSymbol) Id() SymbolId { return t.SymbolId }
+func (t GenericSymbol) Id() SymbolId { return t.SymbolId }
 
-func (t *GenericSymbol) Loc() Location { return t.Location }
+func (t GenericSymbol) Loc() Location { return t.Location }
 
 type Lexer interface {
 	// Note: Return io.EOF to indicate end of stream
-	// Token with unspecified value type should return *GenericSymbol
+	// Token with unspecified value type should return GenericSymbol
 	Next() (Token, error)
 
 	CurrentLocation() Location
@@ -72,7 +72,7 @@ type Lexer interface {
 
 type Reducer interface {
 	// 22:8: file -> ...
-	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ *GenericSymbol, Body_ []Statement) (*File, error)
+	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ GenericSymbol, Body_ []Statement) (*File, error)
 
 	// 29:4: optional_imports -> imports: ...
 	ImportsToOptionalImports(Import_ *Value) (*Value, error)
@@ -553,7 +553,7 @@ const (
 type Symbol struct {
 	SymbolId_ SymbolId
 
-	Generic_ *GenericSymbol
+	Generic_ GenericSymbol
 
 	Atom         *Atom
 	Branch       *Branch
@@ -585,11 +585,11 @@ func NewSymbol(token Token) (*Symbol, error) {
 		}
 		symbol.Atom = val
 	case _EndMarker, SectionMarkerToken:
-		val, ok := token.(*GenericSymbol)
+		val, ok := token.(GenericSymbol)
 		if !ok {
 			return nil, fmt.Errorf(
 				"Invalid value type for token %s.  "+
-					"Expecting *GenericSymbol (%v)",
+					"Expecting GenericSymbol (%v)",
 				token.Id(),
 				token.Loc())
 		}
@@ -683,10 +683,7 @@ func (s *Symbol) Loc() Location {
 			return loc.Loc()
 		}
 	}
-	if s.Generic_ != nil {
-		return s.Generic_.Loc()
-	}
-	return Location{}
+	return s.Generic_.Loc()
 }
 
 type _PseudoSymbolStack struct {
@@ -701,7 +698,7 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 			if err != io.EOF {
 				return nil, fmt.Errorf("Unexpected lex error: %s", err)
 			}
-			token = &GenericSymbol{_EndMarker, stack.lexer.CurrentLocation()}
+			token = GenericSymbol{_EndMarker, stack.lexer.CurrentLocation()}
 		}
 		item, err := NewSymbol(token)
 		if err != nil {
@@ -1763,4 +1760,7 @@ Number of shift actions: 169
 Number of reduce actions: 39
 Number of shift/reduce conflicts: 0
 Number of reduce/reduce conflicts: 0
+Number of unoptimized states: 138
+Number of unoptimized shift actions: 334
+Number of unoptimized reduce actions: 1243
 */

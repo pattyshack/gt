@@ -14,7 +14,7 @@ func (ReducerImpl) ToFile(
 	pkg *Value,
 	imports *Value,
 	template *TemplateDeclaration,
-	sectionMarker *GenericSymbol,
+	sectionMarker GenericSymbol,
 	body []Statement) (
 	*File,
 	error) {

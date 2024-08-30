@@ -99,7 +99,7 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
 		return nil, nil
 	}
 
-	return &LRGenericSymbol{
+	return LRGenericSymbol{
 		LRSymbolId: LRSymbolId(symbol.Id),
 		LRLocation: LRLocation(loc),
 	}, nil

@@ -124,10 +124,9 @@ func GenerateGoLRCode(
 	endSymbol := nameGen.Internal("EndMarker")
 	wildcardSymbol := nameGen.Internal("WildcardMarker")
 	genericSymbol := nameGen.Public("GenericSymbol")
-	genericSymbolPtr := "*" + genericSymbol
 
 	orderedValueTypes := lr.ParamList{
-		&lr.Param{lr.Generic, imports.Obj(genericSymbolPtr)},
+		&lr.Param{lr.Generic, imports.Obj(genericSymbol)},
 	}
 	for name, valueType := range cfg.ValueTypes {
 		orderedValueTypes = append(
@@ -156,21 +155,21 @@ func GenerateGoLRCode(
 			IsTerminal:         true,
 			ValueType:          lr.Generic,
 			CodeGenSymbolConst: lr.StartMarker,
-			CodeGenType:        genericSymbolPtr,
+			CodeGenType:        genericSymbol,
 		}
 	wildcard := &lr.Term{
 			Name:               lr.Wildcard,
 			IsTerminal:         true,
 			ValueType:          lr.Generic,
 			CodeGenSymbolConst: wildcardSymbol,
-			CodeGenType:        genericSymbolPtr,
+			CodeGenType:        genericSymbol,
 		}
 	endMarker := &lr.Term{
 			Name:               lr.EndMarker,
 			IsTerminal:         true,
 			ValueType:          lr.Generic,
 			CodeGenSymbolConst: endSymbol,
-			CodeGenType:        genericSymbolPtr,
+			CodeGenType:        genericSymbol,
 		}
 
   grammar.Terms[startMarker.Name] = startMarker

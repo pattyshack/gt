@@ -32,7 +32,7 @@ func (Reducer) NilToAdditionalSections() ([]*AdditionalSection, error) {
 }
 
 func (Reducer) ToAdditionalSection(
-	marker *LRGenericSymbol,
+	marker LRGenericSymbol,
 	name *Token,
 	content *Token) (
 	*AdditionalSection,
@@ -53,7 +53,7 @@ func (Reducer) AddToDefs(
 func (Reducer) AddExplicitToDefs(
 	defs []Definition,
 	def Definition,
-	terminator *LRGenericSymbol) (
+	terminator LRGenericSymbol) (
 	[]Definition, error) {
 
 	return append(defs, def), nil
@@ -65,7 +65,7 @@ func (Reducer) DefToDefs(def Definition) ([]Definition, error) {
 
 func (Reducer) ExplicitDefToDefs(
 	def Definition,
-	terminator *LRGenericSymbol) (
+	terminator LRGenericSymbol) (
 	[]Definition,
 	error) {
 
@@ -73,10 +73,10 @@ func (Reducer) ExplicitDefToDefs(
 }
 
 func (Reducer) TermDeclToDef(
-	rword *LRGenericSymbol,
-	lt *LRGenericSymbol,
+	rword LRGenericSymbol,
+	lt LRGenericSymbol,
 	value *Token,
-	gt *LRGenericSymbol,
+	gt LRGenericSymbol,
 	terms []*Token) (
 	Definition,
 	error) {
@@ -85,7 +85,7 @@ func (Reducer) TermDeclToDef(
 }
 
 func (Reducer) UntypedTermDeclToDef(
-	rword *LRGenericSymbol,
+	rword LRGenericSymbol,
 	terms []*Token) (
 	Definition,
 	error) {
@@ -94,7 +94,7 @@ func (Reducer) UntypedTermDeclToDef(
 }
 
 func (Reducer) StartDeclToDef(
-	startKw *LRGenericSymbol,
+	startKw LRGenericSymbol,
 	ruleNames []*Token) (
 	Definition,
 	error) {
@@ -106,11 +106,11 @@ func (Reducer) RuleToDef(rule *Rule) (Definition, error) {
 	return rule, nil
 }
 
-func (Reducer) TokenToRword(tokenKw *LRGenericSymbol) (*LRGenericSymbol, error) {
+func (Reducer) TokenToRword(tokenKw LRGenericSymbol) (LRGenericSymbol, error) {
 	return tokenKw, nil
 }
 
-func (Reducer) TypeToRword(typeKw *LRGenericSymbol) (*LRGenericSymbol, error) {
+func (Reducer) TypeToRword(typeKw LRGenericSymbol) (LRGenericSymbol, error) {
 	return typeKw, nil
 }
 
@@ -199,7 +199,7 @@ func (Reducer) ToRule(
 
 func (Reducer) AddToClauses(
 	clauses []*Clause,
-	or *LRGenericSymbol,
+	or LRGenericSymbol,
 	clause *Clause) (
 	[]*Clause,
 	error) {

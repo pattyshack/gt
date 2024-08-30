@@ -55,7 +55,7 @@ func (pc *ParseContext) Lex(val *LrSymType) int {
 	switch t := tok.(type) {
 	case *parser.Token:
 		val.Token = t
-	case *parser.LRGenericSymbol:
+	case parser.LRGenericSymbol:
 		val.Generic_ = t
 	}
 

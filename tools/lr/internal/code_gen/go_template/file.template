@@ -143,13 +143,13 @@ type $GenericSymbolType struct {
     $LocationType
 }
 
-func (t *$GenericSymbolType) Id() $SymbolIdType { return t.$SymbolIdType }
+func (t $GenericSymbolType) Id() $SymbolIdType { return t.$SymbolIdType }
 
-func (t *$GenericSymbolType) Loc() $LocationType { return t.$LocationType }
+func (t $GenericSymbolType) Loc() $LocationType { return t.$LocationType }
 
 type $LexerType interface {
     // Note: Return io.EOF to indicate end of stream
-    // Token with unspecified value type should return *$GenericSymbolType
+    // Token with unspecified value type should return $GenericSymbolType
     Next() ($TokenType, error)
 
     CurrentLocation() $LocationType
@@ -438,7 +438,7 @@ const (
 type $SymbolType struct {
     SymbolId_ $SymbolIdType
 
-    Generic_ *$GenericSymbolType
+    Generic_ $GenericSymbolType
 
 [[-for _, valueType := range OrderedValueTypes-]]
     [[-if valueType.Name == lr.Generic-]]
@@ -527,10 +527,7 @@ $(term.CodeGenSymbolConst)
         }
 [[-end]]
     }
-    if s.Generic_ != nil {
-        return s.Generic_.Loc()
-    }
-    return $LocationType{}
+    return s.Generic_.Loc()
 }
 
 type $SymbolStackType struct {
@@ -545,7 +542,7 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
             if err != $EOF {
                 return nil, $Errorf("Unexpected lex error: %s", err)
             }
-            token = &$GenericSymbolType{$EndSymbolId, stack.lexer.CurrentLocation()}
+            token = $GenericSymbolType{$EndSymbolId, stack.lexer.CurrentLocation()}
         }
         item, err := NewSymbol(token)
         if err != nil {

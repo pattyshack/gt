@@ -7,7 +7,7 @@ import (
 %}
 
 %union {
-    Generic_ *parser.LRGenericSymbol
+    Generic_ parser.LRGenericSymbol
 
     *parser.Token
     Tokens []*parser.Token
@@ -32,6 +32,8 @@ import (
 
 // XXX: add LEFT / RIGHT / NONASSOC?
 %token <Generic_> TOKEN TYPE START // %<identifier>
+
+%token <Generic_> ';' '<' '>' '|'
 
 // Intermediate token that should not reach the parser
 %token <Token> ARROW
@@ -99,7 +101,7 @@ defs:
     }
     |
     defs def ';' {
-        $$, _ =  Lrlex.(*ParseContext).AddExplicitToDefs($1, $2, nil)
+        $$, _ =  Lrlex.(*ParseContext).AddExplicitToDefs($1, $2, $3)
     }
     |
     def {
@@ -107,7 +109,7 @@ defs:
     }
     |
     def ';' {
-        $$, _ =  Lrlex.(*ParseContext).ExplicitDefToDefs($1, nil)
+        $$, _ =  Lrlex.(*ParseContext).ExplicitDefToDefs($1, $2)
     }
     ;
 
@@ -115,7 +117,7 @@ defs:
 def:
     // type / token declaration
     rword '<' IDENTIFIER '>' nonempty_id_or_char_list {
-        $$, _ =  Lrlex.(*ParseContext).TermDeclToDef($1, nil, $3, nil, $5)
+        $$, _ =  Lrlex.(*ParseContext).TermDeclToDef($1, $2, $3, $4, $5)
     }
     |
     rword nonempty_id_or_char_list {
@@ -200,7 +202,7 @@ clause:
 
 clauses:
     clauses '|' clause {
-        $$, _ = Lrlex.(*ParseContext).AddToClauses($1, nil, $3)
+        $$, _ = Lrlex.(*ParseContext).AddToClauses($1, $2, $3)
     }
     |
     clause {

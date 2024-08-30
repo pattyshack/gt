@@ -38,7 +38,7 @@ type StartDeclaration struct {
 }
 
 func NewStartDeclaration(
-	start *LRGenericSymbol,
+	start LRGenericSymbol,
 	ids []*Token) *StartDeclaration {
 
 	return &StartDeclaration{
@@ -60,7 +60,7 @@ func (sd *StartDeclaration) String() string {
 }
 
 type TermDeclaration struct {
-	TermType *LRGenericSymbol
+	TermType LRGenericSymbol
 
 	IsTerminal bool
 
@@ -70,7 +70,7 @@ type TermDeclaration struct {
 }
 
 func NewTermDeclaration(
-	termType *LRGenericSymbol,
+	termType LRGenericSymbol,
 	valueType *Token,
 	terms []*Token) *TermDeclaration {
 
