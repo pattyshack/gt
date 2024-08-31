@@ -360,3 +360,88 @@ func PeekBlockComment(
 
 	return numCommentBytes, scopeLevel, nil
 }
+
+// Strip all leading whitespaces.
+func StripLeadingWhitespaces(
+  reader BufferedByteLocationReader,
+) error {
+  modified := true
+  for modified {
+    modified = false
+
+    num, err := PeekSpaces(reader, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+
+    num, _, _, err = PeekNewlines(reader, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+  }
+
+  return nil
+}
+
+// Strip all leading whitespaces, // line comments, and scoped /**/ block
+// comments.
+func StripLeadingWhitespacesAndComments(
+  reader BufferedByteLocationReader,
+) error {
+  modified := true
+  for modified {
+    modified = false
+
+    num, err := PeekSpaces(reader, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+
+    num, _, _, err = PeekNewlines(reader, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+
+    num, err = PeekLineComment(reader, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+
+    num, _, err = PeekBlockComment(reader, true, 32)
+    if err != nil {
+      return err
+    }
+
+    if num > 0 {
+      reader.Discard(num)
+      modified = true
+    }
+  }
+
+  return nil
+}

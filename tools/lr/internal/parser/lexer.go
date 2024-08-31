@@ -54,7 +54,7 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 }
 
 func (lexer *rawLexer) Next() (LRToken, error) {
-	err := parseutil.StripLeadingWhitespacesAndComments(lexer.reader)
+	err := lexutil.StripLeadingWhitespacesAndComments(lexer.reader)
 	if err != nil {
 		return nil, err
 	}

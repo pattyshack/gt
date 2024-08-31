@@ -208,7 +208,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	directiveReader := lexutil.NewBufferedByteLocationReaderFromSlice("", content)
 	directiveReader.Location = lexutil.Location(loc)
 
-	err = parseutil.StripLeadingWhitespaces(directiveReader)
+	err = lexutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		return nil, err
 	}
 
-	err = parseutil.StripLeadingWhitespaces(directiveReader)
+	err = lexutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		if second == "if" {
 			id = "else if"
 
-			err = parseutil.StripLeadingWhitespaces(directiveReader)
+			err = lexutil.StripLeadingWhitespaces(directiveReader)
 			if err != nil && err != io.EOF {
 				return nil, err
 			}

@@ -80,7 +80,7 @@ type headerLexer struct {
 }
 
 func (lexer *headerLexer) Next() (Token, error) {
-	err := parseutil.StripLeadingWhitespaces(lexer.reader)
+	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 }
 
 func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
-	err := parseutil.StripLeadingWhitespaces(lexer.reader)
+	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 }
 
 func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
-	err := parseutil.StripLeadingWhitespaces(lexer.reader)
+	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	Token,
 	error) {
 
-	err := parseutil.StripLeadingWhitespaces(lexer.reader)
+	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 			lexer.reader.Location)
 	}
 
-	err = parseutil.StripLeadingWhitespaces(lexer.reader)
+	err = lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 	args := []Argument{}
 	for {
-		err := parseutil.StripLeadingWhitespaces(declReader)
+		err := lexutil.StripLeadingWhitespaces(declReader)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -266,7 +266,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 				lineReader.Location)
 		}
 
-		err = parseutil.StripLeadingWhitespaces(lineReader)
+		err = lexutil.StripLeadingWhitespaces(lineReader)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
