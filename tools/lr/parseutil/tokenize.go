@@ -5,18 +5,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/pattyshack/gt/lexutil"
-	"github.com/pattyshack/gt/stringutil"
 )
-
-var (
-	NonIdentifierChars = map[byte]struct{}{}
-)
-
-func init() {
-	for _, c := range "`~!@#$%^&*()-=+{[]}\\|;:'\",<.>/? \t\n" {
-		NonIdentifierChars[byte(c)] = struct{}{}
-	}
-}
 
 func IsWhitespace(char byte) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
@@ -236,75 +225,4 @@ func MaybeTokenizeCharacter(
 	}
 
 	return string(bytes), loc, nil
-}
-
-// If the reader's leading bytes are an identifer, those bytes off the reader
-// and return the value.  Otherwise, return a nil slice.
-func MaybeTokenizeIdentifier(
-	reader lexutil.BufferedByteLocationReader,
-	internPool *stringutil.InternPool,
-) (string, lexutil.Location, error) {
-	peekRange := 32
-	prevLen := 0
-	checkIdx := 0
-
-	var bytes []byte
-	var err error
-	for {
-		bytes, err = reader.Peek(peekRange)
-		if err != nil && err != io.EOF {
-			return "", lexutil.Location{}, err
-		}
-
-		if len(bytes) == 0 {
-			return "", lexutil.Location{}, nil
-		}
-
-		if checkIdx == 0 {
-			char := bytes[0]
-			_, ok := NonIdentifierChars[char]
-			if ok {
-				return "", lexutil.Location{}, nil
-			}
-
-			// first char in the identifier can't be a number
-			if '0' <= char && char <= '9' {
-				return "", lexutil.Location{}, nil
-			}
-
-			checkIdx = 1
-		}
-
-		if prevLen == len(bytes) { // ran out of bytes to read
-			break
-		}
-
-		foundEnd := false
-		for checkIdx < len(bytes) {
-			char := bytes[checkIdx]
-			_, ok := NonIdentifierChars[char]
-			if ok {
-				foundEnd = true
-				break
-			}
-			checkIdx += 1
-		}
-
-		if foundEnd {
-			break
-		}
-
-		prevLen = len(bytes)
-		peekRange *= 2
-	}
-
-	loc := reader.Location
-
-	bytes = bytes[:checkIdx]
-	n, err := reader.Read(bytes)
-	if len(bytes) != n || err != nil {
-		panic(err) // should never happen
-	}
-
-	return internPool.InternBytes(bytes), loc, nil
 }

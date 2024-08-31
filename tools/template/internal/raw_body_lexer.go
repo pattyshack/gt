@@ -44,7 +44,15 @@ var (
 		"error":   struct{}{},
 		"embed":   struct{}{},
 	}
+
+	NonIdentifierChars = map[byte]struct{}{}
 )
+
+func init() {
+	for _, c := range "`~!@#$%^&*()-=+{[]}\\|;:'\",<.>/? \t\n" {
+		NonIdentifierChars[byte(c)] = struct{}{}
+	}
+}
 
 type BodyToken interface {
 	Token
@@ -226,7 +234,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			trimTrailing), nil
 	}
 
-	id, _, err := parseutil.MaybeTokenizeIdentifier(
+	id, _, err := lexutil.MaybeTokenizeIdentifier(
 		directiveReader,
 		lexer.internPool)
 	if err != nil && err != io.EOF {
@@ -241,7 +249,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	param := ""
 	// check for "else if" compound identifier
 	if id == "else" {
-		second, _, err := parseutil.MaybeTokenizeIdentifier(
+		second, _, err := lexutil.MaybeTokenizeIdentifier(
 			directiveReader,
 			lexer.internPool)
 		if err != nil && err != io.EOF {
@@ -344,7 +352,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 		return lexer.tokenizeNonSubstituteDirective()
 
 	} else if content[0] == '$' {
-		_, ok := parseutil.NonIdentifierChars[content[1]]
+		_, ok := NonIdentifierChars[content[1]]
 		if !ok { // $<identifier>
 			loc := lexer.reader.Location
 
@@ -353,7 +361,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 				panic(err) // Should never happen
 			}
 
-			value, _, err := parseutil.MaybeTokenizeIdentifier(
+			value, _, err := lexutil.MaybeTokenizeIdentifier(
 				lexer.reader,
 				lexer.internPool)
 			if err != nil {

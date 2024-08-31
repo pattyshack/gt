@@ -39,7 +39,7 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 
 	reader := lexutil.NewBufferedByteLocationReaderFromSlice(
 		filename,
-    content)
+		content)
 	internPool := stringutil.NewInternPool()
 
 	return &LexerImpl{
@@ -85,7 +85,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 		return nil, err
 	}
 
-	val, loc, err := parseutil.MaybeTokenizeIdentifier(
+	val, loc, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		lexer.internPool)
 	if err != nil {
@@ -128,7 +128,7 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 		return nil, err
 	}
 
-	val, _, err := parseutil.MaybeTokenizeIdentifier(
+	val, _, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		lexer.internPool)
 	if err != nil {
@@ -181,7 +181,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		return nil, err
 	}
 
-	templateName, _, err := parseutil.MaybeTokenizeIdentifier(
+	templateName, _, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		lexer.internPool)
 	if err != nil {
@@ -253,7 +253,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		lineReader := lexutil.NewBufferedByteLocationReaderFromSlice("", line)
 		lineReader.Location = lexutil.Location(loc)
 
-		argName, _, err := parseutil.MaybeTokenizeIdentifier(
+		argName, _, err := lexutil.MaybeTokenizeIdentifier(
 			lineReader,
 			lexer.internPool)
 		if err != nil {

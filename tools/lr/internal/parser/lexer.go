@@ -123,7 +123,7 @@ func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
 }
 
 func (lexer *rawLexer) maybeTokenizeIdentifier() (LRToken, error) {
-	value, loc, err := parseutil.MaybeTokenizeIdentifier(
+	value, loc, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		lexer.internPool)
 	if err != nil {
