@@ -5,7 +5,7 @@ import (
 	"unsafe"
 )
 
-func unsafeBytesToString(bytes []byte) string {
+func UnsafeBytesToString(bytes []byte) string {
 	var unsafeString string
 	bytesPtr := (*reflect.SliceHeader)(unsafe.Pointer(&bytes))
 	stringPtr := (*reflect.StringHeader)(unsafe.Pointer(&unsafeString))
@@ -35,7 +35,7 @@ func (pool *InternPool) Intern(str string) string {
 }
 
 func (pool *InternPool) InternBytes(bytes []byte) string {
-	interned, ok := pool.pool[unsafeBytesToString(bytes)]
+	interned, ok := pool.pool[UnsafeBytesToString(bytes)]
 	if ok {
 		return interned
 	}
@@ -43,4 +43,14 @@ func (pool *InternPool) InternBytes(bytes []byte) string {
 	str := string(bytes)
 	pool.pool[str] = str
 	return str
+}
+
+func (pool *InternPool) GetIntern(str string) (string, bool) {
+	interned, ok := pool.pool[str]
+	return interned, ok
+}
+
+func (pool *InternPool) GetInternBytes(bytes []byte) (string, bool) {
+	interned, ok := pool.pool[UnsafeBytesToString(bytes)]
+	return interned, ok
 }

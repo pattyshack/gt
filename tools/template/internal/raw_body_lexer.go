@@ -10,7 +10,6 @@ import (
 
 	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
-	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 const (
@@ -20,9 +19,9 @@ const (
 var (
 	directiveRegexp = regexp.MustCompile(`\[\[|\$`)
 
-	directiveSymbols = parseutil.Symbols{
-		{"$", int(CopySectionToken)},
-		{"#", int(CommentToken)},
+	directiveSymbols = map[string]SymbolId{
+		"$": CopySectionToken,
+		"#": CommentToken,
 	}
 
 	// NOTE: for, $, and # directives can be both parameterless and parametered
@@ -72,6 +71,19 @@ type rawBodyLexer struct {
 	reader lexutil.BufferedByteLocationReader
 
 	internPool *stringutil.InternPool
+
+	lexutil.ConstantSymbols[SymbolId]
+}
+
+func newRawBodyLexer(
+	reader lexutil.BufferedByteLocationReader,
+	internPool *stringutil.InternPool,
+) *rawBodyLexer {
+	return &rawBodyLexer{
+		reader:          reader,
+		internPool:      internPool,
+		ConstantSymbols: lexutil.NewConstantSymbols(directiveSymbols, internPool),
+	}
 }
 
 func (lexer *rawBodyLexer) CurrentLocation() Location {
@@ -213,21 +225,20 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		return nil, err
 	}
 
-	symbol, _, err := parseutil.MaybeTokenizeSymbol(
-		directiveReader,
-		directiveSymbols)
+	symbolStr, symbolId, _, err := lexer.MaybeTokenizeSymbol(
+		directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
 
-	if symbol != nil {
+	if symbolStr != "" {
 		content, err = ioutil.ReadAll(directiveReader)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
 
 		return NewAtom(
-			SymbolId(symbol.Id),
+			SymbolId(symbolId),
 			loc,
 			string(content),
 			trimLeading,

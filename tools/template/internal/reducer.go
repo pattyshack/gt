@@ -3,7 +3,7 @@ package template
 import (
 	"fmt"
 
-	"github.com/pattyshack/gt/tools/lr/parseutil"
+	"github.com/pattyshack/gt/lexutil"
 )
 
 type ReducerImpl struct{}
@@ -125,8 +125,8 @@ func (ReducerImpl) WithWhitespaceToSwitch(
 	Statement,
 	error) {
 
-	for _, char := range []byte(whitespace.Value) {
-		if !parseutil.IsWhitespace(char) {
+	for _, char := range whitespace.Value {
+		if !lexutil.IsWhitespace(char) {
 			return nil, fmt.Errorf(
 				"Text found between [[switch]] and [[case]] (%s)",
 				whitespace.Loc())

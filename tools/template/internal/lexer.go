@@ -7,13 +7,20 @@ import (
 
 	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
-	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 var (
-	sectionMarker = parseutil.Symbols{
-		{"%%\n", 0},
-		{"%%", 0},
+	sectionMarker = map[string]struct{}{
+		"%%\n": struct{}{},
+		"%%":   struct{}{},
+	}
+
+	importMarker = map[string]struct{}{
+		"(": struct{}{},
+	}
+
+	templateDeclMarker = map[string]struct{}{
+		"{": struct{}{},
 	}
 )
 
@@ -45,8 +52,13 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 	return &LexerImpl{
 		reader: reader,
 		currentLexer: &headerLexer{
-			reader:     reader,
-			internPool: internPool,
+			reader:        reader,
+			internPool:    internPool,
+			sectionMarker: lexutil.NewConstantSymbols(sectionMarker, internPool),
+			importMarker:  lexutil.NewConstantSymbols(importMarker, internPool),
+			templateDeclMarker: lexutil.NewConstantSymbols(
+				templateDeclMarker,
+				internPool),
 		},
 		internPool: internPool,
 	}, nil
@@ -64,10 +76,7 @@ func (lexer *LexerImpl) Next() (Token, error) {
 
 	if token.Id() == SectionMarkerToken {
 		lexer.currentLexer = &bodyLexer{
-			raw: &rawBodyLexer{
-				reader:     lexer.reader,
-				internPool: lexer.internPool,
-			},
+			raw: newRawBodyLexer(lexer.reader, lexer.internPool),
 		}
 	}
 
@@ -77,6 +86,10 @@ func (lexer *LexerImpl) Next() (Token, error) {
 type headerLexer struct {
 	reader     lexutil.BufferedByteLocationReader
 	internPool *stringutil.InternPool
+
+	sectionMarker      lexutil.ConstantSymbols[struct{}]
+	importMarker       lexutil.ConstantSymbols[struct{}]
+	templateDeclMarker lexutil.ConstantSymbols[struct{}]
 }
 
 func (lexer *headerLexer) Next() (Token, error) {
@@ -108,14 +121,13 @@ func (lexer *headerLexer) Next() (Token, error) {
 			loc)
 	}
 
-	symbol, loc, err := parseutil.MaybeTokenizeSymbol(
-		lexer.reader,
-		sectionMarker)
+	symbolStr, _, loc, err := lexer.sectionMarker.MaybeTokenizeSymbol(
+		lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbol != nil {
+	if symbolStr != "" {
 		return GenericSymbol{SectionMarkerToken, Location(loc)}, nil
 	}
 
@@ -148,14 +160,13 @@ func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
 		return nil, err
 	}
 
-	symbol, _, err := parseutil.MaybeTokenizeSymbol(
-		lexer.reader,
-		parseutil.Symbols{{"(", 0}})
+	symbolStr, _, _, err := lexer.importMarker.MaybeTokenizeSymbol(
+		lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbol == nil {
+	if symbolStr == "" {
 		return nil, fmt.Errorf(
 			"Unexpected character at %s",
 			lexer.reader.Location)
@@ -199,14 +210,13 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		return nil, err
 	}
 
-	lcurl, _, err := parseutil.MaybeTokenizeSymbol(
-		lexer.reader,
-		parseutil.Symbols{{"{", 0}})
+	lcurl, _, _, err := lexer.templateDeclMarker.MaybeTokenizeSymbol(
+		lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if lcurl == nil {
+	if lcurl == "" {
 		return nil, fmt.Errorf(
 			"Unexpected character at %s",
 			lexer.reader.Location)

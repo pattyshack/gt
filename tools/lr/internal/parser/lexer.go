@@ -4,52 +4,44 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
-var (
-	keywordsAndSymbols = map[string]LRSymbolId{
-		TokenKeyword: LRTokenToken,
-		TypeKeyword:  LRTypeToken,
-		"%start":     LRStartToken,
-		"<":          '<',
-		">":          '>',
-		"|":          '|',
-		";":          ';',
+type rawLexer struct {
+	reader lexutil.BufferedByteLocationReader
+
+	lexutil.ConstantSymbols[LRSymbolId]
+
+	internPool *stringutil.InternPool
+}
+
+func newRawLexer(filename string, reader io.Reader) *rawLexer {
+	markersAndSymbols := map[string]LRSymbolId{
+		TokenMarker: LRTokenToken,
+		TypeMarker:  LRTypeToken,
+		"%start":    LRStartToken,
+		"<":         '<',
+		">":         '>',
+		"|":         '|',
+		";":         ';',
 
 		"%%": LRSectionMarkerToken,
 
 		"->": Arrow,
 		":":  ':',
 	}
-)
 
-type rawLexer struct {
-	reader lexutil.BufferedByteLocationReader
-
-	sorted parseutil.Symbols
-
-	internPool *stringutil.InternPool
-}
-
-func newRawLexer(filename string, reader io.Reader) *rawLexer {
-	sorted := parseutil.Symbols{}
-	for val, id := range keywordsAndSymbols {
-		sorted = append(sorted, parseutil.Symbol{val, int(id)})
-	}
-	sort.Sort(sorted)
-
+	pool := stringutil.NewInternPool()
 	return &rawLexer{
 		reader: lexutil.NewBufferedByteLocationReader(
 			filename,
 			reader,
 			1024*1024),
-		sorted:     sorted,
-		internPool: stringutil.NewInternPool(),
+		ConstantSymbols: lexutil.NewConstantSymbols(markersAndSymbols, pool),
+		internPool:      pool,
 	}
 }
 
@@ -88,19 +80,17 @@ func (lexer *rawLexer) Next() (LRToken, error) {
 }
 
 func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
-	symbol, loc, err := parseutil.MaybeTokenizeSymbol(
-		lexer.reader,
-		lexer.sorted)
+	symbolStr, symbolId, loc, err := lexer.MaybeTokenizeSymbol(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbol == nil {
+	if symbolStr == "" {
 		return nil, nil
 	}
 
 	return LRGenericSymbol{
-		LRSymbolId: LRSymbolId(symbol.Id),
+		LRSymbolId: LRSymbolId(symbolId),
 		LRLocation: LRLocation(loc),
 	}, nil
 }

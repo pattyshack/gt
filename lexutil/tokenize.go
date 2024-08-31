@@ -8,6 +8,10 @@ import (
 	"github.com/pattyshack/gt/stringutil"
 )
 
+func IsWhitespace(char rune) bool {
+	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
+}
+
 // Peek for identifier of the form
 //
 //	(unicode-letter | '_') (unicode-letter | unicode-number | '_')*
@@ -363,85 +367,164 @@ func PeekBlockComment(
 
 // Strip all leading whitespaces.
 func StripLeadingWhitespaces(
-  reader BufferedByteLocationReader,
+	reader BufferedByteLocationReader,
 ) error {
-  modified := true
-  for modified {
-    modified = false
+	modified := true
+	for modified {
+		modified = false
 
-    num, err := PeekSpaces(reader, 32)
-    if err != nil {
-      return err
-    }
+		num, err := PeekSpaces(reader, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
 
-    num, _, _, err = PeekNewlines(reader, 32)
-    if err != nil {
-      return err
-    }
+		num, _, _, err = PeekNewlines(reader, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
-  }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
+	}
 
-  return nil
+	return nil
 }
 
 // Strip all leading whitespaces, // line comments, and scoped /**/ block
 // comments.
 func StripLeadingWhitespacesAndComments(
-  reader BufferedByteLocationReader,
+	reader BufferedByteLocationReader,
 ) error {
-  modified := true
-  for modified {
-    modified = false
+	modified := true
+	for modified {
+		modified = false
 
-    num, err := PeekSpaces(reader, 32)
-    if err != nil {
-      return err
-    }
+		num, err := PeekSpaces(reader, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
 
-    num, _, _, err = PeekNewlines(reader, 32)
-    if err != nil {
-      return err
-    }
+		num, _, _, err = PeekNewlines(reader, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
 
-    num, err = PeekLineComment(reader, 32)
-    if err != nil {
-      return err
-    }
+		num, err = PeekLineComment(reader, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
 
-    num, _, err = PeekBlockComment(reader, true, 32)
-    if err != nil {
-      return err
-    }
+		num, _, err = PeekBlockComment(reader, true, 32)
+		if err != nil {
+			return err
+		}
 
-    if num > 0 {
-      reader.Discard(num)
-      modified = true
-    }
-  }
+		if num > 0 {
+			reader.Discard(num)
+			modified = true
+		}
+	}
 
-  return nil
+	return nil
+}
+
+// Constant (non-keyword) symbol peeker.
+type ConstantSymbols[T any] struct {
+	symbols         map[string]T
+	maxSymbolLength int
+
+	*stringutil.InternPool
+}
+
+func NewConstantSymbols[T any](
+	symbols map[string]T,
+	internPool *stringutil.InternPool,
+) ConstantSymbols[T] {
+	s := ConstantSymbols[T]{
+		symbols:    symbols,
+		InternPool: internPool,
+	}
+
+	for symbol, _ := range symbols {
+		internPool.Intern(symbol)
+		if len(symbol) > s.maxSymbolLength {
+			s.maxSymbolLength = len(symbol)
+		}
+	}
+
+	return s
+}
+
+func (symbols ConstantSymbols[T]) PeekSymbol(
+	reader BufferedByteLocationReader,
+) (
+	string,
+	T,
+	bool,
+	error,
+) {
+	peeked, err := reader.Peek(symbols.maxSymbolLength)
+	if err != nil && err != io.EOF {
+		var defaultEntry T
+		return "", defaultEntry, false, err
+	}
+
+	for len(peeked) > 0 {
+		symbolStr, ok := symbols.GetInternBytes(peeked)
+		if ok {
+			entry, ok := symbols.symbols[symbolStr]
+			if ok {
+				return symbolStr, entry, ok, nil
+			}
+		}
+		peeked = peeked[:len(peeked)-1]
+	}
+
+	var defaultEntry T
+	return "", defaultEntry, false, nil
+}
+
+func (symbols ConstantSymbols[T]) MaybeTokenizeSymbol(
+	reader BufferedByteLocationReader,
+) (
+	string,
+	T,
+	Location,
+	error,
+) {
+	symbolStr, entry, found, err := symbols.PeekSymbol(reader)
+	if err != nil || !found {
+		return "", entry, Location{}, err
+	}
+
+	loc := reader.Location
+
+	_, err = reader.Discard(len(symbolStr))
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return symbolStr, entry, loc, nil
 }

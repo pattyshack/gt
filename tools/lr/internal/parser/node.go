@@ -87,9 +87,9 @@ func (td *TermDeclaration) Loc() LRLocation {
 }
 
 func (td *TermDeclaration) String() string {
-	result := TypeKeyword
+	result := TypeMarker
 	if td.IsTerminal {
-		result = TokenKeyword
+		result = TokenMarker
 	}
 
 	if td.ValueType != nil {
