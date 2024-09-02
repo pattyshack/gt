@@ -27,7 +27,7 @@ func PeekIdentifier(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numIdentifierBytes := 0
+	numBytes := 0
 
 	for hasMore {
 		peeked, err := reader.Peek(ignorePrefixBytes + peekSize)
@@ -39,11 +39,11 @@ func PeekIdentifier(
 			return 0, err
 		}
 
-		if len(peeked) < ignorePrefixBytes+numIdentifierBytes {
+		if len(peeked) < ignorePrefixBytes+numBytes {
 			panic("should never happen")
 		}
 
-		remaining := peeked[ignorePrefixBytes+numIdentifierBytes:]
+		remaining := peeked[ignorePrefixBytes+numBytes:]
 
 		for len(remaining) > 0 {
 			utf8Char, size := utf8.DecodeRune(remaining)
@@ -54,8 +54,7 @@ func PeekIdentifier(
 					break
 				} else {
 					// Encountered a real invalid utf8 byte
-					hasMore = false
-					break
+					return numBytes, nil
 				}
 			}
 
@@ -65,20 +64,19 @@ func PeekIdentifier(
 
 			if unicode.IsLetter(utf8Char) ||
 				utf8Char == '_' ||
-				(numIdentifierBytes > 0 && unicode.IsNumber(utf8Char)) {
+				(numBytes > 0 && unicode.IsNumber(utf8Char)) {
 
-				numIdentifierBytes += size
+				numBytes += size
 				remaining = remaining[size:]
 			} else {
-				hasMore = false
-				break
+				return numBytes, nil
 			}
 		}
 
 		peekSize *= 2
 	}
 
-	return numIdentifierBytes, nil
+	return numBytes, nil
 }
 
 // If the reader's leading bytes are an identifier, read the identifer bytes
@@ -125,7 +123,7 @@ func PeekSpaces(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numSpaceBytes := 0
+	numBytes := 0
 
 	for hasMore {
 		peeked, err := reader.Peek(peekSize)
@@ -137,20 +135,19 @@ func PeekSpaces(
 			return 0, err
 		}
 
-		for numSpaceBytes < len(peeked) {
-			char := peeked[numSpaceBytes]
+		for numBytes < len(peeked) {
+			char := peeked[numBytes]
 			if char == ' ' || char == '\t' {
-				numSpaceBytes++
+				numBytes++
 			} else {
-				hasMore = false
-				break
+				return numBytes, nil
 			}
 		}
 
 		peekSize *= 2
 	}
 
-	return numSpaceBytes, nil
+	return numBytes, nil
 }
 
 // Peek for newlines of the form
@@ -169,9 +166,8 @@ func PeekNewlines(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numNewlineBytes := 0
+	numBytes := 0
 	numNewlines := 0
-	foundInvalidNewline := false
 
 	for hasMore {
 		peeked, err := reader.Peek(peekSize)
@@ -183,39 +179,37 @@ func PeekNewlines(
 			return 0, 0, false, err
 		}
 
-		for numNewlineBytes < len(peeked) {
-			char := peeked[numNewlineBytes]
+		for numBytes < len(peeked) {
+			char := peeked[numBytes]
 			if char == '\n' {
-				numNewlineBytes++
+				numBytes++
 				numNewlines++
 
 			} else if char == '\r' {
-				if numNewlineBytes+1 >= len(peeked) {
-					// If hasMore is true, then we may have read half of the \r\n pair.
-					// The next outer loop iteration will take care of this. If hasMore
-					// is false, then this is a lone \r and it should not be included
-					// as part of this token.
-					break
+				if numBytes+1 >= len(peeked) {
+					if hasMore {
+						// read more bytes
+						break
+					} else { // '\r' not paired with '\n'
+						return numBytes, numNewlines, true, nil
+					}
 				}
 
-				if peeked[numNewlineBytes+1] == '\n' {
-					numNewlineBytes += 2
+				if peeked[numBytes+1] == '\n' {
+					numBytes += 2
 					numNewlines++
 				} else { // '\r' not paired with '\n'
-					foundInvalidNewline = true
-					hasMore = false
-					break
+					return numBytes, numNewlines, true, nil
 				}
 			} else {
-				hasMore = false
-				break
+				return numBytes, numNewlines, false, nil
 			}
 		}
 
 		peekSize *= 2
 	}
 
-	return numNewlineBytes, numNewlines, foundInvalidNewline, nil
+	return numBytes, numNewlines, false, nil
 }
 
 // Peek for comment of the form
@@ -233,7 +227,7 @@ func PeekLineComment(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numCommentBytes := 0 // "//" already peeked by peekNextToken
+	numBytes := 0 // "//" already peeked by peekNextToken
 
 	for hasMore {
 		peeked, err := reader.Peek(peekSize)
@@ -255,28 +249,27 @@ func PeekLineComment(
 			}
 		}
 
-		if numCommentBytes == 0 {
+		if numBytes == 0 {
 			if peeked[0] == '/' && peeked[1] == '/' {
-				numCommentBytes += 2
+				numBytes += 2
 			} else { // Not a line comment
 				return 0, nil
 			}
 		}
 
-		for numCommentBytes < len(peeked) {
-			char := peeked[numCommentBytes]
+		for numBytes < len(peeked) {
+			char := peeked[numBytes]
 			if char == '\n' || char == '\r' {
-				hasMore = false
-				break
+				return numBytes, nil
 			} else {
-				numCommentBytes++
+				numBytes++
 			}
 		}
 
 		peekSize *= 2
 	}
 
-	return numCommentBytes, nil
+	return numBytes, nil
 }
 
 // Peek for block comment of the form
@@ -297,7 +290,7 @@ func PeekBlockComment(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numCommentBytes := 0
+	numBytes := 0
 	scopeLevel := 0
 
 	for hasMore {
@@ -320,49 +313,48 @@ func PeekBlockComment(
 			}
 		}
 
-		if numCommentBytes == 0 {
+		if numBytes == 0 {
 			if peeked[0] == '/' && peeked[1] == '*' {
-				numCommentBytes += 2
+				numBytes += 2
 				scopeLevel = 1
 			} else { // Not a block comment
 				return 0, 0, nil
 			}
 		}
 
-		for numCommentBytes < len(peeked) {
-			if numCommentBytes+1 >= len(peeked) {
+		for numBytes < len(peeked) {
+			if numBytes+1 >= len(peeked) {
 				if hasMore {
 					// read more bytes
 					break
 				} else {
 					// reached EOF without finding block comment's closing delimiter.
-					numCommentBytes++
-					break
+					numBytes++
+					return numBytes, scopeLevel, nil
 				}
 			}
 
-			char := peeked[numCommentBytes]
-			if char == '/' && peeked[numCommentBytes+1] == '*' {
-				numCommentBytes += 2
+			char := peeked[numBytes]
+			if char == '/' && peeked[numBytes+1] == '*' {
+				numBytes += 2
 				scopeLevel += 1
 
-			} else if char == '*' && peeked[numCommentBytes+1] == '/' {
-				numCommentBytes += 2
+			} else if char == '*' && peeked[numBytes+1] == '/' {
+				numBytes += 2
 				scopeLevel -= 1
 
 				if !scoped || scopeLevel == 0 {
-					hasMore = false
-					break
+					return numBytes, 0, nil
 				}
 			} else {
-				numCommentBytes++
+				numBytes++
 			}
 		}
 
 		peekSize *= 2
 	}
 
-	return numCommentBytes, scopeLevel, nil
+	return numBytes, scopeLevel, nil
 }
 
 // Strip all leading whitespaces.
