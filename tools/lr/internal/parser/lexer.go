@@ -91,7 +91,8 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
 
 	return LRGenericSymbol{
 		LRSymbolId: LRSymbolId(symbolId),
-		LRLocation: LRLocation(loc),
+		StartPos:   LRLocation(loc),
+		EndPos:     LRLocation(lexer.reader.Location),
 	}, nil
 }
 

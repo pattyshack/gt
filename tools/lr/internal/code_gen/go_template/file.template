@@ -136,16 +136,20 @@ func (l $LocationType) ShortString() string {
 type $TokenType interface {
     Id() $SymbolIdType
     Loc() $LocationType
+    // Note: Symbol may optionally implement End() $LocationType
 }
 
 type $GenericSymbolType struct {
     $SymbolIdType
-    $LocationType
+    StartPos $LocationType
+    EndPos $LocationType
 }
 
 func (t $GenericSymbolType) Id() $SymbolIdType { return t.$SymbolIdType }
 
-func (t $GenericSymbolType) Loc() $LocationType { return t.$LocationType }
+func (t $GenericSymbolType) Loc() $LocationType { return t.StartPos }
+
+func (t $GenericSymbolType) End() $LocationType { return t.EndPos }
 
 type $LexerType interface {
     // Note: Return io.EOF to indicate end of stream
@@ -542,7 +546,11 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
             if err != $EOF {
                 return nil, $Errorf("Unexpected lex error: %s", err)
             }
-            token = $GenericSymbolType{$EndSymbolId, stack.lexer.CurrentLocation()}
+            token = $GenericSymbolType{
+              $SymbolIdType: $EndSymbolId,
+              StartPos: stack.lexer.CurrentLocation(),
+              EndPos: stack.lexer.CurrentLocation(),
+            }
         }
         item, err := NewSymbol(token)
         if err != nil {

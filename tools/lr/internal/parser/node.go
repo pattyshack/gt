@@ -42,7 +42,7 @@ func NewStartDeclaration(
 	ids []*Token) *StartDeclaration {
 
 	return &StartDeclaration{
-		LRLocation: start.LRLocation,
+		LRLocation: start.StartPos,
 		Ids:        ids,
 	}
 }
@@ -83,7 +83,7 @@ func NewTermDeclaration(
 }
 
 func (td *TermDeclaration) Loc() LRLocation {
-	return td.TermType.LRLocation
+	return td.TermType.StartPos
 }
 
 func (td *TermDeclaration) String() string {
