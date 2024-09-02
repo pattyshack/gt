@@ -69,6 +69,7 @@ template File {
     OrderedValueTypes       lr.ParamList
 
     OutputDebugNonKernelItems bool
+    GenerateEndPos            bool
 }
 
 %%
@@ -136,20 +137,26 @@ func (l $LocationType) ShortString() string {
 type $TokenType interface {
     Id() $SymbolIdType
     Loc() $LocationType
-    // Note: Symbol may optionally implement End() $LocationType
+[[-if GenerateEndPos]]
+    End() $LocationType
+[[-end]]
 }
 
 type $GenericSymbolType struct {
     $SymbolIdType
     StartPos $LocationType
+[[-if GenerateEndPos]]
     EndPos $LocationType
+[[-end]]
 }
 
 func (t $GenericSymbolType) Id() $SymbolIdType { return t.$SymbolIdType }
 
 func (t $GenericSymbolType) Loc() $LocationType { return t.StartPos }
 
+[[-if GenerateEndPos]]
 func (t $GenericSymbolType) End() $LocationType { return t.EndPos }
+[[-end]]
 
 type $LexerType interface {
     // Note: Return io.EOF to indicate end of stream
@@ -534,6 +541,31 @@ $(term.CodeGenSymbolConst)
     return s.Generic_.Loc()
 }
 
+[[-if GenerateEndPos]]
+func (s *$SymbolType) End() $LocationType {
+    type locator interface { End() $LocationType }
+    switch s.SymbolId_ {
+[[-for _, field := range OrderedValueTypes-]]
+    [[-if field.Name == lr.Generic-]]
+        [[-continue-]]
+    [[-end-]]
+    [[-$ terms := valueTerms[field.Name]]]
+    case 
+    [[-for idx, term := range terms -]]
+$(term.CodeGenSymbolConst)
+        [[-if idx != len(terms)-1 -]], [[end-]]
+    [[-end-]]
+:
+        loc, ok := interface{}(s.$(field.Name)).(locator)
+        if ok {
+            return loc.End()
+        }
+[[-end]]
+    }
+    return s.Generic_.End()
+}
+[[-end]]
+
 type $SymbolStackType struct {
     lexer $LexerType
     top []*$SymbolType
@@ -549,7 +581,6 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
             token = $GenericSymbolType{
               $SymbolIdType: $EndSymbolId,
               StartPos: stack.lexer.CurrentLocation(),
-              EndPos: stack.lexer.CurrentLocation(),
             }
         }
         item, err := NewSymbol(token)

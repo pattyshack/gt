@@ -51,20 +51,16 @@ func (l Location) ShortString() string {
 type Token interface {
 	Id() SymbolId
 	Loc() Location
-	// Note: Symbol may optionally implement End() Location
 }
 
 type GenericSymbol struct {
 	SymbolId
 	StartPos Location
-	EndPos   Location
 }
 
 func (t GenericSymbol) Id() SymbolId { return t.SymbolId }
 
 func (t GenericSymbol) Loc() Location { return t.StartPos }
-
-func (t GenericSymbol) End() Location { return t.EndPos }
 
 type Lexer interface {
 	// Note: Return io.EOF to indicate end of stream
@@ -705,7 +701,6 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 			token = GenericSymbol{
 				SymbolId: _EndMarker,
 				StartPos: stack.lexer.CurrentLocation(),
-				EndPos:   stack.lexer.CurrentLocation(),
 			}
 		}
 		item, err := NewSymbol(token)

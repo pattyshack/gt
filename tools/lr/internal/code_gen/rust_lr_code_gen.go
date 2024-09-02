@@ -81,27 +81,27 @@ func GenerateRustLRCode(
 	}
 	for _, term := range grammar.NonTerminals {
 		orderedSymbolNames = append(orderedSymbolNames, term.Name)
-  }
+	}
 
-  startMarker := &lr.Term{
-      Name:               lr.StartMarker,
-      IsTerminal:         true,
-      ValueType:          lr.Generic,
-    }
-  wildcard := &lr.Term{
-      Name:               lr.Wildcard,
-      IsTerminal:         true,
-      ValueType:          lr.Generic,
-    }
-  endMarker := &lr.Term{
-      Name:               lr.EndMarker,
-      IsTerminal:         true,
-      ValueType:          lr.Generic,
-    }
+	startMarker := &lr.Term{
+		Name:       lr.StartMarker,
+		IsTerminal: true,
+		ValueType:  lr.Generic,
+	}
+	wildcard := &lr.Term{
+		Name:       lr.Wildcard,
+		IsTerminal: true,
+		ValueType:  lr.Generic,
+	}
+	endMarker := &lr.Term{
+		Name:       lr.EndMarker,
+		IsTerminal: true,
+		ValueType:  lr.Generic,
+	}
 
-  grammar.Terms[startMarker.Name] = startMarker
-  grammar.Terms[wildcard.Name] = wildcard
-  grammar.Terms[endMarker.Name] = endMarker
+	grammar.Terms[startMarker.Name] = startMarker
+	grammar.Terms[wildcard.Name] = wildcard
+	grammar.Terms[endMarker.Name] = endMarker
 
 	return &rust_template.File{
 		Grammar:            grammar,

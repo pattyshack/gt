@@ -43,20 +43,16 @@ func (l LRLocation) ShortString() string {
 type LRToken interface {
 	Id() LRSymbolId
 	Loc() LRLocation
-	// Note: Symbol may optionally implement End() LRLocation
 }
 
 type LRGenericSymbol struct {
 	LRSymbolId
 	StartPos LRLocation
-	EndPos   LRLocation
 }
 
 func (t LRGenericSymbol) Id() LRSymbolId { return t.LRSymbolId }
 
 func (t LRGenericSymbol) Loc() LRLocation { return t.StartPos }
-
-func (t LRGenericSymbol) End() LRLocation { return t.EndPos }
 
 type LRLexer interface {
 	// Note: Return io.EOF to indicate end of stream
@@ -645,7 +641,6 @@ func (stack *_LRPseudoSymbolStack) Top() (*LRSymbol, error) {
 			token = LRGenericSymbol{
 				LRSymbolId: _LREndMarker,
 				StartPos:   stack.lexer.CurrentLocation(),
-				EndPos:     stack.lexer.CurrentLocation(),
 			}
 		}
 		item, err := NewSymbol(token)

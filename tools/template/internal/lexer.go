@@ -131,7 +131,6 @@ func (lexer *headerLexer) Next() (Token, error) {
 		return GenericSymbol{
 			SymbolId: SectionMarkerToken,
 			StartPos: Location(loc),
-			EndPos:   Location(lexer.reader.Location),
 		}, nil
 	}
 

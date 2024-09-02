@@ -150,39 +150,39 @@ func GenerateGoLRCode(
 		return nil, err
 	}
 
-  startMarker := &lr.Term{
-			Name:               lr.StartMarker,
-			IsTerminal:         true,
-			ValueType:          lr.Generic,
-			CodeGenSymbolConst: lr.StartMarker,
-			CodeGenType:        genericSymbol,
-		}
+	startMarker := &lr.Term{
+		Name:               lr.StartMarker,
+		IsTerminal:         true,
+		ValueType:          lr.Generic,
+		CodeGenSymbolConst: lr.StartMarker,
+		CodeGenType:        genericSymbol,
+	}
 	wildcard := &lr.Term{
-			Name:               lr.Wildcard,
-			IsTerminal:         true,
-			ValueType:          lr.Generic,
-			CodeGenSymbolConst: wildcardSymbol,
-			CodeGenType:        genericSymbol,
-		}
+		Name:               lr.Wildcard,
+		IsTerminal:         true,
+		ValueType:          lr.Generic,
+		CodeGenSymbolConst: wildcardSymbol,
+		CodeGenType:        genericSymbol,
+	}
 	endMarker := &lr.Term{
-			Name:               lr.EndMarker,
-			IsTerminal:         true,
-			ValueType:          lr.Generic,
-			CodeGenSymbolConst: endSymbol,
-			CodeGenType:        genericSymbol,
-		}
+		Name:               lr.EndMarker,
+		IsTerminal:         true,
+		ValueType:          lr.Generic,
+		CodeGenSymbolConst: endSymbol,
+		CodeGenType:        genericSymbol,
+	}
 
-  grammar.Terms[startMarker.Name] = startMarker
-  grammar.Terms[wildcard.Name] = wildcard
-  grammar.Terms[endMarker.Name] = endMarker
+	grammar.Terms[startMarker.Name] = startMarker
+	grammar.Terms[wildcard.Name] = wildcard
+	grammar.Terms[endMarker.Name] = endMarker
 
-  orderedSymbolNames := []string{lr.StartMarker, lr.Wildcard, lr.EndMarker}
-  for _, term := range grammar.Terminals {
-    orderedSymbolNames = append(orderedSymbolNames, term.Name)
-  }
-  for _, term := range grammar.NonTerminals {
-    orderedSymbolNames = append(orderedSymbolNames, term.Name)
-  }
+	orderedSymbolNames := []string{lr.StartMarker, lr.Wildcard, lr.EndMarker}
+	for _, term := range grammar.Terminals {
+		orderedSymbolNames = append(orderedSymbolNames, term.Name)
+	}
+	for _, term := range grammar.NonTerminals {
+		orderedSymbolNames = append(orderedSymbolNames, term.Name)
+	}
 
 	file := &go_template.File{
 		Package:                   cfg.Package,
@@ -218,11 +218,12 @@ func GenerateGoLRCode(
 		Sprintf:                   imports.Obj("fmt.Sprintf"),
 		Errorf:                    imports.Obj("fmt.Errorf"),
 		EOF:                       imports.Obj("io.EOF"),
-    OrderedSymbolNames:        orderedSymbolNames,
+		OrderedSymbolNames:        orderedSymbolNames,
 		Grammar:                   grammar,
 		States:                    states,
 		OrderedValueTypes:         orderedValueTypes,
 		OutputDebugNonKernelItems: cfg.OutputDebugNonKernelItems,
+		GenerateEndPos:            cfg.GenerateEndPos,
 	}
 
 	return codegen.NewFormattedGoSource(file), nil

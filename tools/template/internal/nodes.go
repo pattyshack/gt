@@ -34,7 +34,7 @@ func NewTToken(
 	trimTrailing bool) *TToken {
 
 	return &TToken{
-		GenericSymbol{id, loc, loc},
+		GenericSymbol{id, loc},
 		trimLeading,
 		trimTrailing,
 	}
@@ -145,7 +145,7 @@ func NewTemplateDeclaration(
 	args []Argument) *TemplateDeclaration {
 
 	return &TemplateDeclaration{
-		GenericSymbol{TemplateDeclToken, loc, loc},
+		GenericSymbol{TemplateDeclToken, loc},
 		name,
 		args,
 	}
