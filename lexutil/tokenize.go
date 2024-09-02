@@ -1,6 +1,7 @@
 package lexutil
 
 import (
+	"fmt"
 	"io"
 	"unicode"
 	"unicode/utf8"
@@ -428,9 +429,13 @@ func StripLeadingWhitespacesAndComments(
 			modified = true
 		}
 
-		num, _, err = PeekBlockComment(reader, true, 32)
+		num, scope, err := PeekBlockComment(reader, true, 32)
 		if err != nil {
 			return err
+		}
+
+		if scope > 0 {
+			return fmt.Errorf("block comment not terminated %s", reader.Location)
 		}
 
 		if num > 0 {
