@@ -70,22 +70,28 @@ type Lexer interface {
 	CurrentLocation() Location
 }
 
-type Reducer interface {
+type FileReducer interface {
 	// 22:8: file -> ...
 	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ GenericSymbol, Body_ []Statement) (*File, error)
+}
 
+type OptionalImportsReducer interface {
 	// 29:4: optional_imports -> imports: ...
 	ImportsToOptionalImports(Import_ *Value) (*Value, error)
 
 	// 30:4: optional_imports -> nil: ...
 	NilToOptionalImports() (*Value, error)
+}
 
+type BodyReducer interface {
 	// 33:4: body -> add: ...
 	AddToBody(Body_ []Statement, Statement_ Statement) ([]Statement, error)
 
 	// 34:4: body -> nil: ...
 	NilToBody() ([]Statement, error)
+}
 
+type StatementReducer interface {
 	// 37:4: statement -> atom: ...
 	AtomToStatement(Atom_ Statement) (Statement, error)
 
@@ -97,7 +103,9 @@ type Reducer interface {
 
 	// 40:4: statement -> if: ...
 	IfToStatement(If_ Statement) (Statement, error)
+}
 
+type AtomReducer interface {
 	// 43:4: atom -> text: ...
 	TextToAtom(Text_ *Atom) (Statement, error)
 
@@ -124,42 +132,71 @@ type Reducer interface {
 
 	// 51:4: atom -> error: ...
 	ErrorToAtom(Error_ *Atom) (Statement, error)
+}
 
+type ForReducer interface {
 	// 53:7: for -> ...
 	ToFor(For_ *Value, Body_ []Statement, End_ *TToken) (Statement, error)
+}
 
+type SwitchReducer interface {
 	// 57:4: switch -> with_whitespace: ...
 	WithWhitespaceToSwitch(Switch_ *Value, Text_ *Atom, CaseList_ []*Branch, OptionalDefault_ *Branch, End_ *TToken) (Statement, error)
 
 	// 58:4: switch -> without_whitespace: ...
 	WithoutWhitespaceToSwitch(Switch_ *Value, CaseList_ []*Branch, OptionalDefault_ *Branch, End_ *TToken) (Statement, error)
+}
 
+type CaseListReducer interface {
 	// 61:4: case_list -> add: ...
 	AddToCaseList(CaseList_ []*Branch, Case_ *Value, Body_ []Statement) ([]*Branch, error)
 
 	// 62:4: case_list -> case: ...
 	CaseToCaseList(Case_ *Value, Body_ []Statement) ([]*Branch, error)
+}
 
+type OptionalDefaultReducer interface {
 	// 65:4: optional_default -> default: ...
 	DefaultToOptionalDefault(Default_ *TToken, Body_ []Statement) (*Branch, error)
 
 	// 66:4: optional_default -> nil: ...
 	NilToOptionalDefault() (*Branch, error)
+}
 
+type IfReducer interface {
 	// 68:6: if -> ...
 	ToIf(If_ *Value, Body_ []Statement, ElseIfList_ []*Branch, OptionalElse_ *Branch, End_ *TToken) (Statement, error)
+}
 
+type ElseIfListReducer interface {
 	// 71:4: else_if_list -> add: ...
 	AddToElseIfList(ElseIfList_ []*Branch, ElseIf_ *Value, Body_ []Statement) ([]*Branch, error)
 
 	// 72:4: else_if_list -> nil: ...
 	NilToElseIfList() ([]*Branch, error)
+}
 
+type OptionalElseReducer interface {
 	// 75:4: optional_else -> else: ...
 	ElseToOptionalElse(Else_ *TToken, Body_ []Statement) (*Branch, error)
 
 	// 76:4: optional_else -> nil: ...
 	NilToOptionalElse() (*Branch, error)
+}
+
+type Reducer interface {
+	FileReducer
+	OptionalImportsReducer
+	BodyReducer
+	StatementReducer
+	AtomReducer
+	ForReducer
+	SwitchReducer
+	CaseListReducer
+	OptionalDefaultReducer
+	IfReducer
+	ElseIfListReducer
+	OptionalElseReducer
 }
 
 type ParseErrorHandler interface {

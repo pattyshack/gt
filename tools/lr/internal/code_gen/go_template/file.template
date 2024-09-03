@@ -166,18 +166,11 @@ type $LexerType interface {
     CurrentLocation() $LocationType
 }
 
-type $ReducerType interface {
-[[-$ firstRule := true -]]
 [[-for _, rule := range Grammar.NonTerminals-]]
     [[-if len(rule.Clauses) == 0-]]
         [[-continue-]]
-    [[-end-]]
-
-    [[-if !firstRule]]
-
-    [[-end-]]
-    [[-$ firstRule = false-]]
-
+    [[-end]]
+type $(rule.CodeGenReducerInterface) interface {
     [[-for clauseIdx, clause := range rule.Clauses-]]
         [[-if clauseIdx > 0]]
 
@@ -220,6 +213,15 @@ $paramName $(term.CodeGenType)$suffix
         [[-end-]]
 ) ($(rule.CodeGenType), error)
     [[-end-]]
+}
+[[end]]
+
+type $ReducerType interface {
+[[-for _, rule := range Grammar.NonTerminals-]]
+    [[-if len(rule.Clauses) == 0-]]
+        [[-continue-]]
+    [[-end]]
+  $(rule.CodeGenReducerInterface)
 [[-end]]
 }
 

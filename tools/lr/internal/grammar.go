@@ -43,7 +43,8 @@ type Term struct {
 
 	Reachable bool
 
-	CodeGenSymbolConst string
+	CodeGenReducerInterface string
+	CodeGenSymbolConst      string
 
 	// Temp variable populated by code generator.  The generated type is
 	// language specific.

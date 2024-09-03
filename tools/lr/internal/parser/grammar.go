@@ -62,19 +62,25 @@ type LRLexer interface {
 	CurrentLocation() LRLocation
 }
 
-type LRReducer interface {
+type LRGrammarReducer interface {
 	// 26:20: grammar -> ...
 	ToGrammar(Defs_ []Definition, AdditionalSections_ []*AdditionalSection) (*Grammar, error)
+}
 
+type LRAdditionalSectionsReducer interface {
 	// 29:4: additional_sections -> add: ...
 	AddToAdditionalSections(AdditionalSections_ []*AdditionalSection, AdditionalSection_ *AdditionalSection) ([]*AdditionalSection, error)
 
 	// 30:4: additional_sections -> nil: ...
 	NilToAdditionalSections() ([]*AdditionalSection, error)
+}
 
+type LRAdditionalSectionReducer interface {
 	// 32:41: additional_section -> ...
 	ToAdditionalSection(SectionMarker_ LRGenericSymbol, Identifier_ *Token, SectionContent_ *Token) (*AdditionalSection, error)
+}
 
+type LRDefsReducer interface {
 	// 35:4: defs -> add: ...
 	AddToDefs(Defs_ []Definition, Def_ Definition) ([]Definition, error)
 
@@ -86,7 +92,9 @@ type LRReducer interface {
 
 	// 38:4: defs -> explicit_def: ...
 	ExplicitDefToDefs(Def_ Definition, char LRGenericSymbol) ([]Definition, error)
+}
 
+type LRDefReducer interface {
 	// 42:4: def -> term_decl: ...
 	TermDeclToDef(Rword_ LRGenericSymbol, char LRGenericSymbol, Identifier_ *Token, char2 LRGenericSymbol, NonemptyIdOrCharList_ []*Token) (Definition, error)
 
@@ -98,19 +106,25 @@ type LRReducer interface {
 
 	// 46:4: def -> rule: ...
 	RuleToDef(Rule_ *Rule) (Definition, error)
+}
 
+type LRRwordReducer interface {
 	// 49:4: rword -> TOKEN: ...
 	TokenToRword(Token_ LRGenericSymbol) (LRGenericSymbol, error)
 
 	// 50:4: rword -> TYPE: ...
 	TypeToRword(Type_ LRGenericSymbol) (LRGenericSymbol, error)
+}
 
+type LRNonemptyIdentListReducer interface {
 	// 53:4: nonempty_ident_list -> add: ...
 	AddToNonemptyIdentList(NonemptyIdentList_ []*Token, Identifier_ *Token) ([]*Token, error)
 
 	// 54:4: nonempty_ident_list -> ident: ...
 	IdentToNonemptyIdentList(Identifier_ *Token) ([]*Token, error)
+}
 
+type LRNonemptyIdOrCharListReducer interface {
 	// 57:4: nonempty_id_or_char_list -> add_id: ...
 	AddIdToNonemptyIdOrCharList(NonemptyIdOrCharList_ []*Token, Identifier_ *Token) ([]*Token, error)
 
@@ -122,27 +136,50 @@ type LRReducer interface {
 
 	// 60:4: nonempty_id_or_char_list -> char: ...
 	CharToNonemptyIdOrCharList(Character_ *Token) ([]*Token, error)
+}
 
+type LRIdOrCharListReducer interface {
 	// 63:4: id_or_char_list -> list: ...
 	ListToIdOrCharList(NonemptyIdOrCharList_ []*Token) ([]*Token, error)
 
 	// 64:4: id_or_char_list -> nil: ...
 	NilToIdOrCharList() ([]*Token, error)
+}
 
+type LRRuleReducer interface {
 	// 66:14: rule -> ...
 	ToRule(RuleDef_ *RuleDef, Clauses_ []*Clause) (*Rule, error)
+}
 
+type LRClauseReducer interface {
 	// 69:2: clause -> unlabeled: ...
 	UnlabeledToClause(IdOrCharList_ []*Token) (*Clause, error)
 
 	// 70:2: clause -> labeled: ...
 	LabeledToClause(Label_ *Token, IdOrCharList_ []*Token) (*Clause, error)
+}
 
+type LRClausesReducer interface {
 	// 73:4: clauses -> add: ...
 	AddToClauses(Clauses_ []*Clause, char LRGenericSymbol, Clause_ *Clause) ([]*Clause, error)
 
 	// 74:4: clauses -> clause: ...
 	ClauseToClauses(Clause_ *Clause) ([]*Clause, error)
+}
+
+type LRReducer interface {
+	LRGrammarReducer
+	LRAdditionalSectionsReducer
+	LRAdditionalSectionReducer
+	LRDefsReducer
+	LRDefReducer
+	LRRwordReducer
+	LRNonemptyIdentListReducer
+	LRNonemptyIdOrCharListReducer
+	LRIdOrCharListReducer
+	LRRuleReducer
+	LRClauseReducer
+	LRClausesReducer
 }
 
 type LRParseErrorHandler interface {

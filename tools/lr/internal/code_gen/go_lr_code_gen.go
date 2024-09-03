@@ -80,6 +80,11 @@ func populateGoCodeGenVariables(
 				codegen.SnakeToCamel(term.Name) + suffix)
 		}
 
+		if !term.IsTerminal {
+			term.CodeGenReducerInterface = nameGen.Public(
+				codegen.SnakeToCamel(term.Name) + "Reducer")
+		}
+
 		for _, clause := range term.Clauses {
 			reducerName := nameGen.Add(
 				codegen.SnakeToCamel(clause.Label) +
