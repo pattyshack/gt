@@ -107,7 +107,7 @@ type Clause struct {
 	Label *Token // optional
 	Body  []*Token
 
-  Passthrough bool
+	Passthrough bool
 
 	// set by NewRule
 	LRLocation
@@ -118,9 +118,9 @@ type Clause struct {
 
 func NewClause(label *Token, body []*Token, passthrough bool) *Clause {
 	return &Clause{
-		Label: label,
-		Body:  body,
-    Passthrough: passthrough,
+		Label:       label,
+		Body:        body,
+		Passthrough: passthrough,
 	}
 }
 

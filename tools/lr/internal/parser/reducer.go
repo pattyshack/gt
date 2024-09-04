@@ -202,17 +202,17 @@ func (Reducer) ClauseToClauses(clause *Clause) ([]*Clause, error) {
 }
 
 func (Reducer) PassthroughIdToClause(
-  eq LRGenericSymbol,
-  id *Token,
+	eq LRGenericSymbol,
+	id *Token,
 ) (*Clause, error) {
-  return NewClause(nil, []*Token{id}, true), nil
+	return NewClause(nil, []*Token{id}, true), nil
 }
 
 func (Reducer) PassthroughCharToClause(
-  eq LRGenericSymbol,
-  char *Token,
+	eq LRGenericSymbol,
+	char *Token,
 ) (*Clause, error) {
-  return NewClause(nil, []*Token{char}, true), nil
+	return NewClause(nil, []*Token{char}, true), nil
 }
 
 func (Reducer) UnlabeledToClause(

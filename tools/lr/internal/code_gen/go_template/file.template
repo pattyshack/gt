@@ -533,6 +533,9 @@ func (s *$SymbolType) Loc() $LocationType {
         [[-continue-]]
     [[-end-]]
     [[-$ terms := valueTerms[field.Name]]]
+    [[-if len(terms) == 0]]
+      [[-continue]]
+    [[-end]]
     case 
     [[-for idx, term := range terms -]]
 $(term.CodeGenSymbolConst)
