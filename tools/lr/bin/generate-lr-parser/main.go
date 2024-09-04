@@ -13,16 +13,10 @@ import (
 	lr "github.com/pattyshack/gt/tools/lr/internal"
 	"github.com/pattyshack/gt/tools/lr/internal/code_gen"
 	"github.com/pattyshack/gt/tools/lr/internal/parser"
-	"github.com/pattyshack/gt/tools/lr/internal/parser/yacc"
 )
 
 func main() {
 	cpuProfile := flag.String("cpu-profile", "", "write cpu profile to file")
-
-	useYacc := flag.Bool(
-		"use-yacc",
-		false,
-		"Use yacc generated parser instead of bootstrap parser")
 
 	shouldPrintTokens := flag.Bool("print-tokens", false, "For testing only")
 	shouldPrintParsed := flag.Bool("print-parsed", false, "For testing only")
@@ -66,19 +60,9 @@ func main() {
 	}
 	defer file.Close()
 
-	var parsed *parser.Grammar
-	if *useYacc {
-		fmt.Println("Using yacc generated parser")
-		parsed, err = yacc.Parse(filename, file)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		parsed, err = parser.Parse(filename, file)
-		if err != nil {
-			panic(err)
-		}
-
+	parsed, err := parser.Parse(filename, file)
+	if err != nil {
+		panic(err)
 	}
 
 	grammar, err := lr.NewGrammar(filename, parsed)
@@ -170,15 +154,13 @@ func printParsed(filename string) {
 	fmt.Println("File (Parsed Definitions): ", filename)
 	fmt.Println("==================================")
 
-	yacc.LrErrorVerbose = true
-
 	file, err := os.Open(filename)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	parsed, err := yacc.Parse(filename, file)
+	parsed, err := parser.Parse(filename, file)
 	if err != nil {
 		panic(err)
 	}
