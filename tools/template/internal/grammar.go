@@ -76,8 +76,6 @@ type FileReducer interface {
 }
 
 type OptionalImportsReducer interface {
-	// 29:4: optional_imports -> imports: ...
-	ImportsToOptionalImports(Import_ *Value) (*Value, error)
 
 	// 30:4: optional_imports -> nil: ...
 	NilToOptionalImports() (*Value, error)
@@ -89,49 +87,6 @@ type BodyReducer interface {
 
 	// 34:4: body -> nil: ...
 	NilToBody() ([]Statement, error)
-}
-
-type StatementReducer interface {
-	// 37:4: statement -> atom: ...
-	AtomToStatement(Atom_ Statement) (Statement, error)
-
-	// 38:4: statement -> for: ...
-	ForToStatement(For_ Statement) (Statement, error)
-
-	// 39:4: statement -> switch: ...
-	SwitchToStatement(Switch_ Statement) (Statement, error)
-
-	// 40:4: statement -> if: ...
-	IfToStatement(If_ Statement) (Statement, error)
-}
-
-type AtomReducer interface {
-	// 43:4: atom -> text: ...
-	TextToAtom(Text_ *Atom) (Statement, error)
-
-	// 44:4: atom -> substitution: ...
-	SubstitutionToAtom(Substitution_ *Atom) (Statement, error)
-
-	// 45:4: atom -> embed: ...
-	EmbedToAtom(Embed_ *Atom) (Statement, error)
-
-	// 46:4: atom -> copy_section: ...
-	CopySectionToAtom(CopySection_ *Atom) (Statement, error)
-
-	// 47:4: atom -> comment: ...
-	CommentToAtom(Comment_ *Atom) (Statement, error)
-
-	// 48:4: atom -> continue: ...
-	ContinueToAtom(Continue_ *Atom) (Statement, error)
-
-	// 49:4: atom -> break: ...
-	BreakToAtom(Break_ *Atom) (Statement, error)
-
-	// 50:4: atom -> return: ...
-	ReturnToAtom(Return_ *Atom) (Statement, error)
-
-	// 51:4: atom -> error: ...
-	ErrorToAtom(Error_ *Atom) (Statement, error)
 }
 
 type ForReducer interface {
@@ -188,8 +143,6 @@ type Reducer interface {
 	FileReducer
 	OptionalImportsReducer
 	BodyReducer
-	StatementReducer
-	AtomReducer
 	ForReducer
 	SwitchReducer
 	CaseListReducer
@@ -432,7 +385,7 @@ type _ReduceType int
 
 const (
 	_ReduceToFile                    = _ReduceType(1)
-	_ReduceImportsToOptionalImports  = _ReduceType(2)
+	_ReduceImportToOptionalImports   = _ReduceType(2)
 	_ReduceNilToOptionalImports      = _ReduceType(3)
 	_ReduceAddToBody                 = _ReduceType(4)
 	_ReduceNilToBody                 = _ReduceType(5)
@@ -467,8 +420,8 @@ func (i _ReduceType) String() string {
 	switch i {
 	case _ReduceToFile:
 		return "ToFile"
-	case _ReduceImportsToOptionalImports:
-		return "ImportsToOptionalImports"
+	case _ReduceImportToOptionalImports:
+		return "ImportToOptionalImports"
 	case _ReduceNilToOptionalImports:
 		return "NilToOptionalImports"
 	case _ReduceAddToBody:
@@ -796,11 +749,13 @@ func (act *_Action) ReduceSymbol(
 		stack = stack[:len(stack)-5]
 		symbol.SymbolId_ = FileType
 		symbol.File, err = reducer.ToFile(args[0].Value, args[1].Value, args[2].TemplateDecl, args[3].Generic_, args[4].Statements)
-	case _ReduceImportsToOptionalImports:
+	case _ReduceImportToOptionalImports:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = OptionalImportsType
-		symbol.Value, err = reducer.ImportsToOptionalImports(args[0].Value)
+		//line grammar.lr:29:6
+		symbol.Value = args[0].Value
+		err = nil
 	case _ReduceNilToOptionalImports:
 		symbol.SymbolId_ = OptionalImportsType
 		symbol.Value, err = reducer.NilToOptionalImports()
@@ -816,67 +771,93 @@ func (act *_Action) ReduceSymbol(
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = StatementType
-		symbol.Statement, err = reducer.AtomToStatement(args[0].Statement)
+		//line grammar.lr:37:6
+		symbol.Statement = args[0].Statement
+		err = nil
 	case _ReduceForToStatement:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = StatementType
-		symbol.Statement, err = reducer.ForToStatement(args[0].Statement)
+		//line grammar.lr:38:6
+		symbol.Statement = args[0].Statement
+		err = nil
 	case _ReduceSwitchToStatement:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = StatementType
-		symbol.Statement, err = reducer.SwitchToStatement(args[0].Statement)
+		//line grammar.lr:39:6
+		symbol.Statement = args[0].Statement
+		err = nil
 	case _ReduceIfToStatement:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = StatementType
-		symbol.Statement, err = reducer.IfToStatement(args[0].Statement)
+		//line grammar.lr:40:6
+		symbol.Statement = args[0].Statement
+		err = nil
 	case _ReduceTextToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.TextToAtom(args[0].Atom)
+		//line grammar.lr:43:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceSubstitutionToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.SubstitutionToAtom(args[0].Atom)
+		//line grammar.lr:44:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceEmbedToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.EmbedToAtom(args[0].Atom)
+		//line grammar.lr:45:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceCopySectionToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.CopySectionToAtom(args[0].Atom)
+		//line grammar.lr:46:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceCommentToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.CommentToAtom(args[0].Atom)
+		//line grammar.lr:47:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceContinueToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.ContinueToAtom(args[0].Atom)
+		//line grammar.lr:48:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceBreakToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.BreakToAtom(args[0].Atom)
+		//line grammar.lr:49:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceReturnToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.ReturnToAtom(args[0].Atom)
+		//line grammar.lr:50:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceErrorToAtom:
 		args := stack[len(stack)-1:]
 		stack = stack[:len(stack)-1]
 		symbol.SymbolId_ = AtomType
-		symbol.Statement, err = reducer.ErrorToAtom(args[0].Atom)
+		//line grammar.lr:51:6
+		symbol.Statement = args[0].Atom
+		err = nil
 	case _ReduceToFor:
 		args := stack[len(stack)-3:]
 		stack = stack[:len(stack)-3]
@@ -1014,7 +995,7 @@ var (
 	_GotoState47Action                     = &_Action{_ShiftAction, _State47, 0}
 	_GotoState48Action                     = &_Action{_ShiftAction, _State48, 0}
 	_ReduceToFileAction                    = &_Action{_ReduceAction, 0, _ReduceToFile}
-	_ReduceImportsToOptionalImportsAction  = &_Action{_ReduceAction, 0, _ReduceImportsToOptionalImports}
+	_ReduceImportToOptionalImportsAction   = &_Action{_ReduceAction, 0, _ReduceImportToOptionalImports}
 	_ReduceNilToOptionalImportsAction      = &_Action{_ReduceAction, 0, _ReduceNilToOptionalImports}
 	_ReduceAddToBodyAction                 = &_Action{_ReduceAction, 0, _ReduceAddToBody}
 	_ReduceNilToBodyAction                 = &_Action{_ReduceAction, 0, _ReduceNilToBody}
@@ -1217,7 +1198,7 @@ var _ActionTable = _ActionTableType{
 	{_State46, SwitchType}:          _GotoState25Action,
 	{_State46, IfType}:              _GotoState23Action,
 	{_State3, TemplateDeclToken}:    _ReduceNilToOptionalImportsAction,
-	{_State4, TemplateDeclToken}:    _ReduceImportsToOptionalImportsAction,
+	{_State4, TemplateDeclToken}:    _ReduceImportToOptionalImportsAction,
 	{_State7, _WildcardMarker}:      _ReduceNilToBodyAction,
 	{_State8, _EndMarker}:           _ReduceToFileAction,
 	{_State9, _WildcardMarker}:      _ReduceBreakToAtomAction,

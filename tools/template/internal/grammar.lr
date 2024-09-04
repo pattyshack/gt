@@ -26,7 +26,7 @@ file -> PACKAGE
         body
 
 optional_imports ->
-    imports : IMPORT |
+    = IMPORT |
     nil     :
 
 body ->
@@ -34,21 +34,21 @@ body ->
     nil :
 
 statement ->
-    atom   : atom |
-    for    : for |
-    switch : switch |
-    if     : if
+    = atom |
+    = for |
+    = switch |
+    = if
 
 atom ->
-    text         : TEXT |
-    substitution : SUBSTITUTION |
-    embed        : EMBED |
-    copy_section : COPY_SECTION |
-    comment      : COMMENT |
-    continue     : CONTINUE |
-    break        : BREAK |
-    return       : RETURN |
-    error        : ERROR
+    = TEXT |
+    = SUBSTITUTION |
+    = EMBED |
+    = COPY_SECTION |
+    = COMMENT |
+    = CONTINUE |
+    = BREAK |
+    = RETURN |
+    = ERROR
 
 for -> FOR body END
 

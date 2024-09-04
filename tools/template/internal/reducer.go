@@ -31,10 +31,6 @@ func (ReducerImpl) ToFile(
 	}, nil
 }
 
-func (ReducerImpl) ImportsToOptionalImports(imports *Value) (*Value, error) {
-	return imports, nil
-}
-
 func (ReducerImpl) NilToOptionalImports() (*Value, error) {
 	return nil, nil
 }
@@ -50,58 +46,6 @@ func (ReducerImpl) AddToBody(
 
 func (ReducerImpl) NilToBody() ([]Statement, error) {
 	return nil, nil
-}
-
-func (ReducerImpl) AtomToStatement(atom Statement) (Statement, error) {
-	return atom, nil
-}
-
-func (ReducerImpl) ForToStatement(for_ Statement) (Statement, error) {
-	return for_, nil
-}
-
-func (ReducerImpl) SwitchToStatement(switch_ Statement) (Statement, error) {
-	return switch_, nil
-}
-
-func (ReducerImpl) IfToStatement(if_ Statement) (Statement, error) {
-	return if_, nil
-}
-
-func (ReducerImpl) TextToAtom(text *Atom) (Statement, error) {
-	return text, nil
-}
-
-func (ReducerImpl) SubstitutionToAtom(sub *Atom) (Statement, error) {
-	return sub, nil
-}
-
-func (ReducerImpl) EmbedToAtom(embed *Atom) (Statement, error) {
-	return embed, nil
-}
-
-func (ReducerImpl) CopySectionToAtom(copySection *Atom) (Statement, error) {
-	return copySection, nil
-}
-
-func (ReducerImpl) CommentToAtom(comment *Atom) (Statement, error) {
-	return comment, nil
-}
-
-func (ReducerImpl) ContinueToAtom(cont *Atom) (Statement, error) {
-	return cont, nil
-}
-
-func (ReducerImpl) BreakToAtom(break_ *Atom) (Statement, error) {
-	return break_, nil
-}
-
-func (ReducerImpl) ReturnToAtom(ret *Atom) (Statement, error) {
-	return ret, nil
-}
-
-func (ReducerImpl) ErrorToAtom(err *Atom) (Statement, error) {
-	return err, nil
 }
 
 func (ReducerImpl) ToFor(
