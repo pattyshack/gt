@@ -27,6 +27,7 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 		">":         '>',
 		"|":         '|',
 		";":         ';',
+		"=":         '=',
 
 		"%%": LRSectionMarkerToken,
 

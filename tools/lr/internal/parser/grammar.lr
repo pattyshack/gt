@@ -14,7 +14,7 @@
 // a single token by the lexer.
 %token <Token> LABEL
 
-%token '<' '>' '|' ';' SECTION_MARKER
+%token '<' '>' '|' ';' '=' SECTION_MARKER
 %token <Token> CHARACTER IDENTIFIER
 
 %token <Token> SECTION_CONTENT
@@ -46,8 +46,8 @@ def<Definition> ->
     rule       : rule
 
 rword ->
-    TOKEN |
-    TYPE
+    = TOKEN |
+    = TYPE
 
 nonempty_ident_list<Tokens> ->
     add   : nonempty_ident_list IDENTIFIER |
@@ -66,6 +66,8 @@ id_or_char_list<Tokens> ->
 rule<Rule> -> RULE_DEF clauses
 
 clause<Clause> ->
+  passthrough_id: '=' IDENTIFIER |
+  passthrough_char: '=' CHARACTER |
   unlabeled: id_or_char_list |
   labeled: LABEL id_or_char_list
 

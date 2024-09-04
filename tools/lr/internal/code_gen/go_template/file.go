@@ -953,7 +953,7 @@ type `))
 	// file.template:169:0
 	for _, rule := range Grammar.NonTerminals {
 		// file.template:170:4
-		if len(rule.Clauses) == 0 {
+		if rule.NumReducerClauses == 0 {
 			// file.template:171:8
 			continue
 		}
@@ -988,8 +988,13 @@ type `))
 		// file.template:174:4
 		for clauseIdx, clause := range rule.Clauses {
 			// file.template:175:8
+			if clause.Passthrough {
+				// file.template:176:10
+				continue
+			}
+			// file.template:178:8
 			if clauseIdx > 0 {
-				// file.template:175:29
+				// file.template:178:29
 				{
 					_n, _err := _output.Write([]byte(`
 `))
@@ -999,9 +1004,9 @@ type `))
 					}
 				}
 			}
-			// file.template:179:8
+			// file.template:182:8
 			if clause.Label == "" {
-				// file.template:179:34
+				// file.template:182:34
 				{
 					_n, _err := _output.Write([]byte(`
     // `))
@@ -1010,18 +1015,18 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:180:7
+				// file.template:183:7
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(clause.LRLocation.ShortString()),
-						"file.template:180:7")
+						"file.template:183:7")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:180:41
+				// file.template:183:41
 				{
 					_n, _err := _output.Write([]byte(`: `))
 					_numWritten += int64(_n)
@@ -1029,18 +1034,18 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:180:43
+				// file.template:183:43
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(rule.Name),
-						"file.template:180:43")
+						"file.template:183:43")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:180:55
+				// file.template:183:55
 				{
 					_n, _err := _output.Write([]byte(` -> ...`))
 					_numWritten += int64(_n)
@@ -1049,7 +1054,7 @@ type `))
 					}
 				}
 			} else {
-				// file.template:181:17
+				// file.template:184:17
 				{
 					_n, _err := _output.Write([]byte(`
     // `))
@@ -1058,18 +1063,18 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:7
+				// file.template:185:7
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(clause.LRLocation.ShortString()),
-						"file.template:182:7")
+						"file.template:185:7")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:41
+				// file.template:185:41
 				{
 					_n, _err := _output.Write([]byte(`: `))
 					_numWritten += int64(_n)
@@ -1077,18 +1082,18 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:43
+				// file.template:185:43
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(rule.Name),
-						"file.template:182:43")
+						"file.template:185:43")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:55
+				// file.template:185:55
 				{
 					_n, _err := _output.Write([]byte(` -> `))
 					_numWritten += int64(_n)
@@ -1096,18 +1101,18 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:59
+				// file.template:185:59
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(clause.Label),
-						"file.template:182:59")
+						"file.template:185:59")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:182:74
+				// file.template:185:74
 				{
 					_n, _err := _output.Write([]byte(`: ...`))
 					_numWritten += int64(_n)
@@ -1116,9 +1121,9 @@ type `))
 					}
 				}
 			}
-			// file.template:185:8
+			// file.template:188:8
 			paramNameCount := map[string]int{}
-			// file.template:185:49
+			// file.template:188:49
 			{
 				_n, _err := _output.Write([]byte(`
     `))
@@ -1127,18 +1132,18 @@ type `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:186:4
+			// file.template:189:4
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerName),
-					"file.template:186:4")
+					"file.template:189:4")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:186:32
+			// file.template:189:32
 			{
 				_n, _err := _output.Write([]byte(`(`))
 				_numWritten += int64(_n)
@@ -1146,9 +1151,9 @@ type `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:187:8
+			// file.template:190:8
 			for termIdx, term := range clause.Bindings {
-				// file.template:189:12
+				// file.template:192:12
 
 				paramName := ""
 				if term.SymbolId == parser.LRCharacterToken {
@@ -1170,18 +1175,18 @@ type `))
 					suffix = ", "
 				}
 
-				// file.template:212:0
+				// file.template:215:0
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(paramName),
-						"file.template:212:0")
+						"file.template:215:0")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:212:10
+				// file.template:215:10
 				{
 					_n, _err := _output.Write([]byte(` `))
 					_numWritten += int64(_n)
@@ -1189,30 +1194,30 @@ type `))
 						return _numWritten, _err
 					}
 				}
-				// file.template:212:11
+				// file.template:215:11
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(term.CodeGenType),
-						"file.template:212:11")
+						"file.template:215:11")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:212:30
+				// file.template:215:30
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(suffix),
-						"file.template:212:30")
+						"file.template:215:30")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
 			}
-			// file.template:213:17
+			// file.template:216:17
 			{
 				_n, _err := _output.Write([]byte(`) (`))
 				_numWritten += int64(_n)
@@ -1220,18 +1225,18 @@ type `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:214:3
+			// file.template:217:3
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(rule.CodeGenType),
-					"file.template:214:3")
+					"file.template:217:3")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:214:22
+			// file.template:217:22
 			{
 				_n, _err := _output.Write([]byte(`, error)`))
 				_numWritten += int64(_n)
@@ -1240,7 +1245,7 @@ type `))
 				}
 			}
 		}
-		// file.template:215:13
+		// file.template:218:13
 		{
 			_n, _err := _output.Write([]byte(`}
 `))
@@ -1250,7 +1255,7 @@ type `))
 			}
 		}
 	}
-	// file.template:217:7
+	// file.template:220:7
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -1260,18 +1265,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:219:5
+	// file.template:222:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReducerType),
-			"file.template:219:5")
+			"file.template:222:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:219:17
+	// file.template:222:17
 	{
 		_n, _err := _output.Write([]byte(` interface {`))
 		_numWritten += int64(_n)
@@ -1279,35 +1284,38 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:220:0
+	// file.template:223:0
 	for _, rule := range Grammar.NonTerminals {
-		// file.template:221:4
+		// file.template:224:4
 		if len(rule.Clauses) == 0 {
-			// file.template:222:8
+			// file.template:225:8
 			continue
 		}
-		// file.template:223:12
-		{
-			_n, _err := _output.Write([]byte(`
+		// file.template:227:2
+		if rule.NumReducerClauses > 0 {
+			// file.template:227:36
+			{
+				_n, _err := _output.Write([]byte(`
   `))
-			_numWritten += int64(_n)
-			if _err != nil {
-				return _numWritten, _err
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
 			}
-		}
-		// file.template:224:2
-		{
-			_n, _err := _template.writeValue(
-				_output,
-				(rule.CodeGenReducerInterface),
-				"file.template:224:2")
-			_numWritten += int64(_n)
-			if _err != nil {
-				return _numWritten, _err
+			// file.template:228:2
+			{
+				_n, _err := _template.writeValue(
+					_output,
+					(rule.CodeGenReducerInterface),
+					"file.template:228:2")
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
 			}
 		}
 	}
-	// file.template:225:8
+	// file.template:230:8
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -1318,18 +1326,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:228:5
+	// file.template:233:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ErrHandlerType),
-			"file.template:228:5")
+			"file.template:233:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:228:20
+	// file.template:233:20
 	{
 		_n, _err := _output.Write([]byte(` interface {
     Error(nextToken `))
@@ -1338,18 +1346,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:229:20
+	// file.template:234:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TokenType),
-			"file.template:229:20")
+			"file.template:234:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:229:30
+	// file.template:234:30
 	{
 		_n, _err := _output.Write([]byte(`, parseStack `))
 		_numWritten += int64(_n)
@@ -1357,18 +1365,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:229:43
+	// file.template:234:43
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:229:43")
+			"file.template:234:43")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:229:53
+	// file.template:234:53
 	{
 		_n, _err := _output.Write([]byte(`) error
 }
@@ -1379,18 +1387,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:232:5
+	// file.template:237:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(DefaultErrHandlerType),
-			"file.template:232:5")
+			"file.template:237:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:232:27
+	// file.template:237:27
 	{
 		_n, _err := _output.Write([]byte(` struct {}
 
@@ -1400,18 +1408,18 @@ func (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:6
+	// file.template:239:6
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(DefaultErrHandlerType),
-			"file.template:234:6")
+			"file.template:239:6")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:28
+	// file.template:239:28
 	{
 		_n, _err := _output.Write([]byte(`) Error(nextToken `))
 		_numWritten += int64(_n)
@@ -1419,18 +1427,18 @@ func (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:46
+	// file.template:239:46
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TokenType),
-			"file.template:234:46")
+			"file.template:239:46")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:56
+	// file.template:239:56
 	{
 		_n, _err := _output.Write([]byte(`, stack `))
 		_numWritten += int64(_n)
@@ -1438,18 +1446,18 @@ func (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:64
+	// file.template:239:64
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:234:64")
+			"file.template:239:64")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:234:74
+	// file.template:239:74
 	{
 		_n, _err := _output.Write([]byte(`) error {
     return `))
@@ -1458,18 +1466,18 @@ func (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:235:11
+	// file.template:240:11
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Errorf),
-			"file.template:235:11")
+			"file.template:240:11")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:235:18
+	// file.template:240:18
 	{
 		_n, _err := _output.Write([]byte(`(
         "Syntax error: unexpected symbol %v. Expecting %v (%v)",
@@ -1480,18 +1488,18 @@ func (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:238:8
+	// file.template:243:8
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ExpectedTerminalsFunc),
-			"file.template:238:8")
+			"file.template:243:8")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:238:30
+	// file.template:243:30
 	{
 		_n, _err := _output.Write([]byte(`(stack[len(stack)-1].StateId),
         nextToken.Loc())
@@ -1503,18 +1511,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:5
+	// file.template:247:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ExpectedTerminalsFunc),
-			"file.template:242:5")
+			"file.template:247:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:27
+	// file.template:247:27
 	{
 		_n, _err := _output.Write([]byte(`(id `))
 		_numWritten += int64(_n)
@@ -1522,18 +1530,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:31
+	// file.template:247:31
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:242:31")
+			"file.template:247:31")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:43
+	// file.template:247:43
 	{
 		_n, _err := _output.Write([]byte(`) []`))
 		_numWritten += int64(_n)
@@ -1541,18 +1549,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:47
+	// file.template:247:47
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:242:47")
+			"file.template:247:47")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:242:60
+	// file.template:247:60
 	{
 		_n, _err := _output.Write([]byte(` {
     result := []`))
@@ -1561,18 +1569,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:243:16
+	// file.template:248:16
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:243:16")
+			"file.template:248:16")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:243:29
+	// file.template:248:29
 	{
 		_n, _err := _output.Write([]byte(`{}
     for key, _ := range `))
@@ -1581,18 +1589,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:244:24
+	// file.template:249:24
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTable),
-			"file.template:244:24")
+			"file.template:249:24")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:244:36
+	// file.template:249:36
 	{
 		_n, _err := _output.Write([]byte(` {
         if key.`))
@@ -1601,18 +1609,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:245:15
+	// file.template:250:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:245:15")
+			"file.template:250:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:245:27
+	// file.template:250:27
 	{
 		_n, _err := _output.Write([]byte(` != id {
             continue
@@ -1623,18 +1631,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:248:36
+	// file.template:253:36
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:248:36")
+			"file.template:253:36")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:248:49
+	// file.template:253:49
 	{
 		_n, _err := _output.Write([]byte(`)
     }
@@ -1645,18 +1653,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:251:4
+	// file.template:256:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SortSlice),
-			"file.template:251:4")
+			"file.template:256:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:251:14
+	// file.template:256:14
 	{
 		_n, _err := _output.Write([]byte(`(result, func(i int, j int) bool {return result[i] < result[j]})
     return result
@@ -1667,16 +1675,16 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:255:0
+	// file.template:260:0
 	for idx, start := range Grammar.Starts {
-		// file.template:256:4
+		// file.template:261:4
 
 		parseSuffix := ""
 		if len(Grammar.Starts) > 1 {
 			parseSuffix = codegen.SnakeToCamel(start.Name)
 		}
 
-		// file.template:263:6
+		// file.template:268:6
 		{
 			_n, _err := _output.Write([]byte(`
 func `))
@@ -1685,29 +1693,29 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:5
+		// file.template:269:5
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ParseFuncPrefix),
-				"file.template:264:5")
+				"file.template:269:5")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:23
+		// file.template:269:23
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(parseSuffix),
-				"file.template:264:23")
+				"file.template:269:23")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:37
+		// file.template:269:37
 		{
 			_n, _err := _output.Write([]byte(`(lexer `))
 			_numWritten += int64(_n)
@@ -1715,18 +1723,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:44
+		// file.template:269:44
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(LexerType),
-				"file.template:264:44")
+				"file.template:269:44")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:54
+		// file.template:269:54
 		{
 			_n, _err := _output.Write([]byte(`, reducer `))
 			_numWritten += int64(_n)
@@ -1734,18 +1742,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:64
+		// file.template:269:64
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ReducerType),
-				"file.template:264:64")
+				"file.template:269:64")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:264:76
+		// file.template:269:76
 		{
 			_n, _err := _output.Write([]byte(`) (`))
 			_numWritten += int64(_n)
@@ -1753,18 +1761,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:266:0
+		// file.template:271:0
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(start.CodeGenType),
-				"file.template:266:0")
+				"file.template:271:0")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:266:20
+		// file.template:271:20
 		{
 			_n, _err := _output.Write([]byte(`, error) {
 
@@ -1774,29 +1782,29 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:268:11
+		// file.template:273:11
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ParseFuncPrefix),
-				"file.template:268:11")
+				"file.template:273:11")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:268:29
+		// file.template:273:29
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(parseSuffix),
-				"file.template:268:29")
+				"file.template:273:29")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:268:43
+		// file.template:273:43
 		{
 			_n, _err := _output.Write([]byte(`WithCustomErrorHandler(
         lexer,
@@ -1807,18 +1815,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:271:8
+		// file.template:276:8
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(DefaultErrHandlerType),
-				"file.template:271:8")
+				"file.template:276:8")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:271:30
+		// file.template:276:30
 		{
 			_n, _err := _output.Write([]byte(`{})
 }
@@ -1829,29 +1837,29 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:274:5
+		// file.template:279:5
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ParseFuncPrefix),
-				"file.template:274:5")
+				"file.template:279:5")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:274:23
+		// file.template:279:23
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(parseSuffix),
-				"file.template:274:23")
+				"file.template:279:23")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:274:37
+		// file.template:279:37
 		{
 			_n, _err := _output.Write([]byte(`WithCustomErrorHandler(
     lexer `))
@@ -1860,18 +1868,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:275:10
+		// file.template:280:10
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(LexerType),
-				"file.template:275:10")
+				"file.template:280:10")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:275:20
+		// file.template:280:20
 		{
 			_n, _err := _output.Write([]byte(`,
     reducer `))
@@ -1880,18 +1888,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:276:12
+		// file.template:281:12
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ReducerType),
-				"file.template:276:12")
+				"file.template:281:12")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:276:24
+		// file.template:281:24
 		{
 			_n, _err := _output.Write([]byte(`,
     errHandler `))
@@ -1900,18 +1908,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:277:15
+		// file.template:282:15
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ErrHandlerType),
-				"file.template:277:15")
+				"file.template:282:15")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:277:30
+		// file.template:282:30
 		{
 			_n, _err := _output.Write([]byte(`) (
     `))
@@ -1920,18 +1928,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:278:4
+		// file.template:283:4
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(start.CodeGenType),
-				"file.template:278:4")
+				"file.template:283:4")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:278:24
+		// file.template:283:24
 		{
 			_n, _err := _output.Write([]byte(`,
     error) {
@@ -1942,18 +1950,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:281:17
+		// file.template:286:17
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(InternalParseFunc),
-				"file.template:281:17")
+				"file.template:286:17")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:281:35
+		// file.template:286:35
 		{
 			_n, _err := _output.Write([]byte(`(lexer, reducer, errHandler, `))
 			_numWritten += int64(_n)
@@ -1961,18 +1969,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:281:64
+		// file.template:286:64
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(States.OrderedStates[idx].CodeGenConst),
-				"file.template:281:64")
+				"file.template:286:64")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:282:47
+		// file.template:287:47
 		{
 			_n, _err := _output.Write([]byte(`)
     if err != nil {
@@ -1982,18 +1990,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:284:22
+		// file.template:289:22
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(start.CodeGenType),
-				"file.template:284:22")
+				"file.template:289:22")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:284:42
+		// file.template:289:42
 		{
 			_n, _err := _output.Write([]byte(`
         return errRetVal, err
@@ -2004,18 +2012,18 @@ func `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:287:16
+		// file.template:292:16
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(start.ValueType),
-				"file.template:287:16")
+				"file.template:292:16")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:287:34
+		// file.template:292:34
 		{
 			_n, _err := _output.Write([]byte(`, nil
 }
@@ -2026,7 +2034,7 @@ func `))
 			}
 		}
 	}
-	// file.template:289:7
+	// file.template:294:7
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -2041,18 +2049,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:296:5
+	// file.template:301:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(InternalParseFunc),
-			"file.template:296:5")
+			"file.template:301:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:296:23
+	// file.template:301:23
 	{
 		_n, _err := _output.Write([]byte(`(
     lexer `))
@@ -2061,18 +2069,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:297:10
+	// file.template:302:10
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(LexerType),
-			"file.template:297:10")
+			"file.template:302:10")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:297:20
+	// file.template:302:20
 	{
 		_n, _err := _output.Write([]byte(`,
     reducer `))
@@ -2081,18 +2089,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:298:12
+	// file.template:303:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReducerType),
-			"file.template:298:12")
+			"file.template:303:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:298:24
+	// file.template:303:24
 	{
 		_n, _err := _output.Write([]byte(`,
     errHandler `))
@@ -2101,18 +2109,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:299:15
+	// file.template:304:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ErrHandlerType),
-			"file.template:299:15")
+			"file.template:304:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:299:30
+	// file.template:304:30
 	{
 		_n, _err := _output.Write([]byte(`,
     startState `))
@@ -2121,18 +2129,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:300:15
+	// file.template:305:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:300:15")
+			"file.template:305:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:300:27
+	// file.template:305:27
 	{
 		_n, _err := _output.Write([]byte(`) (
     *`))
@@ -2141,18 +2149,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:301:5
+	// file.template:306:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:301:5")
+			"file.template:306:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:301:19
+	// file.template:306:19
 	{
 		_n, _err := _output.Write([]byte(`,
     error) {
@@ -2163,18 +2171,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:304:18
+	// file.template:309:18
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:304:18")
+			"file.template:309:18")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:304:28
+	// file.template:309:28
 	{
 		_n, _err := _output.Write([]byte(`{
         // Note: we don't have to populate the start symbol since its value
@@ -2185,18 +2193,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:307:9
+	// file.template:312:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:307:9")
+			"file.template:312:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:307:23
+	// file.template:312:23
 	{
 		_n, _err := _output.Write([]byte(`{startState, nil},
     }
@@ -2207,18 +2215,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:310:20
+	// file.template:315:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolStackType),
-			"file.template:310:20")
+			"file.template:315:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:310:36
+	// file.template:315:36
 	{
 		_n, _err := _output.Write([]byte(`{lexer: lexer}
 
@@ -2234,18 +2242,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:318:22
+	// file.template:323:22
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTable),
-			"file.template:318:22")
+			"file.template:323:22")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:318:34
+	// file.template:323:34
 	{
 		_n, _err := _output.Write([]byte(`.Get(
             stateStack[len(stateStack)-1].StateId,
@@ -2260,18 +2268,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:325:32
+	// file.template:330:32
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ShiftAction),
-			"file.template:325:32")
+			"file.template:330:32")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:325:44
+	// file.template:330:44
 	{
 		_n, _err := _output.Write([]byte(` {
             stateStack = append(stateStack, action.ShiftItem(nextSymbol))
@@ -2286,18 +2294,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:332:39
+	// file.template:337:39
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceAction),
-			"file.template:332:39")
+			"file.template:337:39")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:332:52
+	// file.template:337:52
 	{
 		_n, _err := _output.Write([]byte(` {
             var reduceSymbol *`))
@@ -2306,18 +2314,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:333:30
+	// file.template:338:30
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:333:30")
+			"file.template:338:30")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:333:41
+	// file.template:338:41
 	{
 		_n, _err := _output.Write([]byte(`
             stateStack, reduceSymbol, err = action.ReduceSymbol(
@@ -2334,18 +2342,18 @@ func `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:342:39
+	// file.template:347:39
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(AcceptAction),
-			"file.template:342:39")
+			"file.template:347:39")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:342:52
+	// file.template:347:52
 	{
 		_n, _err := _output.Write([]byte(` {
             if len(stateStack) != 2 {
@@ -2364,18 +2372,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:353:8
+	// file.template:358:8
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:353:8")
+			"file.template:358:8")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:353:21
+	// file.template:358:21
 	{
 		_n, _err := _output.Write([]byte(`) String() string {
     switch i {
@@ -2385,18 +2393,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:355:9
+	// file.template:360:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(EndSymbolId),
-			"file.template:355:9")
+			"file.template:360:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:355:21
+	// file.template:360:21
 	{
 		_n, _err := _output.Write([]byte(`:
         return "$"
@@ -2406,18 +2414,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:357:9
+	// file.template:362:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(WildcardSymbolId),
-			"file.template:357:9")
+			"file.template:362:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:357:26
+	// file.template:362:26
 	{
 		_n, _err := _output.Write([]byte(`:
         return "*"`))
@@ -2426,11 +2434,11 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:359:0
+	// file.template:364:0
 	for _, symbolName := range OrderedSymbolNames[3:] {
-		// file.template:360:4
+		// file.template:365:4
 		term := Grammar.Terms[symbolName]
-		// file.template:360:44
+		// file.template:365:44
 		{
 			_n, _err := _output.Write([]byte(`
     case `))
@@ -2439,18 +2447,18 @@ func (i `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:361:9
+		// file.template:366:9
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(term.CodeGenSymbolConst),
-				"file.template:361:9")
+				"file.template:366:9")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:361:35
+		// file.template:366:35
 		{
 			_n, _err := _output.Write([]byte(`:`))
 			_numWritten += int64(_n)
@@ -2458,9 +2466,9 @@ func (i `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:362:4
+		// file.template:367:4
 		if term.SymbolId == parser.LRCharacterToken {
-			// file.template:363:8
+			// file.template:368:8
 
 			escaped := term.Name
 			if term.Name == "'\"'" {
@@ -2469,7 +2477,7 @@ func (i `))
 				escaped = "'\\\\" + term.Name[2:]
 			}
 
-			// file.template:372:10
+			// file.template:377:10
 			{
 				_n, _err := _output.Write([]byte(`
         return "`))
@@ -2478,18 +2486,18 @@ func (i `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:373:16
+			// file.template:378:16
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(escaped),
-					"file.template:373:16")
+					"file.template:378:16")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:373:24
+			// file.template:378:24
 			{
 				_n, _err := _output.Write([]byte(`"`))
 				_numWritten += int64(_n)
@@ -2498,7 +2506,7 @@ func (i `))
 				}
 			}
 		} else {
-			// file.template:374:13
+			// file.template:379:13
 			{
 				_n, _err := _output.Write([]byte(`
         return "`))
@@ -2507,18 +2515,18 @@ func (i `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:375:16
+			// file.template:380:16
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(term.Name),
-					"file.template:375:16")
+					"file.template:380:16")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:375:28
+			// file.template:380:28
 			{
 				_n, _err := _output.Write([]byte(`"`))
 				_numWritten += int64(_n)
@@ -2528,7 +2536,7 @@ func (i `))
 			}
 		}
 	}
-	// file.template:377:8
+	// file.template:382:8
 	{
 		_n, _err := _output.Write([]byte(`
     default:
@@ -2538,18 +2546,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:379:15
+	// file.template:384:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Sprintf),
-			"file.template:379:15")
+			"file.template:384:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:379:23
+	// file.template:384:23
 	{
 		_n, _err := _output.Write([]byte(`("?unknown symbol %d?", int(i))
     }
@@ -2562,18 +2570,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:384:4
+	// file.template:389:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(EndSymbolId),
-			"file.template:384:4")
+			"file.template:389:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:384:16
+	// file.template:389:16
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -2581,18 +2589,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:384:19
+	// file.template:389:19
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:384:19")
+			"file.template:389:19")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:384:32
+	// file.template:389:32
 	{
 		_n, _err := _output.Write([]byte(`(0)
     `))
@@ -2601,18 +2609,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:385:4
+	// file.template:390:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(WildcardSymbolId),
-			"file.template:385:4")
+			"file.template:390:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:385:21
+	// file.template:390:21
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -2620,18 +2628,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:385:24
+	// file.template:390:24
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:385:24")
+			"file.template:390:24")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:385:37
+	// file.template:390:37
 	{
 		_n, _err := _output.Write([]byte(`(-1)
 `))
@@ -2640,9 +2648,9 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:387:0
+	// file.template:392:0
 	for idx, term := range Grammar.NonTerminals {
-		// file.template:387:48
+		// file.template:392:48
 		{
 			_n, _err := _output.Write([]byte(`
     `))
@@ -2651,18 +2659,18 @@ const (
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:4
+		// file.template:393:4
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(term.CodeGenSymbolConst),
-				"file.template:388:4")
+				"file.template:393:4")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:30
+		// file.template:393:30
 		{
 			_n, _err := _output.Write([]byte(` = `))
 			_numWritten += int64(_n)
@@ -2670,18 +2678,18 @@ const (
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:33
+		// file.template:393:33
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(SymbolIdType),
-				"file.template:388:33")
+				"file.template:393:33")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:46
+		// file.template:393:46
 		{
 			_n, _err := _output.Write([]byte(`(`))
 			_numWritten += int64(_n)
@@ -2689,18 +2697,18 @@ const (
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:47
+		// file.template:393:47
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(256 + len(Grammar.Terminals) + idx),
-				"file.template:388:47")
+				"file.template:393:47")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:388:80
+		// file.template:393:80
 		{
 			_n, _err := _output.Write([]byte(`)`))
 			_numWritten += int64(_n)
@@ -2709,7 +2717,7 @@ const (
 			}
 		}
 	}
-	// file.template:389:8
+	// file.template:394:8
 	{
 		_n, _err := _output.Write([]byte(`
 )
@@ -2720,18 +2728,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:392:5
+	// file.template:397:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:392:5")
+			"file.template:397:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:392:18
+	// file.template:397:18
 	{
 		_n, _err := _output.Write([]byte(` int
 
@@ -2743,18 +2751,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:396:4
+	// file.template:401:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ShiftAction),
-			"file.template:396:4")
+			"file.template:401:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:396:16
+	// file.template:401:16
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -2762,18 +2770,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:396:19
+	// file.template:401:19
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:396:19")
+			"file.template:401:19")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:396:32
+	// file.template:401:32
 	{
 		_n, _err := _output.Write([]byte(`(0)
     `))
@@ -2782,18 +2790,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:397:4
+	// file.template:402:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceAction),
-			"file.template:397:4")
+			"file.template:402:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:397:17
+	// file.template:402:17
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -2801,18 +2809,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:397:20
+	// file.template:402:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:397:20")
+			"file.template:402:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:397:33
+	// file.template:402:33
 	{
 		_n, _err := _output.Write([]byte(`(1)
     `))
@@ -2821,18 +2829,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:398:4
+	// file.template:403:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(AcceptAction),
-			"file.template:398:4")
+			"file.template:403:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:398:17
+	// file.template:403:17
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -2840,18 +2848,18 @@ const (
 			return _numWritten, _err
 		}
 	}
-	// file.template:398:20
+	// file.template:403:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:398:20")
+			"file.template:403:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:398:33
+	// file.template:403:33
 	{
 		_n, _err := _output.Write([]byte(`(2)
 )
@@ -2862,18 +2870,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:401:8
+	// file.template:406:8
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:401:8")
+			"file.template:406:8")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:401:21
+	// file.template:406:21
 	{
 		_n, _err := _output.Write([]byte(`) String() string {
     switch i {
@@ -2883,18 +2891,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:403:9
+	// file.template:408:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ShiftAction),
-			"file.template:403:9")
+			"file.template:408:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:403:21
+	// file.template:408:21
 	{
 		_n, _err := _output.Write([]byte(`:
         return "shift"
@@ -2904,18 +2912,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:405:9
+	// file.template:410:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceAction),
-			"file.template:405:9")
+			"file.template:410:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:405:22
+	// file.template:410:22
 	{
 		_n, _err := _output.Write([]byte(`:
         return "reduce"
@@ -2925,18 +2933,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:407:9
+	// file.template:412:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(AcceptAction),
-			"file.template:407:9")
+			"file.template:412:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:407:22
+	// file.template:412:22
 	{
 		_n, _err := _output.Write([]byte(`:
         return "accept"
@@ -2947,18 +2955,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:410:15
+	// file.template:415:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Sprintf),
-			"file.template:410:15")
+			"file.template:415:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:410:23
+	// file.template:415:23
 	{
 		_n, _err := _output.Write([]byte(`("?Unknown action %d?", int(i))
     }
@@ -2970,18 +2978,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:414:5
+	// file.template:419:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceType),
-			"file.template:414:5")
+			"file.template:419:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:414:16
+	// file.template:419:16
 	{
 		_n, _err := _output.Write([]byte(` int
 
@@ -2991,13 +2999,13 @@ const (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:417:0
+	// file.template:422:0
 	clauseIdx := 1
-	// file.template:418:0
+	// file.template:423:0
 	for _, rule := range Grammar.NonTerminals {
-		// file.template:419:4
+		// file.template:424:4
 		for _, clause := range rule.Clauses {
-			// file.template:419:44
+			// file.template:424:44
 			{
 				_n, _err := _output.Write([]byte(`
     `))
@@ -3006,18 +3014,18 @@ const (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:4
+			// file.template:425:4
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerNameConst),
-					"file.template:420:4")
+					"file.template:425:4")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:37
+			// file.template:425:37
 			{
 				_n, _err := _output.Write([]byte(` = `))
 				_numWritten += int64(_n)
@@ -3025,18 +3033,18 @@ const (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:40
+			// file.template:425:40
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(ReduceType),
-					"file.template:420:40")
+					"file.template:425:40")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:51
+			// file.template:425:51
 			{
 				_n, _err := _output.Write([]byte(`(`))
 				_numWritten += int64(_n)
@@ -3044,18 +3052,18 @@ const (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:52
+			// file.template:425:52
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clauseIdx),
-					"file.template:420:52")
+					"file.template:425:52")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:420:62
+			// file.template:425:62
 			{
 				_n, _err := _output.Write([]byte(`)`))
 				_numWritten += int64(_n)
@@ -3063,11 +3071,11 @@ const (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:421:8
+			// file.template:426:8
 			clauseIdx += 1
 		}
 	}
-	// file.template:423:8
+	// file.template:428:8
 	{
 		_n, _err := _output.Write([]byte(`
 )
@@ -3078,18 +3086,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:426:8
+	// file.template:431:8
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceType),
-			"file.template:426:8")
+			"file.template:431:8")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:426:19
+	// file.template:431:19
 	{
 		_n, _err := _output.Write([]byte(`) String() string {
     switch i {`))
@@ -3098,11 +3106,11 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:428:0
+	// file.template:433:0
 	for _, rule := range Grammar.NonTerminals {
-		// file.template:429:4
+		// file.template:434:4
 		for _, clause := range rule.Clauses {
-			// file.template:429:44
+			// file.template:434:44
 			{
 				_n, _err := _output.Write([]byte(`
     case `))
@@ -3111,18 +3119,18 @@ func (i `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:430:9
+			// file.template:435:9
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerNameConst),
-					"file.template:430:9")
+					"file.template:435:9")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:430:42
+			// file.template:435:42
 			{
 				_n, _err := _output.Write([]byte(`:
         return "`))
@@ -3131,18 +3139,18 @@ func (i `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:431:16
+			// file.template:436:16
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerName),
-					"file.template:431:16")
+					"file.template:436:16")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:431:44
+			// file.template:436:44
 			{
 				_n, _err := _output.Write([]byte(`"`))
 				_numWritten += int64(_n)
@@ -3152,7 +3160,7 @@ func (i `))
 			}
 		}
 	}
-	// file.template:433:8
+	// file.template:438:8
 	{
 		_n, _err := _output.Write([]byte(`
     default:
@@ -3162,18 +3170,18 @@ func (i `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:435:15
+	// file.template:440:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Sprintf),
-			"file.template:435:15")
+			"file.template:440:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:435:23
+	// file.template:440:23
 	{
 		_n, _err := _output.Write([]byte(`("?unknown reduce type %d?", int(i))
     }
@@ -3185,18 +3193,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:439:5
+	// file.template:444:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:439:5")
+			"file.template:444:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:439:17
+	// file.template:444:17
 	{
 		_n, _err := _output.Write([]byte(` int
 
@@ -3206,18 +3214,18 @@ func (id `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:441:9
+	// file.template:446:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:441:9")
+			"file.template:446:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:441:21
+	// file.template:446:21
 	{
 		_n, _err := _output.Write([]byte(`) String() string {
     return `))
@@ -3226,18 +3234,18 @@ func (id `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:442:11
+	// file.template:447:11
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Sprintf),
-			"file.template:442:11")
+			"file.template:447:11")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:442:19
+	// file.template:447:19
 	{
 		_n, _err := _output.Write([]byte(`("State %d", int(id))
 }
@@ -3248,9 +3256,9 @@ const (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:446:0
+	// file.template:451:0
 	for _, state := range States.OrderedStates {
-		// file.template:446:47
+		// file.template:451:47
 		{
 			_n, _err := _output.Write([]byte(`
     `))
@@ -3259,18 +3267,18 @@ const (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:4
+		// file.template:452:4
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(state.CodeGenConst),
-				"file.template:447:4")
+				"file.template:452:4")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:25
+		// file.template:452:25
 		{
 			_n, _err := _output.Write([]byte(` = `))
 			_numWritten += int64(_n)
@@ -3278,18 +3286,18 @@ const (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:28
+		// file.template:452:28
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(StateIdType),
-				"file.template:447:28")
+				"file.template:452:28")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:40
+		// file.template:452:40
 		{
 			_n, _err := _output.Write([]byte(`(`))
 			_numWritten += int64(_n)
@@ -3297,18 +3305,18 @@ const (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:41
+		// file.template:452:41
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(state.StateNum),
-				"file.template:447:41")
+				"file.template:452:41")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:447:58
+		// file.template:452:58
 		{
 			_n, _err := _output.Write([]byte(`)`))
 			_numWritten += int64(_n)
@@ -3317,7 +3325,7 @@ const (`))
 			}
 		}
 	}
-	// file.template:448:8
+	// file.template:453:8
 	{
 		_n, _err := _output.Write([]byte(`
 )
@@ -3328,18 +3336,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:451:5
+	// file.template:456:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:451:5")
+			"file.template:456:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:451:16
+	// file.template:456:16
 	{
 		_n, _err := _output.Write([]byte(` struct {
     SymbolId_ `))
@@ -3348,18 +3356,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:452:14
+	// file.template:457:14
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:452:14")
+			"file.template:457:14")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:452:27
+	// file.template:457:27
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -3369,18 +3377,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:454:13
+	// file.template:459:13
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(GenericSymbolType),
-			"file.template:454:13")
+			"file.template:459:13")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:454:31
+	// file.template:459:31
 	{
 		_n, _err := _output.Write([]byte(`
 `))
@@ -3389,14 +3397,14 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:456:0
+	// file.template:461:0
 	for _, valueType := range OrderedValueTypes {
-		// file.template:457:4
+		// file.template:462:4
 		if valueType.Name == lr.Generic {
-			// file.template:458:8
+			// file.template:463:8
 			continue
 		}
-		// file.template:459:12
+		// file.template:464:12
 		{
 			_n, _err := _output.Write([]byte(`
     `))
@@ -3405,18 +3413,18 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:460:4
+		// file.template:465:4
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(valueType.Name),
-				"file.template:460:4")
+				"file.template:465:4")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:460:21
+		// file.template:465:21
 		{
 			_n, _err := _output.Write([]byte(` `))
 			_numWritten += int64(_n)
@@ -3424,19 +3432,19 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:460:22
+		// file.template:465:22
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(valueType.ParamType),
-				"file.template:460:22")
+				"file.template:465:22")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
 	}
-	// file.template:461:8
+	// file.template:466:8
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -3446,7 +3454,7 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:464:0
+	// file.template:469:0
 
 	valueTerms := map[string][]*lr.Term{}
 	for _, symbolName := range OrderedSymbolNames[2:] {
@@ -3454,7 +3462,7 @@ type `))
 		valueTerms[term.ValueType] = append(valueTerms[term.ValueType], term)
 	}
 
-	// file.template:472:3
+	// file.template:477:3
 	{
 		_n, _err := _output.Write([]byte(`func NewSymbol(token `))
 		_numWritten += int64(_n)
@@ -3462,18 +3470,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:473:21
+	// file.template:478:21
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TokenType),
-			"file.template:473:21")
+			"file.template:478:21")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:473:31
+	// file.template:478:31
 	{
 		_n, _err := _output.Write([]byte(`) (*`))
 		_numWritten += int64(_n)
@@ -3481,18 +3489,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:473:35
+	// file.template:478:35
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:473:35")
+			"file.template:478:35")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:473:46
+	// file.template:478:46
 	{
 		_n, _err := _output.Write([]byte(`, error) {
     symbol, ok := token.(*`))
@@ -3501,18 +3509,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:474:26
+	// file.template:479:26
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:474:26")
+			"file.template:479:26")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:474:37
+	// file.template:479:37
 	{
 		_n, _err := _output.Write([]byte(`)
     if ok {
@@ -3525,18 +3533,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:479:14
+	// file.template:484:14
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:479:14")
+			"file.template:484:14")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:479:25
+	// file.template:484:25
 	{
 		_n, _err := _output.Write([]byte(`{SymbolId_: token.Id()}
     switch token.Id() {`))
@@ -3545,9 +3553,9 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:481:0
+	// file.template:486:0
 	for _, valueType := range OrderedValueTypes {
-		// file.template:482:4
+		// file.template:487:4
 
 		consts := []string{}
 		for _, term := range valueTerms[valueType.Name] {
@@ -3562,7 +3570,7 @@ type `))
 			continue
 		}
 
-		// file.template:497:6
+		// file.template:502:6
 		{
 			_n, _err := _output.Write([]byte(`
     case `))
@@ -3571,22 +3579,22 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:499:4
+		// file.template:504:4
 		for idx, kconst := range consts {
-			// file.template:500:0
+			// file.template:505:0
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(kconst),
-					"file.template:500:0")
+					"file.template:505:0")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:500:8
+			// file.template:505:8
 			if idx != len(consts)-1 {
-				// file.template:500:37
+				// file.template:505:37
 				{
 					_n, _err := _output.Write([]byte(`, `))
 					_numWritten += int64(_n)
@@ -3596,7 +3604,7 @@ type `))
 				}
 			}
 		}
-		// file.template:501:13
+		// file.template:506:13
 		{
 			_n, _err := _output.Write([]byte(`:
         val, ok := token.(`))
@@ -3605,18 +3613,18 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:503:26
+		// file.template:508:26
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(valueType.ParamType),
-				"file.template:503:26")
+				"file.template:508:26")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:503:48
+		// file.template:508:48
 		{
 			_n, _err := _output.Write([]byte(`)
         if !ok {
@@ -3626,18 +3634,18 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:505:24
+		// file.template:510:24
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(Errorf),
-				"file.template:505:24")
+				"file.template:510:24")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:505:31
+		// file.template:510:31
 		{
 			_n, _err := _output.Write([]byte(`(
                 "Invalid value type for token %s.  "+
@@ -3647,18 +3655,18 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:507:31
+		// file.template:512:31
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(valueType.ParamType),
-				"file.template:507:31")
+				"file.template:512:31")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:507:53
+		// file.template:512:53
 		{
 			_n, _err := _output.Write([]byte(` (%v)",
                 token.Id(),
@@ -3670,18 +3678,18 @@ type `))
 				return _numWritten, _err
 			}
 		}
-		// file.template:511:15
+		// file.template:516:15
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(valueType.Name),
-				"file.template:511:15")
+				"file.template:516:15")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:511:32
+		// file.template:516:32
 		{
 			_n, _err := _output.Write([]byte(` = val`))
 			_numWritten += int64(_n)
@@ -3690,7 +3698,7 @@ type `))
 			}
 		}
 	}
-	// file.template:512:8
+	// file.template:517:8
 	{
 		_n, _err := _output.Write([]byte(`
     default:
@@ -3700,18 +3708,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:514:20
+	// file.template:519:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Errorf),
-			"file.template:514:20")
+			"file.template:519:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:514:27
+	// file.template:519:27
 	{
 		_n, _err := _output.Write([]byte(`("Unexpected token type: %s", symbol.Id())
     }
@@ -3724,18 +3732,18 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:519:9
+	// file.template:524:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:519:9")
+			"file.template:524:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:519:20
+	// file.template:524:20
 	{
 		_n, _err := _output.Write([]byte(`) Id() `))
 		_numWritten += int64(_n)
@@ -3743,18 +3751,18 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:519:27
+	// file.template:524:27
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:519:27")
+			"file.template:524:27")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:519:40
+	// file.template:524:40
 	{
 		_n, _err := _output.Write([]byte(` {
     return s.SymbolId_
@@ -3766,18 +3774,18 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:523:9
+	// file.template:528:9
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:523:9")
+			"file.template:528:9")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:523:20
+	// file.template:528:20
 	{
 		_n, _err := _output.Write([]byte(`) Loc() `))
 		_numWritten += int64(_n)
@@ -3785,18 +3793,18 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:523:28
+	// file.template:528:28
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(LocationType),
-			"file.template:523:28")
+			"file.template:528:28")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:523:41
+	// file.template:528:41
 	{
 		_n, _err := _output.Write([]byte(` {
     type locator interface { Loc() `))
@@ -3805,18 +3813,18 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:524:35
+	// file.template:529:35
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(LocationType),
-			"file.template:524:35")
+			"file.template:529:35")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:524:48
+	// file.template:529:48
 	{
 		_n, _err := _output.Write([]byte(` }
     switch s.SymbolId_ {`))
@@ -3825,16 +3833,16 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:526:0
+	// file.template:531:0
 	for _, field := range OrderedValueTypes {
-		// file.template:527:4
+		// file.template:532:4
 		if field.Name == lr.Generic {
-			// file.template:528:8
+			// file.template:533:8
 			continue
 		}
-		// file.template:530:4
+		// file.template:535:4
 		terms := valueTerms[field.Name]
-		// file.template:530:42
+		// file.template:535:42
 		{
 			_n, _err := _output.Write([]byte(`
     case `))
@@ -3843,22 +3851,22 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:532:4
+		// file.template:537:4
 		for idx, term := range terms {
-			// file.template:533:0
+			// file.template:538:0
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(term.CodeGenSymbolConst),
-					"file.template:533:0")
+					"file.template:538:0")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:534:8
+			// file.template:539:8
 			if idx != len(terms)-1 {
-				// file.template:534:37
+				// file.template:539:37
 				{
 					_n, _err := _output.Write([]byte(`, `))
 					_numWritten += int64(_n)
@@ -3868,7 +3876,7 @@ func (s *`))
 				}
 			}
 		}
-		// file.template:535:13
+		// file.template:540:13
 		{
 			_n, _err := _output.Write([]byte(`:
         loc, ok := interface{}(s.`))
@@ -3877,18 +3885,18 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:537:33
+		// file.template:542:33
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(field.Name),
-				"file.template:537:33")
+				"file.template:542:33")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:537:46
+		// file.template:542:46
 		{
 			_n, _err := _output.Write([]byte(`).(locator)
         if ok {
@@ -3900,7 +3908,7 @@ func (s *`))
 			}
 		}
 	}
-	// file.template:541:8
+	// file.template:546:8
 	{
 		_n, _err := _output.Write([]byte(`
     }
@@ -3912,9 +3920,9 @@ func (s *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:546:0
+	// file.template:551:0
 	if GenerateEndPos {
-		// file.template:546:22
+		// file.template:551:22
 		{
 			_n, _err := _output.Write([]byte(`
 func (s *`))
@@ -3923,18 +3931,18 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:547:9
+		// file.template:552:9
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(SymbolType),
-				"file.template:547:9")
+				"file.template:552:9")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:547:20
+		// file.template:552:20
 		{
 			_n, _err := _output.Write([]byte(`) End() `))
 			_numWritten += int64(_n)
@@ -3942,18 +3950,18 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:547:28
+		// file.template:552:28
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(LocationType),
-				"file.template:547:28")
+				"file.template:552:28")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:547:41
+		// file.template:552:41
 		{
 			_n, _err := _output.Write([]byte(` {
     type locator interface { End() `))
@@ -3962,18 +3970,18 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:548:35
+		// file.template:553:35
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(LocationType),
-				"file.template:548:35")
+				"file.template:553:35")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:548:48
+		// file.template:553:48
 		{
 			_n, _err := _output.Write([]byte(` }
     switch s.SymbolId_ {`))
@@ -3982,16 +3990,16 @@ func (s *`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:550:0
+		// file.template:555:0
 		for _, field := range OrderedValueTypes {
-			// file.template:551:4
+			// file.template:556:4
 			if field.Name == lr.Generic {
-				// file.template:552:8
+				// file.template:557:8
 				continue
 			}
-			// file.template:554:4
+			// file.template:559:4
 			terms := valueTerms[field.Name]
-			// file.template:554:42
+			// file.template:559:42
 			{
 				_n, _err := _output.Write([]byte(`
     case `))
@@ -4000,22 +4008,22 @@ func (s *`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:556:4
+			// file.template:561:4
 			for idx, term := range terms {
-				// file.template:557:0
+				// file.template:562:0
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(term.CodeGenSymbolConst),
-						"file.template:557:0")
+						"file.template:562:0")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:558:8
+				// file.template:563:8
 				if idx != len(terms)-1 {
-					// file.template:558:37
+					// file.template:563:37
 					{
 						_n, _err := _output.Write([]byte(`, `))
 						_numWritten += int64(_n)
@@ -4025,7 +4033,7 @@ func (s *`))
 					}
 				}
 			}
-			// file.template:559:13
+			// file.template:564:13
 			{
 				_n, _err := _output.Write([]byte(`:
         loc, ok := interface{}(s.`))
@@ -4034,18 +4042,18 @@ func (s *`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:561:33
+			// file.template:566:33
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(field.Name),
-					"file.template:561:33")
+					"file.template:566:33")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:561:46
+			// file.template:566:46
 			{
 				_n, _err := _output.Write([]byte(`).(locator)
         if ok {
@@ -4057,7 +4065,7 @@ func (s *`))
 				}
 			}
 		}
-		// file.template:565:8
+		// file.template:570:8
 		{
 			_n, _err := _output.Write([]byte(`
     }
@@ -4069,7 +4077,7 @@ func (s *`))
 			}
 		}
 	}
-	// file.template:569:8
+	// file.template:574:8
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -4079,18 +4087,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:571:5
+	// file.template:576:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolStackType),
-			"file.template:571:5")
+			"file.template:576:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:571:21
+	// file.template:576:21
 	{
 		_n, _err := _output.Write([]byte(` struct {
     lexer `))
@@ -4099,18 +4107,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:572:10
+	// file.template:577:10
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(LexerType),
-			"file.template:572:10")
+			"file.template:577:10")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:572:20
+	// file.template:577:20
 	{
 		_n, _err := _output.Write([]byte(`
     top []*`))
@@ -4119,18 +4127,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:573:11
+	// file.template:578:11
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:573:11")
+			"file.template:578:11")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:573:22
+	// file.template:578:22
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -4141,18 +4149,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:576:13
+	// file.template:581:13
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolStackType),
-			"file.template:576:13")
+			"file.template:581:13")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:576:29
+	// file.template:581:29
 	{
 		_n, _err := _output.Write([]byte(`) Top() (*`))
 		_numWritten += int64(_n)
@@ -4160,18 +4168,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:576:39
+	// file.template:581:39
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:576:39")
+			"file.template:581:39")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:576:50
+	// file.template:581:50
 	{
 		_n, _err := _output.Write([]byte(`, error) {
     if len(stack.top) == 0 {
@@ -4183,18 +4191,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:580:22
+	// file.template:585:22
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(EOF),
-			"file.template:580:22")
+			"file.template:585:22")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:580:26
+	// file.template:585:26
 	{
 		_n, _err := _output.Write([]byte(` {
                 return nil, `))
@@ -4203,18 +4211,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:581:28
+	// file.template:586:28
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Errorf),
-			"file.template:581:28")
+			"file.template:586:28")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:581:35
+	// file.template:586:35
 	{
 		_n, _err := _output.Write([]byte(`("Unexpected lex error: %s", err)
             }
@@ -4224,18 +4232,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:583:20
+	// file.template:588:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(GenericSymbolType),
-			"file.template:583:20")
+			"file.template:588:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:583:38
+	// file.template:588:38
 	{
 		_n, _err := _output.Write([]byte(`{
               `))
@@ -4244,18 +4252,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:584:14
+	// file.template:589:14
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:584:14")
+			"file.template:589:14")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:584:27
+	// file.template:589:27
 	{
 		_n, _err := _output.Write([]byte(`: `))
 		_numWritten += int64(_n)
@@ -4263,18 +4271,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:584:29
+	// file.template:589:29
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(EndSymbolId),
-			"file.template:584:29")
+			"file.template:589:29")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:584:41
+	// file.template:589:41
 	{
 		_n, _err := _output.Write([]byte(`,
               StartPos: stack.lexer.CurrentLocation(),
@@ -4295,18 +4303,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:597:13
+	// file.template:602:13
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolStackType),
-			"file.template:597:13")
+			"file.template:602:13")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:597:29
+	// file.template:602:29
 	{
 		_n, _err := _output.Write([]byte(`) Push(symbol *`))
 		_numWritten += int64(_n)
@@ -4314,18 +4322,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:597:44
+	// file.template:602:44
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:597:44")
+			"file.template:602:44")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:597:55
+	// file.template:602:55
 	{
 		_n, _err := _output.Write([]byte(`) {
     stack.top = append(stack.top, symbol)
@@ -4337,18 +4345,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:601:13
+	// file.template:606:13
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolStackType),
-			"file.template:601:13")
+			"file.template:606:13")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:601:29
+	// file.template:606:29
 	{
 		_n, _err := _output.Write([]byte(`) Pop() (*`))
 		_numWritten += int64(_n)
@@ -4356,18 +4364,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:601:39
+	// file.template:606:39
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:601:39")
+			"file.template:606:39")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:601:50
+	// file.template:606:50
 	{
 		_n, _err := _output.Write([]byte(`, error) {
     if len(stack.top) == 0 {
@@ -4377,18 +4385,18 @@ func (stack *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:603:20
+	// file.template:608:20
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Errorf),
-			"file.template:603:20")
+			"file.template:608:20")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:603:27
+	// file.template:608:27
 	{
 		_n, _err := _output.Write([]byte(`("internal error: cannot pop an empty top")
     }
@@ -4403,18 +4411,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:610:5
+	// file.template:615:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:610:5")
+			"file.template:615:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:610:19
+	// file.template:615:19
 	{
 		_n, _err := _output.Write([]byte(` struct {
     StateId `))
@@ -4423,18 +4431,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:611:12
+	// file.template:616:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:611:12")
+			"file.template:616:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:611:24
+	// file.template:616:24
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -4444,18 +4452,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:613:5
+	// file.template:618:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:613:5")
+			"file.template:618:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:613:16
+	// file.template:618:16
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -4466,18 +4474,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:616:5
+	// file.template:621:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:616:5")
+			"file.template:621:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:616:15
+	// file.template:621:15
 	{
 		_n, _err := _output.Write([]byte(` []*`))
 		_numWritten += int64(_n)
@@ -4485,18 +4493,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:616:19
+	// file.template:621:19
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:616:19")
+			"file.template:621:19")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:616:33
+	// file.template:621:33
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -4506,18 +4514,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:618:5
+	// file.template:623:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionType),
-			"file.template:618:5")
+			"file.template:623:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:618:16
+	// file.template:623:16
 	{
 		_n, _err := _output.Write([]byte(` struct {
     ActionType `))
@@ -4526,18 +4534,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:619:15
+	// file.template:624:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionIdType),
-			"file.template:619:15")
+			"file.template:624:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:619:28
+	// file.template:624:28
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -4547,18 +4555,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:621:17
+	// file.template:626:17
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:621:17")
+			"file.template:626:17")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:621:29
+	// file.template:626:29
 	{
 		_n, _err := _output.Write([]byte(`
     ReduceType `))
@@ -4567,18 +4575,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:622:15
+	// file.template:627:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReduceType),
-			"file.template:622:15")
+			"file.template:627:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:622:26
+	// file.template:627:26
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -4589,18 +4597,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:11
+	// file.template:630:11
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionType),
-			"file.template:625:11")
+			"file.template:630:11")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:22
+	// file.template:630:22
 	{
 		_n, _err := _output.Write([]byte(`) ShiftItem(symbol *`))
 		_numWritten += int64(_n)
@@ -4608,18 +4616,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:42
+	// file.template:630:42
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:625:42")
+			"file.template:630:42")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:53
+	// file.template:630:53
 	{
 		_n, _err := _output.Write([]byte(`) *`))
 		_numWritten += int64(_n)
@@ -4627,18 +4635,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:56
+	// file.template:630:56
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:625:56")
+			"file.template:630:56")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:625:70
+	// file.template:630:70
 	{
 		_n, _err := _output.Write([]byte(` {
     return &`))
@@ -4647,18 +4655,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:626:12
+	// file.template:631:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackItemType),
-			"file.template:626:12")
+			"file.template:631:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:626:26
+	// file.template:631:26
 	{
 		_n, _err := _output.Write([]byte(`{StateId: act.ShiftStateId, `))
 		_numWritten += int64(_n)
@@ -4666,18 +4674,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:626:54
+	// file.template:631:54
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:626:54")
+			"file.template:631:54")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:626:65
+	// file.template:631:65
 	{
 		_n, _err := _output.Write([]byte(`: symbol}
 }
@@ -4688,18 +4696,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:629:11
+	// file.template:634:11
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionType),
-			"file.template:629:11")
+			"file.template:634:11")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:629:22
+	// file.template:634:22
 	{
 		_n, _err := _output.Write([]byte(`) ReduceSymbol(
     reducer `))
@@ -4708,18 +4716,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:630:12
+	// file.template:635:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ReducerType),
-			"file.template:630:12")
+			"file.template:635:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:630:24
+	// file.template:635:24
 	{
 		_n, _err := _output.Write([]byte(`,
     stack `))
@@ -4728,18 +4736,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:631:10
+	// file.template:636:10
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:631:10")
+			"file.template:636:10")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:631:20
+	// file.template:636:20
 	{
 		_n, _err := _output.Write([]byte(`) (
     `))
@@ -4748,18 +4756,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:632:4
+	// file.template:637:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StackType),
-			"file.template:632:4")
+			"file.template:637:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:632:14
+	// file.template:637:14
 	{
 		_n, _err := _output.Write([]byte(`,
     *`))
@@ -4768,18 +4776,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:633:5
+	// file.template:638:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:633:5")
+			"file.template:638:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:633:16
+	// file.template:638:16
 	{
 		_n, _err := _output.Write([]byte(`,
     error) {
@@ -4791,18 +4799,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:637:15
+	// file.template:642:15
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolType),
-			"file.template:637:15")
+			"file.template:642:15")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:637:26
+	// file.template:642:26
 	{
 		_n, _err := _output.Write([]byte(`{}
     switch act.ReduceType {`))
@@ -4811,11 +4819,11 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:639:0
+	// file.template:644:0
 	for _, rule := range Grammar.NonTerminals {
-		// file.template:640:4
+		// file.template:645:4
 		for _, clause := range rule.Clauses {
-			// file.template:640:44
+			// file.template:645:44
 			{
 				_n, _err := _output.Write([]byte(`
     case `))
@@ -4824,18 +4832,18 @@ func (act *`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:641:9
+			// file.template:646:9
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerNameConst),
-					"file.template:641:9")
+					"file.template:646:9")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:641:42
+			// file.template:646:42
 			{
 				_n, _err := _output.Write([]byte(`:`))
 				_numWritten += int64(_n)
@@ -4843,9 +4851,9 @@ func (act *`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:642:8
+			// file.template:647:8
 			if len(clause.Bindings) > 0 {
-				// file.template:642:40
+				// file.template:647:40
 				{
 					_n, _err := _output.Write([]byte(`
         args := stack[len(stack)-`))
@@ -4854,18 +4862,18 @@ func (act *`))
 						return _numWritten, _err
 					}
 				}
-				// file.template:643:33
+				// file.template:648:33
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(len(clause.Bindings)),
-						"file.template:643:33")
+						"file.template:648:33")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:643:56
+				// file.template:648:56
 				{
 					_n, _err := _output.Write([]byte(`:]
         stack = stack[:len(stack)-`))
@@ -4874,18 +4882,18 @@ func (act *`))
 						return _numWritten, _err
 					}
 				}
-				// file.template:644:34
+				// file.template:649:34
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(len(clause.Bindings)),
-						"file.template:644:34")
+						"file.template:649:34")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:644:57
+				// file.template:649:57
 				{
 					_n, _err := _output.Write([]byte(`]`))
 					_numWritten += int64(_n)
@@ -4894,7 +4902,7 @@ func (act *`))
 					}
 				}
 			}
-			// file.template:645:16
+			// file.template:650:16
 			{
 				_n, _err := _output.Write([]byte(`
         symbol.SymbolId_ = `))
@@ -4903,127 +4911,199 @@ func (act *`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:646:27
+			// file.template:651:27
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(rule.CodeGenSymbolConst),
-					"file.template:646:27")
+					"file.template:651:27")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:646:53
-			{
-				_n, _err := _output.Write([]byte(`
+			// file.template:652:8
+			if clause.Passthrough {
+				// file.template:652:34
+				{
+					_n, _err := _output.Write([]byte(`
+        //line `))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:653:15
+				{
+					_n, _err := _template.writeValue(
+						_output,
+						(clause.LRLocation),
+						"file.template:653:15")
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:653:35
+				{
+					_n, _err := _output.Write([]byte(`
         symbol.`))
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
-				}
-			}
-			// file.template:647:15
-			{
-				_n, _err := _template.writeValue(
-					_output,
-					(rule.ValueType),
-					"file.template:647:15")
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
-				}
-			}
-			// file.template:647:32
-			{
-				_n, _err := _output.Write([]byte(`, err = reducer.`))
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
-				}
-			}
-			// file.template:647:48
-			{
-				_n, _err := _template.writeValue(
-					_output,
-					(clause.CodeGenReducerName),
-					"file.template:647:48")
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
-				}
-			}
-			// file.template:647:76
-			{
-				_n, _err := _output.Write([]byte(`(`))
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
-				}
-			}
-			// file.template:648:8
-			for idx, term := range clause.Bindings {
-				// file.template:648:52
-				{
-					_n, _err := _output.Write([]byte(`args[`))
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:649:5
+				// file.template:654:15
 				{
 					_n, _err := _template.writeValue(
 						_output,
-						(idx),
-						"file.template:649:5")
+						(rule.ValueType),
+						"file.template:654:15")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:649:9
+				// file.template:654:32
 				{
-					_n, _err := _output.Write([]byte(`].`))
+					_n, _err := _output.Write([]byte(` = args[0].`))
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:649:11
+				// file.template:654:43
 				{
 					_n, _err := _template.writeValue(
 						_output,
-						(term.ValueType),
-						"file.template:649:11")
+						(clause.Bindings[0].ValueType),
+						"file.template:654:43")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:650:12
-				if idx != len(clause.Bindings)-1 {
-					// file.template:650:49
+				// file.template:654:74
+				{
+					_n, _err := _output.Write([]byte(`
+        err = nil`))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+			} else {
+				// file.template:656:17
+				{
+					_n, _err := _output.Write([]byte(`
+        symbol.`))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:657:15
+				{
+					_n, _err := _template.writeValue(
+						_output,
+						(rule.ValueType),
+						"file.template:657:15")
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:657:32
+				{
+					_n, _err := _output.Write([]byte(`, err = reducer.`))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:657:48
+				{
+					_n, _err := _template.writeValue(
+						_output,
+						(clause.CodeGenReducerName),
+						"file.template:657:48")
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:657:76
+				{
+					_n, _err := _output.Write([]byte(`(`))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
+				}
+				// file.template:658:10
+				for idx, term := range clause.Bindings {
+					// file.template:658:54
 					{
-						_n, _err := _output.Write([]byte(`,`))
+						_n, _err := _output.Write([]byte(`  args[`))
 						_numWritten += int64(_n)
 						if _err != nil {
 							return _numWritten, _err
 						}
 					}
+					// file.template:659:7
+					{
+						_n, _err := _template.writeValue(
+							_output,
+							(idx),
+							"file.template:659:7")
+						_numWritten += int64(_n)
+						if _err != nil {
+							return _numWritten, _err
+						}
+					}
+					// file.template:659:11
+					{
+						_n, _err := _output.Write([]byte(`].`))
+						_numWritten += int64(_n)
+						if _err != nil {
+							return _numWritten, _err
+						}
+					}
+					// file.template:659:13
+					{
+						_n, _err := _template.writeValue(
+							_output,
+							(term.ValueType),
+							"file.template:659:13")
+						_numWritten += int64(_n)
+						if _err != nil {
+							return _numWritten, _err
+						}
+					}
+					// file.template:660:14
+					if idx != len(clause.Bindings)-1 {
+						// file.template:660:51
+						{
+							_n, _err := _output.Write([]byte(`,`))
+							_numWritten += int64(_n)
+							if _err != nil {
+								return _numWritten, _err
+							}
+						}
+					}
 				}
-			}
-			// file.template:651:17
-			{
-				_n, _err := _output.Write([]byte(`)`))
-				_numWritten += int64(_n)
-				if _err != nil {
-					return _numWritten, _err
+				// file.template:661:19
+				{
+					_n, _err := _output.Write([]byte(`)`))
+					_numWritten += int64(_n)
+					if _err != nil {
+						return _numWritten, _err
+					}
 				}
 			}
 		}
 	}
-	// file.template:654:8
+	// file.template:665:8
 	{
 		_n, _err := _output.Write([]byte(`
     default:
@@ -5037,18 +5117,18 @@ func (act *`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:660:14
+	// file.template:671:14
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(Errorf),
-			"file.template:660:14")
+			"file.template:671:14")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:660:21
+	// file.template:671:21
 	{
 		_n, _err := _output.Write([]byte(`("Unexpected %s reduce error: %s", act.ReduceType, err)
     }
@@ -5062,18 +5142,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:666:5
+	// file.template:677:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TableKeyType),
-			"file.template:666:5")
+			"file.template:677:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:666:18
+	// file.template:677:18
 	{
 		_n, _err := _output.Write([]byte(` struct {
     `))
@@ -5082,18 +5162,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:667:4
+	// file.template:678:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:667:4")
+			"file.template:678:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:667:16
+	// file.template:678:16
 	{
 		_n, _err := _output.Write([]byte(`
     `))
@@ -5102,18 +5182,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:668:4
+	// file.template:679:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:668:4")
+			"file.template:679:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:668:17
+	// file.template:679:17
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -5124,18 +5204,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:5
+	// file.template:682:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTableType),
-			"file.template:671:5")
+			"file.template:682:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:21
+	// file.template:682:21
 	{
 		_n, _err := _output.Write([]byte(` map[`))
 		_numWritten += int64(_n)
@@ -5143,18 +5223,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:26
+	// file.template:682:26
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TableKeyType),
-			"file.template:671:26")
+			"file.template:682:26")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:39
+	// file.template:682:39
 	{
 		_n, _err := _output.Write([]byte(`]*`))
 		_numWritten += int64(_n)
@@ -5162,18 +5242,18 @@ type `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:41
+	// file.template:682:41
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionType),
-			"file.template:671:41")
+			"file.template:682:41")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:671:52
+	// file.template:682:52
 	{
 		_n, _err := _output.Write([]byte(`
 
@@ -5183,18 +5263,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:673:12
+	// file.template:684:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTableType),
-			"file.template:673:12")
+			"file.template:684:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:673:28
+	// file.template:684:28
 	{
 		_n, _err := _output.Write([]byte(`) Get(
     stateId `))
@@ -5203,18 +5283,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:674:12
+	// file.template:685:12
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(StateIdType),
-			"file.template:674:12")
+			"file.template:685:12")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:674:24
+	// file.template:685:24
 	{
 		_n, _err := _output.Write([]byte(`,
     symbolId `))
@@ -5223,18 +5303,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:675:13
+	// file.template:686:13
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(SymbolIdType),
-			"file.template:675:13")
+			"file.template:686:13")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:675:26
+	// file.template:686:26
 	{
 		_n, _err := _output.Write([]byte(`) (
     *`))
@@ -5243,18 +5323,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:676:5
+	// file.template:687:5
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionType),
-			"file.template:676:5")
+			"file.template:687:5")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:676:16
+	// file.template:687:16
 	{
 		_n, _err := _output.Write([]byte(`,
     bool) {
@@ -5265,18 +5345,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:679:24
+	// file.template:690:24
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TableKeyType),
-			"file.template:679:24")
+			"file.template:690:24")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:679:37
+	// file.template:690:37
 	{
 		_n, _err := _output.Write([]byte(`{stateId, symbolId}]
     if ok {
@@ -5289,18 +5369,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:684:23
+	// file.template:695:23
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(TableKeyType),
-			"file.template:684:23")
+			"file.template:695:23")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:684:36
+	// file.template:695:36
 	{
 		_n, _err := _output.Write([]byte(`{stateId, `))
 		_numWritten += int64(_n)
@@ -5308,18 +5388,18 @@ func (table `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:684:46
+	// file.template:695:46
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(WildcardSymbolId),
-			"file.template:684:46")
+			"file.template:695:46")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:684:63
+	// file.template:695:63
 	{
 		_n, _err := _output.Write([]byte(`}]
     return action, ok
@@ -5331,9 +5411,9 @@ var (`))
 			return _numWritten, _err
 		}
 	}
-	// file.template:689:0
+	// file.template:700:0
 	for _, state := range States.OrderedStates {
-		// file.template:689:47
+		// file.template:700:47
 		{
 			_n, _err := _output.Write([]byte(`
     `))
@@ -5342,18 +5422,18 @@ var (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:4
+		// file.template:701:4
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(state.CodeGenAction),
-				"file.template:690:4")
+				"file.template:701:4")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:26
+		// file.template:701:26
 		{
 			_n, _err := _output.Write([]byte(` = &`))
 			_numWritten += int64(_n)
@@ -5361,18 +5441,18 @@ var (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:30
+		// file.template:701:30
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ActionType),
-				"file.template:690:30")
+				"file.template:701:30")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:41
+		// file.template:701:41
 		{
 			_n, _err := _output.Write([]byte(`{`))
 			_numWritten += int64(_n)
@@ -5380,18 +5460,18 @@ var (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:42
+		// file.template:701:42
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(ShiftAction),
-				"file.template:690:42")
+				"file.template:701:42")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:54
+		// file.template:701:54
 		{
 			_n, _err := _output.Write([]byte(`, `))
 			_numWritten += int64(_n)
@@ -5399,18 +5479,18 @@ var (`))
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:56
+		// file.template:701:56
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(state.CodeGenConst),
-				"file.template:690:56")
+				"file.template:701:56")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:690:77
+		// file.template:701:77
 		{
 			_n, _err := _output.Write([]byte(`, 0}`))
 			_numWritten += int64(_n)
@@ -5419,11 +5499,11 @@ var (`))
 			}
 		}
 	}
-	// file.template:693:0
+	// file.template:704:0
 	for _, term := range Grammar.NonTerminals {
-		// file.template:694:4
+		// file.template:705:4
 		for _, clause := range term.Clauses {
-			// file.template:694:44
+			// file.template:705:44
 			{
 				_n, _err := _output.Write([]byte(`
     `))
@@ -5432,18 +5512,18 @@ var (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:4
+			// file.template:706:4
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReduceAction),
-					"file.template:695:4")
+					"file.template:706:4")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:33
+			// file.template:706:33
 			{
 				_n, _err := _output.Write([]byte(` = &`))
 				_numWritten += int64(_n)
@@ -5451,18 +5531,18 @@ var (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:37
+			// file.template:706:37
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(ActionType),
-					"file.template:695:37")
+					"file.template:706:37")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:48
+			// file.template:706:48
 			{
 				_n, _err := _output.Write([]byte(`{`))
 				_numWritten += int64(_n)
@@ -5470,18 +5550,18 @@ var (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:49
+			// file.template:706:49
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(ReduceAction),
-					"file.template:695:49")
+					"file.template:706:49")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:62
+			// file.template:706:62
 			{
 				_n, _err := _output.Write([]byte(`, 0, `))
 				_numWritten += int64(_n)
@@ -5489,18 +5569,18 @@ var (`))
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:67
+			// file.template:706:67
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(clause.CodeGenReducerNameConst),
-					"file.template:695:67")
+					"file.template:706:67")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:695:100
+			// file.template:706:100
 			{
 				_n, _err := _output.Write([]byte(`}`))
 				_numWritten += int64(_n)
@@ -5510,7 +5590,7 @@ var (`))
 			}
 		}
 	}
-	// file.template:697:8
+	// file.template:708:8
 	{
 		_n, _err := _output.Write([]byte(`
 )
@@ -5521,18 +5601,18 @@ var `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:700:4
+	// file.template:711:4
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTable),
-			"file.template:700:4")
+			"file.template:711:4")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:700:16
+	// file.template:711:16
 	{
 		_n, _err := _output.Write([]byte(` = `))
 		_numWritten += int64(_n)
@@ -5540,18 +5620,18 @@ var `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:700:19
+	// file.template:711:19
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(ActionTableType),
-			"file.template:700:19")
+			"file.template:711:19")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:700:35
+	// file.template:711:35
 	{
 		_n, _err := _output.Write([]byte(`{`))
 		_numWritten += int64(_n)
@@ -5559,11 +5639,11 @@ var `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:701:0
+	// file.template:712:0
 	for _, state := range States.OrderedStates {
-		// file.template:702:4
+		// file.template:713:4
 		for _, item := range state.Items {
-			// file.template:703:8
+			// file.template:714:8
 
 			if !item.IsReduce {
 				continue
@@ -5573,7 +5653,7 @@ var `))
 				continue
 			}
 
-			// file.template:713:10
+			// file.template:724:10
 			{
 				_n, _err := _output.Write([]byte(`
     {`))
@@ -5582,18 +5662,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:5
+			// file.template:725:5
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(state.CodeGenConst),
-					"file.template:714:5")
+					"file.template:725:5")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:26
+			// file.template:725:26
 			{
 				_n, _err := _output.Write([]byte(`, `))
 				_numWritten += int64(_n)
@@ -5601,18 +5681,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:28
+			// file.template:725:28
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(EndSymbolId),
-					"file.template:714:28")
+					"file.template:725:28")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:40
+			// file.template:725:40
 			{
 				_n, _err := _output.Write([]byte(`}: &`))
 				_numWritten += int64(_n)
@@ -5620,18 +5700,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:44
+			// file.template:725:44
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(ActionType),
-					"file.template:714:44")
+					"file.template:725:44")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:55
+			// file.template:725:55
 			{
 				_n, _err := _output.Write([]byte(`{`))
 				_numWritten += int64(_n)
@@ -5639,18 +5719,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:56
+			// file.template:725:56
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(AcceptAction),
-					"file.template:714:56")
+					"file.template:725:56")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:714:69
+			// file.template:725:69
 			{
 				_n, _err := _output.Write([]byte(`, 0, 0},`))
 				_numWritten += int64(_n)
@@ -5660,11 +5740,11 @@ var `))
 			}
 		}
 	}
-	// file.template:718:0
+	// file.template:729:0
 	for _, state := range States.OrderedStates {
-		// file.template:719:4
+		// file.template:730:4
 		for _, symbolName := range OrderedSymbolNames {
-			// file.template:720:8
+			// file.template:731:8
 
 			symbol := Grammar.Terms[symbolName]
 			child, ok := state.Goto[symbolName]
@@ -5672,7 +5752,7 @@ var `))
 				continue
 			}
 
-			// file.template:728:10
+			// file.template:739:10
 			{
 				_n, _err := _output.Write([]byte(`
     {`))
@@ -5681,18 +5761,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:5
+			// file.template:740:5
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(state.CodeGenConst),
-					"file.template:729:5")
+					"file.template:740:5")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:26
+			// file.template:740:26
 			{
 				_n, _err := _output.Write([]byte(`, `))
 				_numWritten += int64(_n)
@@ -5700,18 +5780,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:28
+			// file.template:740:28
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(symbol.CodeGenSymbolConst),
-					"file.template:729:28")
+					"file.template:740:28")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:56
+			// file.template:740:56
 			{
 				_n, _err := _output.Write([]byte(`}: `))
 				_numWritten += int64(_n)
@@ -5719,18 +5799,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:59
+			// file.template:740:59
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(child.CodeGenAction),
-					"file.template:729:59")
+					"file.template:740:59")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:729:81
+			// file.template:740:81
 			{
 				_n, _err := _output.Write([]byte(`,`))
 				_numWritten += int64(_n)
@@ -5740,11 +5820,11 @@ var `))
 			}
 		}
 	}
-	// file.template:733:0
+	// file.template:744:0
 	for _, state := range States.OrderedStates {
-		// file.template:734:4
+		// file.template:745:4
 		for _, item := range state.Items {
-			// file.template:735:8
+			// file.template:746:8
 
 			if !item.IsReduce {
 				continue
@@ -5757,7 +5837,7 @@ var `))
 			idConst := Grammar.Terms[item.LookAhead].CodeGenSymbolConst
 			reduceAction := item.Clause.CodeGenReduceAction
 
-			// file.template:748:10
+			// file.template:759:10
 			{
 				_n, _err := _output.Write([]byte(`
     {`))
@@ -5766,18 +5846,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:5
+			// file.template:760:5
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(state.CodeGenConst),
-					"file.template:749:5")
+					"file.template:760:5")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:26
+			// file.template:760:26
 			{
 				_n, _err := _output.Write([]byte(`, `))
 				_numWritten += int64(_n)
@@ -5785,18 +5865,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:28
+			// file.template:760:28
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(idConst),
-					"file.template:749:28")
+					"file.template:760:28")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:36
+			// file.template:760:36
 			{
 				_n, _err := _output.Write([]byte(`}: `))
 				_numWritten += int64(_n)
@@ -5804,18 +5884,18 @@ var `))
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:39
+			// file.template:760:39
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(reduceAction),
-					"file.template:749:39")
+					"file.template:760:39")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:749:52
+			// file.template:760:52
 			{
 				_n, _err := _output.Write([]byte(`,`))
 				_numWritten += int64(_n)
@@ -5825,7 +5905,7 @@ var `))
 			}
 		}
 	}
-	// file.template:751:8
+	// file.template:762:8
 	{
 		_n, _err := _output.Write([]byte(`
 }
@@ -5837,7 +5917,7 @@ var `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:755:0
+	// file.template:766:0
 	{
 		_n, _err := (&debug_template.File{
 			OrderedSymbolNames:        OrderedSymbolNames,
@@ -5849,7 +5929,7 @@ var `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:761:3
+	// file.template:772:3
 	{
 		_n, _err := _output.Write([]byte(`*/
 `))

@@ -161,15 +161,6 @@ func (Reducer) NilToIdOrCharList() ([]*Token, error) {
 	return []*Token{}, nil
 }
 
-func (Reducer) UnlabeledClauseToRule(
-	ruleName *RuleDef,
-	clauseBody []*Token) (
-	*Rule,
-	error) {
-
-	return NewRule(ruleName, []*Clause{NewClause(nil, clauseBody)}), nil
-}
-
 func (Reducer) ToRule(
 	ruleDef *RuleDef,
 	clauses []*Clause) (
@@ -210,11 +201,25 @@ func (Reducer) ClauseToClauses(clause *Clause) ([]*Clause, error) {
 	return []*Clause{clause}, nil
 }
 
+func (Reducer) PassthroughIdToClause(
+  eq LRGenericSymbol,
+  id *Token,
+) (*Clause, error) {
+  return NewClause(nil, []*Token{id}, true), nil
+}
+
+func (Reducer) PassthroughCharToClause(
+  eq LRGenericSymbol,
+  char *Token,
+) (*Clause, error) {
+  return NewClause(nil, []*Token{char}, true), nil
+}
+
 func (Reducer) UnlabeledToClause(
 	clauseBody []*Token) (
 	*Clause,
 	error) {
-	return NewClause(nil, clauseBody), nil
+	return NewClause(nil, clauseBody, false), nil
 }
 
 func (Reducer) LabeledToClause(
@@ -222,5 +227,5 @@ func (Reducer) LabeledToClause(
 	clauseBody []*Token) (
 	*Clause,
 	error) {
-	return NewClause(label, clauseBody), nil
+	return NewClause(label, clauseBody, false), nil
 }

@@ -20,7 +20,8 @@ type Clause struct {
 
 	Label string
 
-	Bindings []*Term
+	Passthrough bool
+	Bindings    []*Term
 
 	// Temp variable populated by the code generator.
 	CodeGenReducerName      string
@@ -38,8 +39,9 @@ type Term struct {
 
 	ValueType string
 
-	RuleLocation parser.LRLocation
-	Clauses      []*Clause
+	RuleLocation      parser.LRLocation
+	NumReducerClauses int
+	Clauses           []*Clause
 
 	Reachable bool
 
@@ -124,6 +126,34 @@ func classifyDefinitions(
 			}
 
 		case *parser.Rule:
+			// Unlike yacc, each rule implicitly define %type
+			term, ok := terms[def.Name.Value]
+			if !ok {
+				valueType := Generic
+				if def.ValueType != nil {
+					valueType = def.ValueType.Value
+				}
+
+				terms[def.Name.Value] = &Term{
+					Name:       def.Name.Value,
+					LRLocation: def.Loc(),
+					SymbolId:   def.Name.Id(),
+					IsTerminal: false,
+					ValueType:  valueType,
+					Reachable:  false,
+				}
+			} else if def.ValueType != nil &&
+				term.ValueType != def.ValueType.Value {
+
+				errStrs = append(
+					errStrs,
+					fmt.Sprintf(
+						"Rule has conflicting value type declarations: %s %v vs %v",
+						def.Name.Value,
+						term.LRLocation,
+						def.Loc().ShortString()))
+			}
+
 			if firstRuleName == "" {
 				firstRuleName = def.Name.Value
 			}
@@ -181,51 +211,27 @@ func bindTerms(
 
 	errStrs := []string{}
 
-	// Unlike yacc, each rule implicitly define %type
-	for name, rule := range rules {
-		term, ok := terms[name]
-		if !ok {
-			valueType := Generic
-			if rule.ValueType != nil {
-				valueType = rule.ValueType.Value
-			}
-
-			terms[name] = &Term{
-				Name:       rule.Name.Value,
-				LRLocation: rule.Loc(),
-				SymbolId:   rule.Name.Id(),
-				IsTerminal: false,
-				ValueType:  valueType,
-				Reachable:  false,
-			}
-		} else if rule.ValueType != nil &&
-			term.ValueType != rule.ValueType.Value {
-
-			errStrs = append(
-				errStrs,
-				fmt.Sprintf(
-					"Rule has conflicting value type declarations: %s %v vs %v",
-					name,
-					term.LRLocation,
-					rule.Loc().ShortString()))
-		}
-	}
-
 	for name, rule := range rules {
 		term := terms[name]
 		term.RuleLocation = rule.Loc()
 
+		numReducerClauses := 0
 		clauses := []*Clause{}
 		for _, parsedClause := range rule.Clauses {
+			if !parsedClause.Passthrough {
+				numReducerClauses++
+			}
+
 			label := ""
 			if parsedClause.Label != nil {
 				label = parsedClause.Label.Value
 			}
 			clause := &Clause{
-				SortId:     parsedClause.SortId,
-				LRLocation: parsedClause.LRLocation,
-				Label:      label,
-				Bindings:   []*Term{},
+				SortId:      parsedClause.SortId,
+				LRLocation:  parsedClause.LRLocation,
+				Label:       label,
+				Passthrough: parsedClause.Passthrough,
+				Bindings:    []*Term{},
 			}
 
 			for _, id_or_char := range parsedClause.Body {
@@ -245,6 +251,7 @@ func bindTerms(
 			clauses = append(clauses, clause)
 		}
 
+		term.NumReducerClauses = numReducerClauses
 		term.Clauses = clauses
 	}
 

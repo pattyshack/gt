@@ -107,6 +107,8 @@ type Clause struct {
 	Label *Token // optional
 	Body  []*Token
 
+  Passthrough bool
+
 	// set by NewRule
 	LRLocation
 	Parent *Rule
@@ -114,10 +116,11 @@ type Clause struct {
 	SortId int
 }
 
-func NewClause(label *Token, body []*Token) *Clause {
+func NewClause(label *Token, body []*Token, passthrough bool) *Clause {
 	return &Clause{
 		Label: label,
 		Body:  body,
+    Passthrough: passthrough,
 	}
 }
 

@@ -167,11 +167,14 @@ type $LexerType interface {
 }
 
 [[-for _, rule := range Grammar.NonTerminals-]]
-    [[-if len(rule.Clauses) == 0-]]
+    [[-if rule.NumReducerClauses == 0-]]
         [[-continue-]]
     [[-end]]
 type $(rule.CodeGenReducerInterface) interface {
     [[-for clauseIdx, clause := range rule.Clauses-]]
+        [[-if clause.Passthrough-]]
+          [[-continue-]]
+        [[-end-]]
         [[-if clauseIdx > 0]]
 
         [[-end-]]
@@ -221,7 +224,9 @@ type $ReducerType interface {
     [[-if len(rule.Clauses) == 0-]]
         [[-continue-]]
     [[-end]]
+  [[-if rule.NumReducerClauses > 0]]
   $(rule.CodeGenReducerInterface)
+  [[-end]]
 [[-end]]
 }
 
@@ -644,12 +649,18 @@ func (act *$ActionType) ReduceSymbol(
         stack = stack[:len(stack)-$(len(clause.Bindings))]
         [[-end]]
         symbol.SymbolId_ = $(rule.CodeGenSymbolConst)
+        [[-if clause.Passthrough]]
+        //line $(clause.LRLocation)
+        symbol.$(rule.ValueType) = args[0].$(clause.Bindings[0].ValueType)
+        err = nil
+        [[-else]]
         symbol.$(rule.ValueType), err = reducer.$(clause.CodeGenReducerName)(
-        [[-for idx, term := range clause.Bindings-]]
-args[$idx].$(term.ValueType)
-            [[-if idx != len(clause.Bindings)-1]], [[-end-]]
-        [[-end-]]
+          [[-for idx, term := range clause.Bindings-]]
+  args[$idx].$(term.ValueType)
+              [[-if idx != len(clause.Bindings)-1]], [[-end-]]
+          [[-end-]]
 )
+        [[-end]]
     [[-end-]]
 [[-end]]
     default:
