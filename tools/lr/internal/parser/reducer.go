@@ -167,22 +167,49 @@ func (Reducer) ToRule(
 	*Rule,
 	error) {
 
-	if len(clauses) > 1 {
-		for idx, clause := range clauses {
-			if clause.Label != nil { // explicitly labelled
+	numReducerClauses := 0
+	for _, clause := range clauses {
+		if !clause.Passthrough {
+			numReducerClauses++
+		}
+	}
+
+	for idx, clause := range clauses {
+		if clause.Label != nil { // explicitly labelled
+			continue
+		}
+
+		if !clause.Passthrough && numReducerClauses == 1 {
+			continue
+		}
+
+		if len(clause.Body) == 1 {
+			if clause.Body[0].Id() == LRIdentifierToken {
+				clause.Label = clause.Body[0]
+				continue
+			} else if clause.Passthrough {
+				charToken := clause.Body[0]
+				// Ugly label name doesn't matter for passthrough
+				label := ""
+				if len(charToken.Value) == 3 {
+					label = fmt.Sprintf("char_%d", charToken.Value[1])
+				} else {
+					label = fmt.Sprintf("char_slash_%d", charToken.Value[2])
+				}
+				clause.Label = &Token{
+					LRLocation: charToken.Loc(),
+					LRSymbolId: LRIdentifierToken,
+					Value:      label,
+				}
 				continue
 			}
-
-			if len(clause.Body) == 1 && clause.Body[0].Id() == LRIdentifierToken {
-				clause.Label = clause.Body[0]
-			} else {
-				return nil, fmt.Errorf(
-					"rule %s (%s) clause %d must be explicitly named",
-					ruleDef.Name.Value,
-					ruleDef.Loc(),
-					idx)
-			}
 		}
+
+		return nil, fmt.Errorf(
+			"rule %s (%s) clause %d must be explicitly named",
+			ruleDef.Name.Value,
+			ruleDef.Loc(),
+			idx)
 	}
 
 	return NewRule(ruleDef, clauses), nil
