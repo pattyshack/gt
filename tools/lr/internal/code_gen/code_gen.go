@@ -22,8 +22,6 @@ func GenerateLRCode(
 	switch targetLanguage {
 	case GoLang:
 		return GenerateGoLRCode(grammar, states)
-	case RustLang:
-		return GenerateRustLRCode(grammar, states)
 	}
 
 	return nil, fmt.Errorf("Unsupported target language: %s", targetLanguage)
