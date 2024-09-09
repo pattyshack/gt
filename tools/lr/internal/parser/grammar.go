@@ -5,7 +5,6 @@ package parser
 import (
 	fmt "fmt"
 	io "io"
-	sort "sort"
 )
 
 type LRSymbolId int
@@ -195,16 +194,30 @@ func (LRDefaultParseErrorHandler) Error(nextToken LRToken, stack _LRStack) error
 }
 
 func LRExpectedTerminals(id _LRStateId) []LRSymbolId {
-	result := []LRSymbolId{}
-	for key, _ := range _LRActionTable {
-		if key._LRStateId != id {
-			continue
-		}
-		result = append(result, key.LRSymbolId)
+	switch id {
+	case _LRState1:
+		return []LRSymbolId{LRTokenToken, LRTypeToken, LRStartToken, LRRuleDefToken}
+	case _LRState2:
+		return []LRSymbolId{}
+	case _LRState4:
+		return []LRSymbolId{LRIdentifierToken}
+	case _LRState7:
+		return []LRSymbolId{'<', LRCharacterToken, LRIdentifierToken}
+	case _LRState8:
+		return []LRSymbolId{LRCharacterToken, LRIdentifierToken}
+	case _LRState15:
+		return []LRSymbolId{LRIdentifierToken}
+	case _LRState18:
+		return []LRSymbolId{LRIdentifierToken}
+	case _LRState19:
+		return []LRSymbolId{'>'}
+	case _LRState20:
+		return []LRSymbolId{LRSectionContentToken}
+	case _LRState21:
+		return []LRSymbolId{LRCharacterToken, LRIdentifierToken}
 	}
 
-	sort.Slice(result, func(i int, j int) bool { return result[i] < result[j] })
-	return result
+	return nil
 }
 
 func LRParse(lexer LRLexer, reducer LRReducer) (*Grammar, error) {
@@ -272,6 +285,23 @@ func _LRParse(
 				return nil, err
 			}
 		} else if action.ActionType == _LRReduceAction {
+			var reduceSymbol *LRSymbol
+			stateStack, reduceSymbol, err = action.ReduceSymbol(
+				reducer,
+				stateStack)
+			if err != nil {
+				return nil, err
+			}
+
+			symbolStack.Push(reduceSymbol)
+		} else if action.ActionType == _LRShiftAndReduceAction {
+			stateStack = append(stateStack, action.ShiftItem(nextSymbol))
+
+			_, err = symbolStack.Pop()
+			if err != nil {
+				return nil, err
+			}
+
 			var reduceSymbol *LRSymbol
 			stateStack, reduceSymbol, err = action.ReduceSymbol(
 				reducer,
@@ -377,9 +407,10 @@ type _LRActionType int
 
 const (
 	// NOTE: error action is implicit
-	_LRShiftAction  = _LRActionType(0)
-	_LRReduceAction = _LRActionType(1)
-	_LRAcceptAction = _LRActionType(2)
+	_LRShiftAction          = _LRActionType(0)
+	_LRReduceAction         = _LRActionType(1)
+	_LRShiftAndReduceAction = _LRActionType(2)
+	_LRAcceptAction         = _LRActionType(3)
 )
 
 func (i _LRActionType) String() string {
@@ -388,6 +419,8 @@ func (i _LRActionType) String() string {
 		return "shift"
 	case _LRReduceAction:
 		return "reduce"
+	case _LRShiftAndReduceAction:
+		return "shift-and-reduce"
 	case _LRAcceptAction:
 		return "accept"
 	default:
@@ -523,25 +556,6 @@ const (
 	_LRState20 = _LRStateId(20)
 	_LRState21 = _LRStateId(21)
 	_LRState22 = _LRStateId(22)
-	_LRState23 = _LRStateId(23)
-	_LRState24 = _LRStateId(24)
-	_LRState25 = _LRStateId(25)
-	_LRState26 = _LRStateId(26)
-	_LRState27 = _LRStateId(27)
-	_LRState28 = _LRStateId(28)
-	_LRState29 = _LRStateId(29)
-	_LRState30 = _LRStateId(30)
-	_LRState31 = _LRStateId(31)
-	_LRState32 = _LRStateId(32)
-	_LRState33 = _LRStateId(33)
-	_LRState34 = _LRStateId(34)
-	_LRState35 = _LRStateId(35)
-	_LRState36 = _LRStateId(36)
-	_LRState37 = _LRStateId(37)
-	_LRState38 = _LRStateId(38)
-	_LRState39 = _LRStateId(39)
-	_LRState40 = _LRStateId(40)
-	_LRState41 = _LRStateId(41)
 )
 
 type LRSymbol struct {
@@ -901,193 +915,252 @@ type _LRActionTableKey struct {
 	LRSymbolId
 }
 
-type _LRActionTableType map[_LRActionTableKey]*_LRAction
+type _LRActionTableType struct{}
 
-func (table _LRActionTableType) Get(
+func (_LRActionTableType) Get(
 	stateId _LRStateId,
-	symbolId LRSymbolId) (
-	*_LRAction,
-	bool) {
+	symbolId LRSymbolId,
+) (
+	_LRAction,
+	bool,
+) {
+	switch stateId {
+	case _LRState1:
+		switch symbolId {
+		case LRStartToken:
+			return _LRAction{_LRShiftAction, _LRState4, 0}, true
+		case LRRuleDefToken:
+			return _LRAction{_LRShiftAction, _LRState3, 0}, true
+		case LRGrammarType:
+			return _LRAction{_LRShiftAction, _LRState2, 0}, true
+		case LRDefsType:
+			return _LRAction{_LRShiftAction, _LRState6, 0}, true
+		case LRDefType:
+			return _LRAction{_LRShiftAction, _LRState5, 0}, true
+		case LRRwordType:
+			return _LRAction{_LRShiftAction, _LRState7, 0}, true
+		case LRTokenToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceTokenToRword}, true
+		case LRTypeToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceTypeToRword}, true
+		case LRRuleType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceRuleToDef}, true
+		}
+	case _LRState2:
+		switch symbolId {
+		case _LREndMarker:
+			return _LRAction{_LRAcceptAction, 0, 0}, true
+		}
+	case _LRState3:
+		switch symbolId {
+		case LRLabelToken:
+			return _LRAction{_LRShiftAction, _LRState9, 0}, true
+		case '=':
+			return _LRAction{_LRShiftAction, _LRState8, 0}, true
+		case LRNonemptyIdOrCharListType:
+			return _LRAction{_LRShiftAction, _LRState11, 0}, true
+		case LRClausesType:
+			return _LRAction{_LRShiftAction, _LRState10, 0}, true
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}, true
+		case LRIdOrCharListType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceUnlabeledToClause}, true
+		case LRClauseType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceClauseToClauses}, true
 
-	action, ok := table[_LRActionTableKey{stateId, symbolId}]
-	if ok {
-		return action, ok
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceNilToIdOrCharList}, true
+		}
+	case _LRState4:
+		switch symbolId {
+		case LRNonemptyIdentListType:
+			return _LRAction{_LRShiftAction, _LRState12, 0}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdentToNonemptyIdentList}, true
+		}
+	case _LRState5:
+		switch symbolId {
+		case ';':
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceExplicitDefToDefs}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceDefToDefs}, true
+		}
+	case _LRState6:
+		switch symbolId {
+		case LRStartToken:
+			return _LRAction{_LRShiftAction, _LRState4, 0}, true
+		case LRRuleDefToken:
+			return _LRAction{_LRShiftAction, _LRState3, 0}, true
+		case LRAdditionalSectionsType:
+			return _LRAction{_LRShiftAction, _LRState13, 0}, true
+		case LRDefType:
+			return _LRAction{_LRShiftAction, _LRState14, 0}, true
+		case LRRwordType:
+			return _LRAction{_LRShiftAction, _LRState7, 0}, true
+		case LRTokenToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceTokenToRword}, true
+		case LRTypeToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceTypeToRword}, true
+		case LRRuleType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceRuleToDef}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceNilToAdditionalSections}, true
+		}
+	case _LRState7:
+		switch symbolId {
+		case '<':
+			return _LRAction{_LRShiftAction, _LRState15, 0}, true
+		case LRNonemptyIdOrCharListType:
+			return _LRAction{_LRShiftAction, _LRState16, 0}, true
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}, true
+		}
+	case _LRState8:
+		switch symbolId {
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReducePassthroughCharToClause}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReducePassthroughIdToClause}, true
+		}
+	case _LRState9:
+		switch symbolId {
+		case LRNonemptyIdOrCharListType:
+			return _LRAction{_LRShiftAction, _LRState11, 0}, true
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}, true
+		case LRIdOrCharListType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceLabeledToClause}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceNilToIdOrCharList}, true
+		}
+	case _LRState10:
+		switch symbolId {
+		case '|':
+			return _LRAction{_LRShiftAction, _LRState17, 0}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceToRule}, true
+		}
+	case _LRState11:
+		switch symbolId {
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddIdToNonemptyIdOrCharList}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceListToIdOrCharList}, true
+		}
+	case _LRState12:
+		switch symbolId {
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddToNonemptyIdentList}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceStartDeclToDef}, true
+		}
+	case _LRState13:
+		switch symbolId {
+		case LRSectionMarkerToken:
+			return _LRAction{_LRShiftAction, _LRState18, 0}, true
+		case LRAdditionalSectionType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddToAdditionalSections}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceToGrammar}, true
+		}
+	case _LRState14:
+		switch symbolId {
+		case ';':
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddExplicitToDefs}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceAddToDefs}, true
+		}
+	case _LRState15:
+		switch symbolId {
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAction, _LRState19, 0}, true
+		}
+	case _LRState16:
+		switch symbolId {
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddIdToNonemptyIdOrCharList}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceUntypedTermDeclToDef}, true
+		}
+	case _LRState17:
+		switch symbolId {
+		case LRLabelToken:
+			return _LRAction{_LRShiftAction, _LRState9, 0}, true
+		case '=':
+			return _LRAction{_LRShiftAction, _LRState8, 0}, true
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}, true
+		case LRNonemptyIdOrCharListType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceListToIdOrCharList}, true
+		case LRIdOrCharListType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceUnlabeledToClause}, true
+		case LRClauseType:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddToClauses}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceNilToIdOrCharList}, true
+		}
+	case _LRState18:
+		switch symbolId {
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAction, _LRState20, 0}, true
+		}
+	case _LRState19:
+		switch symbolId {
+		case '>':
+			return _LRAction{_LRShiftAction, _LRState21, 0}, true
+		}
+	case _LRState20:
+		switch symbolId {
+		case LRSectionContentToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceToAdditionalSection}, true
+		}
+	case _LRState21:
+		switch symbolId {
+		case LRNonemptyIdOrCharListType:
+			return _LRAction{_LRShiftAction, _LRState22, 0}, true
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}, true
+		}
+	case _LRState22:
+		switch symbolId {
+		case LRCharacterToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddCharToNonemptyIdOrCharList}, true
+		case LRIdentifierToken:
+			return _LRAction{_LRShiftAndReduceAction, 0, _LRReduceAddIdToNonemptyIdOrCharList}, true
+
+		default:
+			return _LRAction{_LRReduceAction, 0, _LRReduceTermDeclToDef}, true
+		}
 	}
 
-	action, ok = table[_LRActionTableKey{stateId, _LRWildcardMarker}]
-	return action, ok
+	return _LRAction{}, false
 }
 
-var (
-	_LRGotoState1Action                          = &_LRAction{_LRShiftAction, _LRState1, 0}
-	_LRGotoState2Action                          = &_LRAction{_LRShiftAction, _LRState2, 0}
-	_LRGotoState3Action                          = &_LRAction{_LRShiftAction, _LRState3, 0}
-	_LRGotoState4Action                          = &_LRAction{_LRShiftAction, _LRState4, 0}
-	_LRGotoState5Action                          = &_LRAction{_LRShiftAction, _LRState5, 0}
-	_LRGotoState6Action                          = &_LRAction{_LRShiftAction, _LRState6, 0}
-	_LRGotoState7Action                          = &_LRAction{_LRShiftAction, _LRState7, 0}
-	_LRGotoState8Action                          = &_LRAction{_LRShiftAction, _LRState8, 0}
-	_LRGotoState9Action                          = &_LRAction{_LRShiftAction, _LRState9, 0}
-	_LRGotoState10Action                         = &_LRAction{_LRShiftAction, _LRState10, 0}
-	_LRGotoState11Action                         = &_LRAction{_LRShiftAction, _LRState11, 0}
-	_LRGotoState12Action                         = &_LRAction{_LRShiftAction, _LRState12, 0}
-	_LRGotoState13Action                         = &_LRAction{_LRShiftAction, _LRState13, 0}
-	_LRGotoState14Action                         = &_LRAction{_LRShiftAction, _LRState14, 0}
-	_LRGotoState15Action                         = &_LRAction{_LRShiftAction, _LRState15, 0}
-	_LRGotoState16Action                         = &_LRAction{_LRShiftAction, _LRState16, 0}
-	_LRGotoState17Action                         = &_LRAction{_LRShiftAction, _LRState17, 0}
-	_LRGotoState18Action                         = &_LRAction{_LRShiftAction, _LRState18, 0}
-	_LRGotoState19Action                         = &_LRAction{_LRShiftAction, _LRState19, 0}
-	_LRGotoState20Action                         = &_LRAction{_LRShiftAction, _LRState20, 0}
-	_LRGotoState21Action                         = &_LRAction{_LRShiftAction, _LRState21, 0}
-	_LRGotoState22Action                         = &_LRAction{_LRShiftAction, _LRState22, 0}
-	_LRGotoState23Action                         = &_LRAction{_LRShiftAction, _LRState23, 0}
-	_LRGotoState24Action                         = &_LRAction{_LRShiftAction, _LRState24, 0}
-	_LRGotoState25Action                         = &_LRAction{_LRShiftAction, _LRState25, 0}
-	_LRGotoState26Action                         = &_LRAction{_LRShiftAction, _LRState26, 0}
-	_LRGotoState27Action                         = &_LRAction{_LRShiftAction, _LRState27, 0}
-	_LRGotoState28Action                         = &_LRAction{_LRShiftAction, _LRState28, 0}
-	_LRGotoState29Action                         = &_LRAction{_LRShiftAction, _LRState29, 0}
-	_LRGotoState30Action                         = &_LRAction{_LRShiftAction, _LRState30, 0}
-	_LRGotoState31Action                         = &_LRAction{_LRShiftAction, _LRState31, 0}
-	_LRGotoState32Action                         = &_LRAction{_LRShiftAction, _LRState32, 0}
-	_LRGotoState33Action                         = &_LRAction{_LRShiftAction, _LRState33, 0}
-	_LRGotoState34Action                         = &_LRAction{_LRShiftAction, _LRState34, 0}
-	_LRGotoState35Action                         = &_LRAction{_LRShiftAction, _LRState35, 0}
-	_LRGotoState36Action                         = &_LRAction{_LRShiftAction, _LRState36, 0}
-	_LRGotoState37Action                         = &_LRAction{_LRShiftAction, _LRState37, 0}
-	_LRGotoState38Action                         = &_LRAction{_LRShiftAction, _LRState38, 0}
-	_LRGotoState39Action                         = &_LRAction{_LRShiftAction, _LRState39, 0}
-	_LRGotoState40Action                         = &_LRAction{_LRShiftAction, _LRState40, 0}
-	_LRGotoState41Action                         = &_LRAction{_LRShiftAction, _LRState41, 0}
-	_LRReduceToGrammarAction                     = &_LRAction{_LRReduceAction, 0, _LRReduceToGrammar}
-	_LRReduceAddToAdditionalSectionsAction       = &_LRAction{_LRReduceAction, 0, _LRReduceAddToAdditionalSections}
-	_LRReduceNilToAdditionalSectionsAction       = &_LRAction{_LRReduceAction, 0, _LRReduceNilToAdditionalSections}
-	_LRReduceToAdditionalSectionAction           = &_LRAction{_LRReduceAction, 0, _LRReduceToAdditionalSection}
-	_LRReduceAddToDefsAction                     = &_LRAction{_LRReduceAction, 0, _LRReduceAddToDefs}
-	_LRReduceAddExplicitToDefsAction             = &_LRAction{_LRReduceAction, 0, _LRReduceAddExplicitToDefs}
-	_LRReduceDefToDefsAction                     = &_LRAction{_LRReduceAction, 0, _LRReduceDefToDefs}
-	_LRReduceExplicitDefToDefsAction             = &_LRAction{_LRReduceAction, 0, _LRReduceExplicitDefToDefs}
-	_LRReduceTermDeclToDefAction                 = &_LRAction{_LRReduceAction, 0, _LRReduceTermDeclToDef}
-	_LRReduceUntypedTermDeclToDefAction          = &_LRAction{_LRReduceAction, 0, _LRReduceUntypedTermDeclToDef}
-	_LRReduceStartDeclToDefAction                = &_LRAction{_LRReduceAction, 0, _LRReduceStartDeclToDef}
-	_LRReduceRuleToDefAction                     = &_LRAction{_LRReduceAction, 0, _LRReduceRuleToDef}
-	_LRReduceTokenToRwordAction                  = &_LRAction{_LRReduceAction, 0, _LRReduceTokenToRword}
-	_LRReduceTypeToRwordAction                   = &_LRAction{_LRReduceAction, 0, _LRReduceTypeToRword}
-	_LRReduceAddToNonemptyIdentListAction        = &_LRAction{_LRReduceAction, 0, _LRReduceAddToNonemptyIdentList}
-	_LRReduceIdentToNonemptyIdentListAction      = &_LRAction{_LRReduceAction, 0, _LRReduceIdentToNonemptyIdentList}
-	_LRReduceAddIdToNonemptyIdOrCharListAction   = &_LRAction{_LRReduceAction, 0, _LRReduceAddIdToNonemptyIdOrCharList}
-	_LRReduceAddCharToNonemptyIdOrCharListAction = &_LRAction{_LRReduceAction, 0, _LRReduceAddCharToNonemptyIdOrCharList}
-	_LRReduceIdToNonemptyIdOrCharListAction      = &_LRAction{_LRReduceAction, 0, _LRReduceIdToNonemptyIdOrCharList}
-	_LRReduceCharToNonemptyIdOrCharListAction    = &_LRAction{_LRReduceAction, 0, _LRReduceCharToNonemptyIdOrCharList}
-	_LRReduceListToIdOrCharListAction            = &_LRAction{_LRReduceAction, 0, _LRReduceListToIdOrCharList}
-	_LRReduceNilToIdOrCharListAction             = &_LRAction{_LRReduceAction, 0, _LRReduceNilToIdOrCharList}
-	_LRReduceToRuleAction                        = &_LRAction{_LRReduceAction, 0, _LRReduceToRule}
-	_LRReducePassthroughIdToClauseAction         = &_LRAction{_LRReduceAction, 0, _LRReducePassthroughIdToClause}
-	_LRReducePassthroughCharToClauseAction       = &_LRAction{_LRReduceAction, 0, _LRReducePassthroughCharToClause}
-	_LRReduceUnlabeledToClauseAction             = &_LRAction{_LRReduceAction, 0, _LRReduceUnlabeledToClause}
-	_LRReduceLabeledToClauseAction               = &_LRAction{_LRReduceAction, 0, _LRReduceLabeledToClause}
-	_LRReduceAddToClausesAction                  = &_LRAction{_LRReduceAction, 0, _LRReduceAddToClauses}
-	_LRReduceClauseToClausesAction               = &_LRAction{_LRReduceAction, 0, _LRReduceClauseToClauses}
-)
-
-var _LRActionTable = _LRActionTableType{
-	{_LRState2, _LREndMarker}:                &_LRAction{_LRAcceptAction, 0, 0},
-	{_LRState1, LRTokenToken}:                _LRGotoState5Action,
-	{_LRState1, LRTypeToken}:                 _LRGotoState6Action,
-	{_LRState1, LRStartToken}:                _LRGotoState4Action,
-	{_LRState1, LRRuleDefToken}:              _LRGotoState3Action,
-	{_LRState1, LRGrammarType}:               _LRGotoState2Action,
-	{_LRState1, LRDefsType}:                  _LRGotoState8Action,
-	{_LRState1, LRDefType}:                   _LRGotoState7Action,
-	{_LRState1, LRRwordType}:                 _LRGotoState10Action,
-	{_LRState1, LRRuleType}:                  _LRGotoState9Action,
-	{_LRState3, LRLabelToken}:                _LRGotoState14Action,
-	{_LRState3, '='}:                         _LRGotoState11Action,
-	{_LRState3, LRCharacterToken}:            _LRGotoState12Action,
-	{_LRState3, LRIdentifierToken}:           _LRGotoState13Action,
-	{_LRState3, LRNonemptyIdOrCharListType}:  _LRGotoState18Action,
-	{_LRState3, LRIdOrCharListType}:          _LRGotoState17Action,
-	{_LRState3, LRClauseType}:                _LRGotoState15Action,
-	{_LRState3, LRClausesType}:               _LRGotoState16Action,
-	{_LRState4, LRIdentifierToken}:           _LRGotoState19Action,
-	{_LRState4, LRNonemptyIdentListType}:     _LRGotoState20Action,
-	{_LRState7, ';'}:                         _LRGotoState21Action,
-	{_LRState8, LRTokenToken}:                _LRGotoState5Action,
-	{_LRState8, LRTypeToken}:                 _LRGotoState6Action,
-	{_LRState8, LRStartToken}:                _LRGotoState4Action,
-	{_LRState8, LRRuleDefToken}:              _LRGotoState3Action,
-	{_LRState8, LRAdditionalSectionsType}:    _LRGotoState22Action,
-	{_LRState8, LRDefType}:                   _LRGotoState23Action,
-	{_LRState8, LRRwordType}:                 _LRGotoState10Action,
-	{_LRState8, LRRuleType}:                  _LRGotoState9Action,
-	{_LRState10, '<'}:                        _LRGotoState24Action,
-	{_LRState10, LRCharacterToken}:           _LRGotoState12Action,
-	{_LRState10, LRIdentifierToken}:          _LRGotoState13Action,
-	{_LRState10, LRNonemptyIdOrCharListType}: _LRGotoState25Action,
-	{_LRState11, LRCharacterToken}:           _LRGotoState26Action,
-	{_LRState11, LRIdentifierToken}:          _LRGotoState27Action,
-	{_LRState14, LRCharacterToken}:           _LRGotoState12Action,
-	{_LRState14, LRIdentifierToken}:          _LRGotoState13Action,
-	{_LRState14, LRNonemptyIdOrCharListType}: _LRGotoState18Action,
-	{_LRState14, LRIdOrCharListType}:         _LRGotoState28Action,
-	{_LRState16, '|'}:                        _LRGotoState29Action,
-	{_LRState18, LRCharacterToken}:           _LRGotoState30Action,
-	{_LRState18, LRIdentifierToken}:          _LRGotoState31Action,
-	{_LRState20, LRIdentifierToken}:          _LRGotoState32Action,
-	{_LRState22, LRSectionMarkerToken}:       _LRGotoState33Action,
-	{_LRState22, LRAdditionalSectionType}:    _LRGotoState34Action,
-	{_LRState23, ';'}:                        _LRGotoState35Action,
-	{_LRState24, LRIdentifierToken}:          _LRGotoState36Action,
-	{_LRState25, LRCharacterToken}:           _LRGotoState30Action,
-	{_LRState25, LRIdentifierToken}:          _LRGotoState31Action,
-	{_LRState29, LRLabelToken}:               _LRGotoState14Action,
-	{_LRState29, '='}:                        _LRGotoState11Action,
-	{_LRState29, LRCharacterToken}:           _LRGotoState12Action,
-	{_LRState29, LRIdentifierToken}:          _LRGotoState13Action,
-	{_LRState29, LRNonemptyIdOrCharListType}: _LRGotoState18Action,
-	{_LRState29, LRIdOrCharListType}:         _LRGotoState17Action,
-	{_LRState29, LRClauseType}:               _LRGotoState37Action,
-	{_LRState33, LRIdentifierToken}:          _LRGotoState38Action,
-	{_LRState36, '>'}:                        _LRGotoState39Action,
-	{_LRState38, LRSectionContentToken}:      _LRGotoState40Action,
-	{_LRState39, LRCharacterToken}:           _LRGotoState12Action,
-	{_LRState39, LRIdentifierToken}:          _LRGotoState13Action,
-	{_LRState39, LRNonemptyIdOrCharListType}: _LRGotoState41Action,
-	{_LRState41, LRCharacterToken}:           _LRGotoState30Action,
-	{_LRState41, LRIdentifierToken}:          _LRGotoState31Action,
-	{_LRState3, _LRWildcardMarker}:           _LRReduceNilToIdOrCharListAction,
-	{_LRState5, _LRWildcardMarker}:           _LRReduceTokenToRwordAction,
-	{_LRState6, _LRWildcardMarker}:           _LRReduceTypeToRwordAction,
-	{_LRState7, _LRWildcardMarker}:           _LRReduceDefToDefsAction,
-	{_LRState8, _LRWildcardMarker}:           _LRReduceNilToAdditionalSectionsAction,
-	{_LRState9, _LRWildcardMarker}:           _LRReduceRuleToDefAction,
-	{_LRState12, _LRWildcardMarker}:          _LRReduceCharToNonemptyIdOrCharListAction,
-	{_LRState13, _LRWildcardMarker}:          _LRReduceIdToNonemptyIdOrCharListAction,
-	{_LRState14, _LRWildcardMarker}:          _LRReduceNilToIdOrCharListAction,
-	{_LRState15, _LRWildcardMarker}:          _LRReduceClauseToClausesAction,
-	{_LRState16, _LRWildcardMarker}:          _LRReduceToRuleAction,
-	{_LRState17, _LRWildcardMarker}:          _LRReduceUnlabeledToClauseAction,
-	{_LRState18, _LRWildcardMarker}:          _LRReduceListToIdOrCharListAction,
-	{_LRState19, _LRWildcardMarker}:          _LRReduceIdentToNonemptyIdentListAction,
-	{_LRState20, _LRWildcardMarker}:          _LRReduceStartDeclToDefAction,
-	{_LRState21, _LRWildcardMarker}:          _LRReduceExplicitDefToDefsAction,
-	{_LRState22, _LREndMarker}:               _LRReduceToGrammarAction,
-	{_LRState23, _LRWildcardMarker}:          _LRReduceAddToDefsAction,
-	{_LRState25, _LRWildcardMarker}:          _LRReduceUntypedTermDeclToDefAction,
-	{_LRState26, _LRWildcardMarker}:          _LRReducePassthroughCharToClauseAction,
-	{_LRState27, _LRWildcardMarker}:          _LRReducePassthroughIdToClauseAction,
-	{_LRState28, _LRWildcardMarker}:          _LRReduceLabeledToClauseAction,
-	{_LRState29, _LRWildcardMarker}:          _LRReduceNilToIdOrCharListAction,
-	{_LRState30, _LRWildcardMarker}:          _LRReduceAddCharToNonemptyIdOrCharListAction,
-	{_LRState31, _LRWildcardMarker}:          _LRReduceAddIdToNonemptyIdOrCharListAction,
-	{_LRState32, _LRWildcardMarker}:          _LRReduceAddToNonemptyIdentListAction,
-	{_LRState34, _LRWildcardMarker}:          _LRReduceAddToAdditionalSectionsAction,
-	{_LRState35, _LRWildcardMarker}:          _LRReduceAddExplicitToDefsAction,
-	{_LRState37, _LRWildcardMarker}:          _LRReduceAddToClausesAction,
-	{_LRState40, _LRWildcardMarker}:          _LRReduceToAdditionalSectionAction,
-	{_LRState41, _LRWildcardMarker}:          _LRReduceTermDeclToDefAction,
-}
+var _LRActionTable = _LRActionTableType{}
 
 /*
 Parser Debug States:
@@ -1109,22 +1182,25 @@ Parser Debug States:
       rule:.RULE_DEF clauses
     Reduce:
       (nil)
+    ShiftAndReduce:
+      TOKEN -> [rword]
+      TYPE -> [rword]
+      rule -> [def]
     Goto:
-      TOKEN -> State 5
-      TYPE -> State 6
       START -> State 4
       RULE_DEF -> State 3
       grammar -> State 2
-      defs -> State 8
-      def -> State 7
-      rword -> State 10
-      rule -> State 9
+      defs -> State 6
+      def -> State 5
+      rword -> State 7
 
   State 2:
     Kernel Items:
       #accept: ^ grammar., $
     Reduce:
       $ -> [#accept]
+    ShiftAndReduce:
+      (nil)
     Goto:
       (nil)
 
@@ -1146,15 +1222,16 @@ Parser Debug States:
       clauses:.clause
     Reduce:
       * -> [id_or_char_list]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
+      id_or_char_list -> [clause]
+      clause -> [clauses]
     Goto:
-      LABEL -> State 14
-      '=' -> State 11
-      CHARACTER -> State 12
-      IDENTIFIER -> State 13
-      nonempty_id_or_char_list -> State 18
-      id_or_char_list -> State 17
-      clause -> State 15
-      clauses -> State 16
+      LABEL -> State 9
+      '=' -> State 8
+      nonempty_id_or_char_list -> State 11
+      clauses -> State 10
 
   State 4:
     Kernel Items:
@@ -1164,36 +1241,23 @@ Parser Debug States:
       nonempty_ident_list:.IDENTIFIER
     Reduce:
       (nil)
+    ShiftAndReduce:
+      IDENTIFIER -> [nonempty_ident_list]
     Goto:
-      IDENTIFIER -> State 19
-      nonempty_ident_list -> State 20
+      nonempty_ident_list -> State 12
 
   State 5:
-    Kernel Items:
-      rword: TOKEN., *
-    Reduce:
-      * -> [rword]
-    Goto:
-      (nil)
-
-  State 6:
-    Kernel Items:
-      rword: TYPE., *
-    Reduce:
-      * -> [rword]
-    Goto:
-      (nil)
-
-  State 7:
     Kernel Items:
       defs: def., *
       defs: def.';'
     Reduce:
       * -> [defs]
+    ShiftAndReduce:
+      ';' -> [defs]
     Goto:
-      ';' -> State 21
+      (nil)
 
-  State 8:
+  State 6:
     Kernel Items:
       grammar: defs.additional_sections
       defs: defs.def
@@ -1210,25 +1274,18 @@ Parser Debug States:
       rule:.RULE_DEF clauses
     Reduce:
       * -> [additional_sections]
+    ShiftAndReduce:
+      TOKEN -> [rword]
+      TYPE -> [rword]
+      rule -> [def]
     Goto:
-      TOKEN -> State 5
-      TYPE -> State 6
       START -> State 4
       RULE_DEF -> State 3
-      additional_sections -> State 22
-      def -> State 23
-      rword -> State 10
-      rule -> State 9
+      additional_sections -> State 13
+      def -> State 14
+      rword -> State 7
 
-  State 9:
-    Kernel Items:
-      def: rule., *
-    Reduce:
-      * -> [def]
-    Goto:
-      (nil)
-
-  State 10:
+  State 7:
     Kernel Items:
       def: rword.'<' IDENTIFIER '>' nonempty_id_or_char_list
       def: rword.nonempty_id_or_char_list
@@ -1239,39 +1296,26 @@ Parser Debug States:
       nonempty_id_or_char_list:.CHARACTER
     Reduce:
       (nil)
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
     Goto:
-      '<' -> State 24
-      CHARACTER -> State 12
-      IDENTIFIER -> State 13
-      nonempty_id_or_char_list -> State 25
+      '<' -> State 15
+      nonempty_id_or_char_list -> State 16
 
-  State 11:
+  State 8:
     Kernel Items:
       clause: '='.IDENTIFIER
       clause: '='.CHARACTER
     Reduce:
       (nil)
-    Goto:
-      CHARACTER -> State 26
-      IDENTIFIER -> State 27
-
-  State 12:
-    Kernel Items:
-      nonempty_id_or_char_list: CHARACTER., *
-    Reduce:
-      * -> [nonempty_id_or_char_list]
+    ShiftAndReduce:
+      CHARACTER -> [clause]
+      IDENTIFIER -> [clause]
     Goto:
       (nil)
 
-  State 13:
-    Kernel Items:
-      nonempty_id_or_char_list: IDENTIFIER., *
-    Reduce:
-      * -> [nonempty_id_or_char_list]
-    Goto:
-      (nil)
-
-  State 14:
+  State 9:
     Kernel Items:
       clause: LABEL.id_or_char_list
     Non-kernel Items:
@@ -1283,138 +1327,96 @@ Parser Debug States:
       id_or_char_list:., *
     Reduce:
       * -> [id_or_char_list]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
+      id_or_char_list -> [clause]
     Goto:
-      CHARACTER -> State 12
-      IDENTIFIER -> State 13
-      nonempty_id_or_char_list -> State 18
-      id_or_char_list -> State 28
+      nonempty_id_or_char_list -> State 11
 
-  State 15:
-    Kernel Items:
-      clauses: clause., *
-    Reduce:
-      * -> [clauses]
-    Goto:
-      (nil)
-
-  State 16:
+  State 10:
     Kernel Items:
       rule: RULE_DEF clauses., *
       clauses: clauses.'|' clause
     Reduce:
       * -> [rule]
-    Goto:
-      '|' -> State 29
-
-  State 17:
-    Kernel Items:
-      clause: id_or_char_list., *
-    Reduce:
-      * -> [clause]
-    Goto:
+    ShiftAndReduce:
       (nil)
+    Goto:
+      '|' -> State 17
 
-  State 18:
+  State 11:
     Kernel Items:
       nonempty_id_or_char_list: nonempty_id_or_char_list.IDENTIFIER
       nonempty_id_or_char_list: nonempty_id_or_char_list.CHARACTER
       id_or_char_list: nonempty_id_or_char_list., *
     Reduce:
       * -> [id_or_char_list]
-    Goto:
-      CHARACTER -> State 30
-      IDENTIFIER -> State 31
-
-  State 19:
-    Kernel Items:
-      nonempty_ident_list: IDENTIFIER., *
-    Reduce:
-      * -> [nonempty_ident_list]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
     Goto:
       (nil)
 
-  State 20:
+  State 12:
     Kernel Items:
       def: START nonempty_ident_list., *
       nonempty_ident_list: nonempty_ident_list.IDENTIFIER
     Reduce:
       * -> [def]
-    Goto:
-      IDENTIFIER -> State 32
-
-  State 21:
-    Kernel Items:
-      defs: def ';'., *
-    Reduce:
-      * -> [defs]
+    ShiftAndReduce:
+      IDENTIFIER -> [nonempty_ident_list]
     Goto:
       (nil)
 
-  State 22:
+  State 13:
     Kernel Items:
-      grammar: defs additional_sections., $
+      grammar: defs additional_sections., *
       additional_sections: additional_sections.additional_section
     Non-kernel Items:
       additional_section:.SECTION_MARKER IDENTIFIER SECTION_CONTENT
     Reduce:
-      $ -> [grammar]
+      * -> [grammar]
+    ShiftAndReduce:
+      additional_section -> [additional_sections]
     Goto:
-      SECTION_MARKER -> State 33
-      additional_section -> State 34
+      SECTION_MARKER -> State 18
 
-  State 23:
+  State 14:
     Kernel Items:
       defs: defs def., *
       defs: defs def.';'
     Reduce:
       * -> [defs]
+    ShiftAndReduce:
+      ';' -> [defs]
     Goto:
-      ';' -> State 35
+      (nil)
 
-  State 24:
+  State 15:
     Kernel Items:
       def: rword '<'.IDENTIFIER '>' nonempty_id_or_char_list
     Reduce:
       (nil)
+    ShiftAndReduce:
+      (nil)
     Goto:
-      IDENTIFIER -> State 36
+      IDENTIFIER -> State 19
 
-  State 25:
+  State 16:
     Kernel Items:
       def: rword nonempty_id_or_char_list., *
       nonempty_id_or_char_list: nonempty_id_or_char_list.IDENTIFIER
       nonempty_id_or_char_list: nonempty_id_or_char_list.CHARACTER
     Reduce:
       * -> [def]
-    Goto:
-      CHARACTER -> State 30
-      IDENTIFIER -> State 31
-
-  State 26:
-    Kernel Items:
-      clause: '=' CHARACTER., *
-    Reduce:
-      * -> [clause]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
     Goto:
       (nil)
 
-  State 27:
-    Kernel Items:
-      clause: '=' IDENTIFIER., *
-    Reduce:
-      * -> [clause]
-    Goto:
-      (nil)
-
-  State 28:
-    Kernel Items:
-      clause: LABEL id_or_char_list., *
-    Reduce:
-      * -> [clause]
-    Goto:
-      (nil)
-
-  State 29:
+  State 17:
     Kernel Items:
       clauses: clauses '|'.clause
     Non-kernel Items:
@@ -1430,88 +1432,47 @@ Parser Debug States:
       clause:.LABEL id_or_char_list
     Reduce:
       * -> [id_or_char_list]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
+      nonempty_id_or_char_list -> [id_or_char_list]
+      id_or_char_list -> [clause]
+      clause -> [clauses]
     Goto:
-      LABEL -> State 14
-      '=' -> State 11
-      CHARACTER -> State 12
-      IDENTIFIER -> State 13
-      nonempty_id_or_char_list -> State 18
-      id_or_char_list -> State 17
-      clause -> State 37
+      LABEL -> State 9
+      '=' -> State 8
 
-  State 30:
-    Kernel Items:
-      nonempty_id_or_char_list: nonempty_id_or_char_list CHARACTER., *
-    Reduce:
-      * -> [nonempty_id_or_char_list]
-    Goto:
-      (nil)
-
-  State 31:
-    Kernel Items:
-      nonempty_id_or_char_list: nonempty_id_or_char_list IDENTIFIER., *
-    Reduce:
-      * -> [nonempty_id_or_char_list]
-    Goto:
-      (nil)
-
-  State 32:
-    Kernel Items:
-      nonempty_ident_list: nonempty_ident_list IDENTIFIER., *
-    Reduce:
-      * -> [nonempty_ident_list]
-    Goto:
-      (nil)
-
-  State 33:
+  State 18:
     Kernel Items:
       additional_section: SECTION_MARKER.IDENTIFIER SECTION_CONTENT
     Reduce:
       (nil)
-    Goto:
-      IDENTIFIER -> State 38
-
-  State 34:
-    Kernel Items:
-      additional_sections: additional_sections additional_section., *
-    Reduce:
-      * -> [additional_sections]
-    Goto:
+    ShiftAndReduce:
       (nil)
-
-  State 35:
-    Kernel Items:
-      defs: defs def ';'., *
-    Reduce:
-      * -> [defs]
     Goto:
-      (nil)
+      IDENTIFIER -> State 20
 
-  State 36:
+  State 19:
     Kernel Items:
       def: rword '<' IDENTIFIER.'>' nonempty_id_or_char_list
     Reduce:
       (nil)
-    Goto:
-      '>' -> State 39
-
-  State 37:
-    Kernel Items:
-      clauses: clauses '|' clause., *
-    Reduce:
-      * -> [clauses]
-    Goto:
+    ShiftAndReduce:
       (nil)
+    Goto:
+      '>' -> State 21
 
-  State 38:
+  State 20:
     Kernel Items:
       additional_section: SECTION_MARKER IDENTIFIER.SECTION_CONTENT
     Reduce:
       (nil)
+    ShiftAndReduce:
+      SECTION_CONTENT -> [additional_section]
     Goto:
-      SECTION_CONTENT -> State 40
+      (nil)
 
-  State 39:
+  State 21:
     Kernel Items:
       def: rword '<' IDENTIFIER '>'.nonempty_id_or_char_list
     Non-kernel Items:
@@ -1521,33 +1482,29 @@ Parser Debug States:
       nonempty_id_or_char_list:.CHARACTER
     Reduce:
       (nil)
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
     Goto:
-      CHARACTER -> State 12
-      IDENTIFIER -> State 13
-      nonempty_id_or_char_list -> State 41
+      nonempty_id_or_char_list -> State 22
 
-  State 40:
-    Kernel Items:
-      additional_section: SECTION_MARKER IDENTIFIER SECTION_CONTENT., *
-    Reduce:
-      * -> [additional_section]
-    Goto:
-      (nil)
-
-  State 41:
+  State 22:
     Kernel Items:
       def: rword '<' IDENTIFIER '>' nonempty_id_or_char_list., *
       nonempty_id_or_char_list: nonempty_id_or_char_list.IDENTIFIER
       nonempty_id_or_char_list: nonempty_id_or_char_list.CHARACTER
     Reduce:
       * -> [def]
+    ShiftAndReduce:
+      CHARACTER -> [nonempty_id_or_char_list]
+      IDENTIFIER -> [nonempty_id_or_char_list]
     Goto:
-      CHARACTER -> State 30
-      IDENTIFIER -> State 31
+      (nil)
 
-Number of states: 41
-Number of shift actions: 63
-Number of reduce actions: 32
+Number of states: 22
+Number of shift actions: 27
+Number of reduce actions: 13
+Number of shift-and-reduce actions: 36
 Number of shift/reduce conflicts: 0
 Number of reduce/reduce conflicts: 0
 Number of unoptimized states: 45

@@ -22,6 +22,7 @@ template File {
     ShiftAction             string
     ReduceAction            string
     AcceptAction            string
+    ShiftAndReduceAction    string
 
     StateIdType             string
     ReduceType              string
@@ -56,7 +57,6 @@ template File {
     ActionTableType         string
     ActionTable             string
 
-    SortSlice               interface{}
     Sprintf                 interface{}
     Errorf                  interface{}
     EOF                     interface{}
@@ -245,16 +245,34 @@ func ($DefaultErrHandlerType) Error(nextToken $TokenType, stack $StackType) erro
 }
 
 func $ExpectedTerminalsFunc(id $StateIdType) []$SymbolIdType {
-    result := []$SymbolIdType{}
-    for key, _ := range $ActionTable {
-        if key.$StateIdType != id {
-            continue
-        }
-        result = append(result, key.$SymbolIdType)
-    }
+  switch id {
+[[-for _, state := range States.OrderedStates-]]
+  [[-$
+  _, ok := state.Reduce[lr.Wildcard]
+  if ok {
+    continue
+  }
+  ]]
+  case $(state.CodeGenConst):
+    return []$SymbolIdType{
+    [[-for _, term := range Grammar.Terminals-]]
+      [[-$
 
-    $SortSlice(result, func(i int, j int) bool {return result[i] < result[j]})
-    return result
+      _, foundGoto := state.Goto[term.Name]
+      _, foundReduce := state.Reduce[term.Name]
+      _, foundShiftAndReduce := state.ShiftAndReduce[term.Name]
+
+      if !foundGoto && !foundReduce && !foundShiftAndReduce {
+        continue
+      }
+      -]]
+      $(term.CodeGenSymbolConst),
+    [[-end]]
+    }
+[[-end]]
+  }
+
+  return nil
 }
 
 [[-for idx, start := range Grammar.Starts-]]
@@ -344,6 +362,23 @@ func $InternalParseFunc(
             }
 
             symbolStack.Push(reduceSymbol)
+        } else if action.ActionType == $ShiftAndReduceAction {
+            stateStack = append(stateStack, action.ShiftItem(nextSymbol))
+
+            _, err = symbolStack.Pop()
+            if err != nil {
+                return nil, err
+            }
+
+            var reduceSymbol *$SymbolType
+            stateStack, reduceSymbol, err = action.ReduceSymbol(
+                reducer,
+                stateStack)
+            if err != nil {
+                return nil, err
+            }
+
+            symbolStack.Push(reduceSymbol)
         } else if action.ActionType == $AcceptAction {
             if len(stateStack) != 2 {
                 panic("This should never happen")
@@ -400,7 +435,8 @@ const (
     // NOTE: error action is implicit
     $ShiftAction = $ActionIdType(0)
     $ReduceAction = $ActionIdType(1)
-    $AcceptAction = $ActionIdType(2)
+    $ShiftAndReduceAction = $ActionIdType(2)
+    $AcceptAction = $ActionIdType(3)
 )
 
 func (i $ActionIdType) String() string {
@@ -409,6 +445,8 @@ func (i $ActionIdType) String() string {
         return "shift"
     case $ReduceAction:
         return "reduce"
+    case $ShiftAndReduceAction:
+        return "shift-and-reduce"
     case $AcceptAction:
         return "accept"
     default:
@@ -682,88 +720,90 @@ type $TableKeyType struct {
     $SymbolIdType
 }
 
-type $ActionTableType map[$TableKeyType]*$ActionType
+type $ActionTableType struct{}
 
-func (table $ActionTableType) Get(
-    stateId $StateIdType,
-    symbolId $SymbolIdType) (
-    *$ActionType,
-    bool) {
-
-    action, ok := table[$TableKeyType{stateId, symbolId}]
-    if ok {
-        return action, ok
-    }
-
-    action, ok = table[$TableKeyType{stateId, $WildcardSymbolId}]
-    return action, ok
-}
-
-var (
+func ($ActionTableType) Get(
+  stateId $StateIdType,
+  symbolId $SymbolIdType,
+) (
+  $ActionType,
+  bool,
+) {
+  switch stateId {
 [[-for _, state := range States.OrderedStates]]
-    $(state.CodeGenAction) = &$ActionType{$ShiftAction, $(state.CodeGenConst), 0}
-[[-end-]]
-
-[[-for _, term := range Grammar.NonTerminals-]]
-    [[-for _, clause := range term.Clauses]]
-    $(clause.CodeGenReduceAction) = &$ActionType{$ReduceAction, 0, $(clause.CodeGenReducerNameConst)}
+  case $(state.CodeGenConst):
+    switch symbolId {
+  [[-for _, symbolName := range OrderedSymbolNames-]]
+    [[-if symbolName == lr.Wildcard-]]
+      [[-continue-]]
     [[-end-]]
+
+    [[-$
+    symbol := Grammar.Terms[symbolName]
+    nextState, ok := state.Goto[symbolName]
+    -]]
+    [[-if ok]]
+    case $(symbol.CodeGenSymbolConst):
+      return $ActionType{$ShiftAction, $(nextState.CodeGenConst), 0}, true
+      [[-continue-]]
+    [[-end-]]
+  [[-end-]]
+
+  [[-for _, symbolName := range OrderedSymbolNames-]]
+    [[-if symbolName == lr.Wildcard-]]
+      [[-continue-]]
+    [[-end-]]
+
+    [[-$
+    symbol := Grammar.Terms[symbolName]
+    reduceItem, ok := state.ShiftAndReduce[symbolName]
+    -]]
+    [[-if ok]]
+    case $(symbol.CodeGenSymbolConst):
+      return $ActionType{$ShiftAndReduceAction, 0, $(reduceItem.Clause.CodeGenReducerNameConst)}, true
+      [[-continue-]]
+    [[-end-]]
+  [[-end-]]
+
+  [[-for _, symbolName := range OrderedSymbolNames-]]
+    [[-if symbolName == lr.Wildcard-]]
+      [[-continue-]]
+    [[-end-]]
+
+    [[-$
+    symbol := Grammar.Terms[symbolName]
+    reduceItems, ok := state.Reduce[symbolName]
+    -]]
+    [[-if ok]]
+    case $(symbol.CodeGenSymbolConst):
+      [[-for _, item := range reduceItems-]]
+        [[-if item.Name == lr.AcceptRule && item.LookAhead == lr.EndMarker]]
+      return $ActionType{$AcceptAction, 0, 0}, true
+        [[-else]]
+      return $ActionType{$ReduceAction, 0, $(item.Clause.CodeGenReducerNameConst)}, true
+        [[-end-]]
+      [[-end-]]
+      [[-continue-]]
+    [[-end-]]
+  [[-end]]
+
+    [[-$
+    reduceItems, ok := state.Reduce[lr.Wildcard]
+    -]]
+    [[-if ok]]
+    default:
+      [[-for _, item := range reduceItems-]]
+      return $ActionType{$ReduceAction, 0, $(item.Clause.CodeGenReducerNameConst)}, true
+      [[-end-]]
+    [[-end-]]
+    }
 [[-end]]
-)
+  }
 
-var $ActionTable = $ActionTableType{
-[[-for _, state := range States.OrderedStates-]]
-    [[-for _, item := range state.Items-]]
-        [[-$
-
-        if !item.IsReduce {
-            continue
-        }
-
-        if item.Name != lr.AcceptRule || item.LookAhead != lr.EndMarker {
-            continue
-        }
-
-        ]]
-    {$(state.CodeGenConst), $EndSymbolId}: &$ActionType{$AcceptAction, 0, 0},
-    [[-end-]]
-[[-end-]]
-
-[[-for _, state := range States.OrderedStates-]]
-    [[-for _, symbolName := range OrderedSymbolNames-]]
-        [[-$
-
-        symbol := Grammar.Terms[symbolName]
-        child, ok := state.Goto[symbolName]
-        if !ok {
-            continue
-        }
-
-        ]]
-    {$(state.CodeGenConst), $(symbol.CodeGenSymbolConst)}: $(child.CodeGenAction),
-    [[-end-]]
-[[-end-]]
-
-[[-for _, state := range States.OrderedStates-]]
-    [[-for _, item := range state.Items-]]
-        [[-$
-
-        if !item.IsReduce {
-            continue
-        }
-
-        if item.Name == lr.AcceptRule && item.LookAhead == lr.EndMarker {
-            continue
-        }
-
-        idConst := Grammar.Terms[item.LookAhead].CodeGenSymbolConst
-        reduceAction := item.Clause.CodeGenReduceAction
-
-        ]]
-    {$(state.CodeGenConst), $idConst}: $reduceAction,
-    [[-end-]]
-[[-end]]
+  return $ActionType{}, false
 }
+
+var $ActionTable = $ActionTableType{}
 
 /*
 [[embed

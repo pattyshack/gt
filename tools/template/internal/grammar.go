@@ -5,7 +5,6 @@ package template
 import (
 	fmt "fmt"
 	io "io"
-	sort "sort"
 )
 
 type SymbolId int
@@ -167,16 +166,30 @@ func (DefaultParseErrorHandler) Error(nextToken Token, stack _Stack) error {
 }
 
 func ExpectedTerminals(id _StateId) []SymbolId {
-	result := []SymbolId{}
-	for key, _ := range _ActionTable {
-		if key._StateId != id {
-			continue
-		}
-		result = append(result, key.SymbolId)
+	switch id {
+	case _State1:
+		return []SymbolId{PackageToken}
+	case _State2:
+		return []SymbolId{}
+	case _State4:
+		return []SymbolId{TemplateDeclToken}
+	case _State5:
+		return []SymbolId{SectionMarkerToken}
+	case _State10:
+		return []SymbolId{CaseToken, TextToken}
+	case _State11:
+		return []SymbolId{ForToken, SwitchToken, IfToken, EndToken, TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken}
+	case _State14:
+		return []SymbolId{CaseToken}
+	case _State21:
+		return []SymbolId{EndToken}
+	case _State24:
+		return []SymbolId{EndToken}
+	case _State25:
+		return []SymbolId{EndToken}
 	}
 
-	sort.Slice(result, func(i int, j int) bool { return result[i] < result[j] })
-	return result
+	return nil
 }
 
 func Parse(lexer Lexer, reducer Reducer) (*File, error) {
@@ -244,6 +257,23 @@ func _Parse(
 				return nil, err
 			}
 		} else if action.ActionType == _ReduceAction {
+			var reduceSymbol *Symbol
+			stateStack, reduceSymbol, err = action.ReduceSymbol(
+				reducer,
+				stateStack)
+			if err != nil {
+				return nil, err
+			}
+
+			symbolStack.Push(reduceSymbol)
+		} else if action.ActionType == _ShiftAndReduceAction {
+			stateStack = append(stateStack, action.ShiftItem(nextSymbol))
+
+			_, err = symbolStack.Pop()
+			if err != nil {
+				return nil, err
+			}
+
 			var reduceSymbol *Symbol
 			stateStack, reduceSymbol, err = action.ReduceSymbol(
 				reducer,
@@ -363,9 +393,10 @@ type _ActionType int
 
 const (
 	// NOTE: error action is implicit
-	_ShiftAction  = _ActionType(0)
-	_ReduceAction = _ActionType(1)
-	_AcceptAction = _ActionType(2)
+	_ShiftAction          = _ActionType(0)
+	_ReduceAction         = _ActionType(1)
+	_ShiftAndReduceAction = _ActionType(2)
+	_AcceptAction         = _ActionType(3)
 )
 
 func (i _ActionType) String() string {
@@ -374,6 +405,8 @@ func (i _ActionType) String() string {
 		return "shift"
 	case _ReduceAction:
 		return "reduce"
+	case _ShiftAndReduceAction:
+		return "shift-and-reduce"
 	case _AcceptAction:
 		return "accept"
 	default:
@@ -519,25 +552,6 @@ const (
 	_State27 = _StateId(27)
 	_State28 = _StateId(28)
 	_State29 = _StateId(29)
-	_State30 = _StateId(30)
-	_State31 = _StateId(31)
-	_State32 = _StateId(32)
-	_State33 = _StateId(33)
-	_State34 = _StateId(34)
-	_State35 = _StateId(35)
-	_State36 = _StateId(36)
-	_State37 = _StateId(37)
-	_State38 = _StateId(38)
-	_State39 = _StateId(39)
-	_State40 = _StateId(40)
-	_State41 = _StateId(41)
-	_State42 = _StateId(42)
-	_State43 = _StateId(43)
-	_State44 = _StateId(44)
-	_State45 = _StateId(45)
-	_State46 = _StateId(46)
-	_State47 = _StateId(47)
-	_State48 = _StateId(48)
 )
 
 type Symbol struct {
@@ -928,314 +942,506 @@ type _ActionTableKey struct {
 	SymbolId
 }
 
-type _ActionTableType map[_ActionTableKey]*_Action
+type _ActionTableType struct{}
 
-func (table _ActionTableType) Get(
+func (_ActionTableType) Get(
 	stateId _StateId,
-	symbolId SymbolId) (
-	*_Action,
-	bool) {
+	symbolId SymbolId,
+) (
+	_Action,
+	bool,
+) {
+	switch stateId {
+	case _State1:
+		switch symbolId {
+		case PackageToken:
+			return _Action{_ShiftAction, _State3, 0}, true
+		case FileType:
+			return _Action{_ShiftAction, _State2, 0}, true
+		}
+	case _State2:
+		switch symbolId {
+		case _EndMarker:
+			return _Action{_AcceptAction, 0, 0}, true
+		}
+	case _State3:
+		switch symbolId {
+		case OptionalImportsType:
+			return _Action{_ShiftAction, _State4, 0}, true
+		case ImportToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceImportToOptionalImports}, true
 
-	action, ok := table[_ActionTableKey{stateId, symbolId}]
-	if ok {
-		return action, ok
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToOptionalImports}, true
+		}
+	case _State4:
+		switch symbolId {
+		case TemplateDeclToken:
+			return _Action{_ShiftAction, _State5, 0}, true
+		}
+	case _State5:
+		switch symbolId {
+		case SectionMarkerToken:
+			return _Action{_ShiftAction, _State6, 0}, true
+		}
+	case _State6:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State7, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State7:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceToFile}, true
+		}
+	case _State8:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State11, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State9:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State12, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State10:
+		switch symbolId {
+		case CaseToken:
+			return _Action{_ShiftAction, _State13, 0}, true
+		case TextToken:
+			return _Action{_ShiftAction, _State14, 0}, true
+		case CaseListType:
+			return _Action{_ShiftAction, _State15, 0}, true
+		}
+	case _State11:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case EndToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceToFor}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+		}
+	case _State12:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case ElseIfListType:
+			return _Action{_ShiftAction, _State16, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToElseIfList}, true
+		}
+	case _State13:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State17, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State14:
+		switch symbolId {
+		case CaseToken:
+			return _Action{_ShiftAction, _State13, 0}, true
+		case CaseListType:
+			return _Action{_ShiftAction, _State18, 0}, true
+		}
+	case _State15:
+		switch symbolId {
+		case CaseToken:
+			return _Action{_ShiftAction, _State19, 0}, true
+		case DefaultToken:
+			return _Action{_ShiftAction, _State20, 0}, true
+		case OptionalDefaultType:
+			return _Action{_ShiftAction, _State21, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToOptionalDefault}, true
+		}
+	case _State16:
+		switch symbolId {
+		case ElseIfToken:
+			return _Action{_ShiftAction, _State23, 0}, true
+		case ElseToken:
+			return _Action{_ShiftAction, _State22, 0}, true
+		case OptionalElseType:
+			return _Action{_ShiftAction, _State24, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToOptionalElse}, true
+		}
+	case _State17:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceCaseToCaseList}, true
+		}
+	case _State18:
+		switch symbolId {
+		case CaseToken:
+			return _Action{_ShiftAction, _State19, 0}, true
+		case DefaultToken:
+			return _Action{_ShiftAction, _State20, 0}, true
+		case OptionalDefaultType:
+			return _Action{_ShiftAction, _State25, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToOptionalDefault}, true
+		}
+	case _State19:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State26, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State20:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State27, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State21:
+		switch symbolId {
+		case EndToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceWithoutWhitespaceToSwitch}, true
+		}
+	case _State22:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State28, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State23:
+		switch symbolId {
+		case BodyType:
+			return _Action{_ShiftAction, _State29, 0}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceNilToBody}, true
+		}
+	case _State24:
+		switch symbolId {
+		case EndToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceToIf}, true
+		}
+	case _State25:
+		switch symbolId {
+		case EndToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceWithWhitespaceToSwitch}, true
+		}
+	case _State26:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceAddToCaseList}, true
+		}
+	case _State27:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceDefaultToOptionalDefault}, true
+		}
+	case _State28:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceElseToOptionalElse}, true
+		}
+	case _State29:
+		switch symbolId {
+		case ForToken:
+			return _Action{_ShiftAction, _State8, 0}, true
+		case SwitchToken:
+			return _Action{_ShiftAction, _State10, 0}, true
+		case IfToken:
+			return _Action{_ShiftAction, _State9, 0}, true
+		case TextToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceTextToAtom}, true
+		case SubstitutionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSubstitutionToAtom}, true
+		case EmbedToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceEmbedToAtom}, true
+		case CopySectionToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCopySectionToAtom}, true
+		case CommentToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceCommentToAtom}, true
+		case ContinueToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceContinueToAtom}, true
+		case BreakToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceBreakToAtom}, true
+		case ReturnToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceReturnToAtom}, true
+		case ErrorToken:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceErrorToAtom}, true
+		case StatementType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAddToBody}, true
+		case AtomType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceAtomToStatement}, true
+		case ForType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceForToStatement}, true
+		case SwitchType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceSwitchToStatement}, true
+		case IfType:
+			return _Action{_ShiftAndReduceAction, 0, _ReduceIfToStatement}, true
+
+		default:
+			return _Action{_ReduceAction, 0, _ReduceAddToElseIfList}, true
+		}
 	}
 
-	action, ok = table[_ActionTableKey{stateId, _WildcardMarker}]
-	return action, ok
+	return _Action{}, false
 }
 
-var (
-	_GotoState1Action                      = &_Action{_ShiftAction, _State1, 0}
-	_GotoState2Action                      = &_Action{_ShiftAction, _State2, 0}
-	_GotoState3Action                      = &_Action{_ShiftAction, _State3, 0}
-	_GotoState4Action                      = &_Action{_ShiftAction, _State4, 0}
-	_GotoState5Action                      = &_Action{_ShiftAction, _State5, 0}
-	_GotoState6Action                      = &_Action{_ShiftAction, _State6, 0}
-	_GotoState7Action                      = &_Action{_ShiftAction, _State7, 0}
-	_GotoState8Action                      = &_Action{_ShiftAction, _State8, 0}
-	_GotoState9Action                      = &_Action{_ShiftAction, _State9, 0}
-	_GotoState10Action                     = &_Action{_ShiftAction, _State10, 0}
-	_GotoState11Action                     = &_Action{_ShiftAction, _State11, 0}
-	_GotoState12Action                     = &_Action{_ShiftAction, _State12, 0}
-	_GotoState13Action                     = &_Action{_ShiftAction, _State13, 0}
-	_GotoState14Action                     = &_Action{_ShiftAction, _State14, 0}
-	_GotoState15Action                     = &_Action{_ShiftAction, _State15, 0}
-	_GotoState16Action                     = &_Action{_ShiftAction, _State16, 0}
-	_GotoState17Action                     = &_Action{_ShiftAction, _State17, 0}
-	_GotoState18Action                     = &_Action{_ShiftAction, _State18, 0}
-	_GotoState19Action                     = &_Action{_ShiftAction, _State19, 0}
-	_GotoState20Action                     = &_Action{_ShiftAction, _State20, 0}
-	_GotoState21Action                     = &_Action{_ShiftAction, _State21, 0}
-	_GotoState22Action                     = &_Action{_ShiftAction, _State22, 0}
-	_GotoState23Action                     = &_Action{_ShiftAction, _State23, 0}
-	_GotoState24Action                     = &_Action{_ShiftAction, _State24, 0}
-	_GotoState25Action                     = &_Action{_ShiftAction, _State25, 0}
-	_GotoState26Action                     = &_Action{_ShiftAction, _State26, 0}
-	_GotoState27Action                     = &_Action{_ShiftAction, _State27, 0}
-	_GotoState28Action                     = &_Action{_ShiftAction, _State28, 0}
-	_GotoState29Action                     = &_Action{_ShiftAction, _State29, 0}
-	_GotoState30Action                     = &_Action{_ShiftAction, _State30, 0}
-	_GotoState31Action                     = &_Action{_ShiftAction, _State31, 0}
-	_GotoState32Action                     = &_Action{_ShiftAction, _State32, 0}
-	_GotoState33Action                     = &_Action{_ShiftAction, _State33, 0}
-	_GotoState34Action                     = &_Action{_ShiftAction, _State34, 0}
-	_GotoState35Action                     = &_Action{_ShiftAction, _State35, 0}
-	_GotoState36Action                     = &_Action{_ShiftAction, _State36, 0}
-	_GotoState37Action                     = &_Action{_ShiftAction, _State37, 0}
-	_GotoState38Action                     = &_Action{_ShiftAction, _State38, 0}
-	_GotoState39Action                     = &_Action{_ShiftAction, _State39, 0}
-	_GotoState40Action                     = &_Action{_ShiftAction, _State40, 0}
-	_GotoState41Action                     = &_Action{_ShiftAction, _State41, 0}
-	_GotoState42Action                     = &_Action{_ShiftAction, _State42, 0}
-	_GotoState43Action                     = &_Action{_ShiftAction, _State43, 0}
-	_GotoState44Action                     = &_Action{_ShiftAction, _State44, 0}
-	_GotoState45Action                     = &_Action{_ShiftAction, _State45, 0}
-	_GotoState46Action                     = &_Action{_ShiftAction, _State46, 0}
-	_GotoState47Action                     = &_Action{_ShiftAction, _State47, 0}
-	_GotoState48Action                     = &_Action{_ShiftAction, _State48, 0}
-	_ReduceToFileAction                    = &_Action{_ReduceAction, 0, _ReduceToFile}
-	_ReduceImportToOptionalImportsAction   = &_Action{_ReduceAction, 0, _ReduceImportToOptionalImports}
-	_ReduceNilToOptionalImportsAction      = &_Action{_ReduceAction, 0, _ReduceNilToOptionalImports}
-	_ReduceAddToBodyAction                 = &_Action{_ReduceAction, 0, _ReduceAddToBody}
-	_ReduceNilToBodyAction                 = &_Action{_ReduceAction, 0, _ReduceNilToBody}
-	_ReduceAtomToStatementAction           = &_Action{_ReduceAction, 0, _ReduceAtomToStatement}
-	_ReduceForToStatementAction            = &_Action{_ReduceAction, 0, _ReduceForToStatement}
-	_ReduceSwitchToStatementAction         = &_Action{_ReduceAction, 0, _ReduceSwitchToStatement}
-	_ReduceIfToStatementAction             = &_Action{_ReduceAction, 0, _ReduceIfToStatement}
-	_ReduceTextToAtomAction                = &_Action{_ReduceAction, 0, _ReduceTextToAtom}
-	_ReduceSubstitutionToAtomAction        = &_Action{_ReduceAction, 0, _ReduceSubstitutionToAtom}
-	_ReduceEmbedToAtomAction               = &_Action{_ReduceAction, 0, _ReduceEmbedToAtom}
-	_ReduceCopySectionToAtomAction         = &_Action{_ReduceAction, 0, _ReduceCopySectionToAtom}
-	_ReduceCommentToAtomAction             = &_Action{_ReduceAction, 0, _ReduceCommentToAtom}
-	_ReduceContinueToAtomAction            = &_Action{_ReduceAction, 0, _ReduceContinueToAtom}
-	_ReduceBreakToAtomAction               = &_Action{_ReduceAction, 0, _ReduceBreakToAtom}
-	_ReduceReturnToAtomAction              = &_Action{_ReduceAction, 0, _ReduceReturnToAtom}
-	_ReduceErrorToAtomAction               = &_Action{_ReduceAction, 0, _ReduceErrorToAtom}
-	_ReduceToForAction                     = &_Action{_ReduceAction, 0, _ReduceToFor}
-	_ReduceWithWhitespaceToSwitchAction    = &_Action{_ReduceAction, 0, _ReduceWithWhitespaceToSwitch}
-	_ReduceWithoutWhitespaceToSwitchAction = &_Action{_ReduceAction, 0, _ReduceWithoutWhitespaceToSwitch}
-	_ReduceAddToCaseListAction             = &_Action{_ReduceAction, 0, _ReduceAddToCaseList}
-	_ReduceCaseToCaseListAction            = &_Action{_ReduceAction, 0, _ReduceCaseToCaseList}
-	_ReduceDefaultToOptionalDefaultAction  = &_Action{_ReduceAction, 0, _ReduceDefaultToOptionalDefault}
-	_ReduceNilToOptionalDefaultAction      = &_Action{_ReduceAction, 0, _ReduceNilToOptionalDefault}
-	_ReduceToIfAction                      = &_Action{_ReduceAction, 0, _ReduceToIf}
-	_ReduceAddToElseIfListAction           = &_Action{_ReduceAction, 0, _ReduceAddToElseIfList}
-	_ReduceNilToElseIfListAction           = &_Action{_ReduceAction, 0, _ReduceNilToElseIfList}
-	_ReduceElseToOptionalElseAction        = &_Action{_ReduceAction, 0, _ReduceElseToOptionalElse}
-	_ReduceNilToOptionalElseAction         = &_Action{_ReduceAction, 0, _ReduceNilToOptionalElse}
-)
-
-var _ActionTable = _ActionTableType{
-	{_State2, _EndMarker}:           &_Action{_AcceptAction, 0, 0},
-	{_State1, PackageToken}:         _GotoState3Action,
-	{_State1, FileType}:             _GotoState2Action,
-	{_State3, ImportToken}:          _GotoState4Action,
-	{_State3, OptionalImportsType}:  _GotoState5Action,
-	{_State5, TemplateDeclToken}:    _GotoState6Action,
-	{_State6, SectionMarkerToken}:   _GotoState7Action,
-	{_State7, BodyType}:             _GotoState8Action,
-	{_State8, ForToken}:             _GotoState15Action,
-	{_State8, SwitchToken}:          _GotoState19Action,
-	{_State8, IfToken}:              _GotoState16Action,
-	{_State8, TextToken}:            _GotoState20Action,
-	{_State8, SubstitutionToken}:    _GotoState18Action,
-	{_State8, EmbedToken}:           _GotoState13Action,
-	{_State8, CopySectionToken}:     _GotoState12Action,
-	{_State8, CommentToken}:         _GotoState10Action,
-	{_State8, ContinueToken}:        _GotoState11Action,
-	{_State8, BreakToken}:           _GotoState9Action,
-	{_State8, ReturnToken}:          _GotoState17Action,
-	{_State8, ErrorToken}:           _GotoState14Action,
-	{_State8, StatementType}:        _GotoState24Action,
-	{_State8, AtomType}:             _GotoState21Action,
-	{_State8, ForType}:              _GotoState22Action,
-	{_State8, SwitchType}:           _GotoState25Action,
-	{_State8, IfType}:               _GotoState23Action,
-	{_State15, BodyType}:            _GotoState26Action,
-	{_State16, BodyType}:            _GotoState27Action,
-	{_State19, CaseToken}:           _GotoState28Action,
-	{_State19, TextToken}:           _GotoState29Action,
-	{_State19, CaseListType}:        _GotoState30Action,
-	{_State26, ForToken}:            _GotoState15Action,
-	{_State26, SwitchToken}:         _GotoState19Action,
-	{_State26, IfToken}:             _GotoState16Action,
-	{_State26, EndToken}:            _GotoState31Action,
-	{_State26, TextToken}:           _GotoState20Action,
-	{_State26, SubstitutionToken}:   _GotoState18Action,
-	{_State26, EmbedToken}:          _GotoState13Action,
-	{_State26, CopySectionToken}:    _GotoState12Action,
-	{_State26, CommentToken}:        _GotoState10Action,
-	{_State26, ContinueToken}:       _GotoState11Action,
-	{_State26, BreakToken}:          _GotoState9Action,
-	{_State26, ReturnToken}:         _GotoState17Action,
-	{_State26, ErrorToken}:          _GotoState14Action,
-	{_State26, StatementType}:       _GotoState24Action,
-	{_State26, AtomType}:            _GotoState21Action,
-	{_State26, ForType}:             _GotoState22Action,
-	{_State26, SwitchType}:          _GotoState25Action,
-	{_State26, IfType}:              _GotoState23Action,
-	{_State27, ForToken}:            _GotoState15Action,
-	{_State27, SwitchToken}:         _GotoState19Action,
-	{_State27, IfToken}:             _GotoState16Action,
-	{_State27, TextToken}:           _GotoState20Action,
-	{_State27, SubstitutionToken}:   _GotoState18Action,
-	{_State27, EmbedToken}:          _GotoState13Action,
-	{_State27, CopySectionToken}:    _GotoState12Action,
-	{_State27, CommentToken}:        _GotoState10Action,
-	{_State27, ContinueToken}:       _GotoState11Action,
-	{_State27, BreakToken}:          _GotoState9Action,
-	{_State27, ReturnToken}:         _GotoState17Action,
-	{_State27, ErrorToken}:          _GotoState14Action,
-	{_State27, StatementType}:       _GotoState24Action,
-	{_State27, AtomType}:            _GotoState21Action,
-	{_State27, ForType}:             _GotoState22Action,
-	{_State27, SwitchType}:          _GotoState25Action,
-	{_State27, IfType}:              _GotoState23Action,
-	{_State27, ElseIfListType}:      _GotoState32Action,
-	{_State28, BodyType}:            _GotoState33Action,
-	{_State29, CaseToken}:           _GotoState28Action,
-	{_State29, CaseListType}:        _GotoState34Action,
-	{_State30, CaseToken}:           _GotoState35Action,
-	{_State30, DefaultToken}:        _GotoState36Action,
-	{_State30, OptionalDefaultType}: _GotoState37Action,
-	{_State32, ElseIfToken}:         _GotoState39Action,
-	{_State32, ElseToken}:           _GotoState38Action,
-	{_State32, OptionalElseType}:    _GotoState40Action,
-	{_State33, ForToken}:            _GotoState15Action,
-	{_State33, SwitchToken}:         _GotoState19Action,
-	{_State33, IfToken}:             _GotoState16Action,
-	{_State33, TextToken}:           _GotoState20Action,
-	{_State33, SubstitutionToken}:   _GotoState18Action,
-	{_State33, EmbedToken}:          _GotoState13Action,
-	{_State33, CopySectionToken}:    _GotoState12Action,
-	{_State33, CommentToken}:        _GotoState10Action,
-	{_State33, ContinueToken}:       _GotoState11Action,
-	{_State33, BreakToken}:          _GotoState9Action,
-	{_State33, ReturnToken}:         _GotoState17Action,
-	{_State33, ErrorToken}:          _GotoState14Action,
-	{_State33, StatementType}:       _GotoState24Action,
-	{_State33, AtomType}:            _GotoState21Action,
-	{_State33, ForType}:             _GotoState22Action,
-	{_State33, SwitchType}:          _GotoState25Action,
-	{_State33, IfType}:              _GotoState23Action,
-	{_State34, CaseToken}:           _GotoState35Action,
-	{_State34, DefaultToken}:        _GotoState36Action,
-	{_State34, OptionalDefaultType}: _GotoState41Action,
-	{_State35, BodyType}:            _GotoState42Action,
-	{_State36, BodyType}:            _GotoState43Action,
-	{_State37, EndToken}:            _GotoState44Action,
-	{_State38, BodyType}:            _GotoState45Action,
-	{_State39, BodyType}:            _GotoState46Action,
-	{_State40, EndToken}:            _GotoState47Action,
-	{_State41, EndToken}:            _GotoState48Action,
-	{_State42, ForToken}:            _GotoState15Action,
-	{_State42, SwitchToken}:         _GotoState19Action,
-	{_State42, IfToken}:             _GotoState16Action,
-	{_State42, TextToken}:           _GotoState20Action,
-	{_State42, SubstitutionToken}:   _GotoState18Action,
-	{_State42, EmbedToken}:          _GotoState13Action,
-	{_State42, CopySectionToken}:    _GotoState12Action,
-	{_State42, CommentToken}:        _GotoState10Action,
-	{_State42, ContinueToken}:       _GotoState11Action,
-	{_State42, BreakToken}:          _GotoState9Action,
-	{_State42, ReturnToken}:         _GotoState17Action,
-	{_State42, ErrorToken}:          _GotoState14Action,
-	{_State42, StatementType}:       _GotoState24Action,
-	{_State42, AtomType}:            _GotoState21Action,
-	{_State42, ForType}:             _GotoState22Action,
-	{_State42, SwitchType}:          _GotoState25Action,
-	{_State42, IfType}:              _GotoState23Action,
-	{_State43, ForToken}:            _GotoState15Action,
-	{_State43, SwitchToken}:         _GotoState19Action,
-	{_State43, IfToken}:             _GotoState16Action,
-	{_State43, TextToken}:           _GotoState20Action,
-	{_State43, SubstitutionToken}:   _GotoState18Action,
-	{_State43, EmbedToken}:          _GotoState13Action,
-	{_State43, CopySectionToken}:    _GotoState12Action,
-	{_State43, CommentToken}:        _GotoState10Action,
-	{_State43, ContinueToken}:       _GotoState11Action,
-	{_State43, BreakToken}:          _GotoState9Action,
-	{_State43, ReturnToken}:         _GotoState17Action,
-	{_State43, ErrorToken}:          _GotoState14Action,
-	{_State43, StatementType}:       _GotoState24Action,
-	{_State43, AtomType}:            _GotoState21Action,
-	{_State43, ForType}:             _GotoState22Action,
-	{_State43, SwitchType}:          _GotoState25Action,
-	{_State43, IfType}:              _GotoState23Action,
-	{_State45, ForToken}:            _GotoState15Action,
-	{_State45, SwitchToken}:         _GotoState19Action,
-	{_State45, IfToken}:             _GotoState16Action,
-	{_State45, TextToken}:           _GotoState20Action,
-	{_State45, SubstitutionToken}:   _GotoState18Action,
-	{_State45, EmbedToken}:          _GotoState13Action,
-	{_State45, CopySectionToken}:    _GotoState12Action,
-	{_State45, CommentToken}:        _GotoState10Action,
-	{_State45, ContinueToken}:       _GotoState11Action,
-	{_State45, BreakToken}:          _GotoState9Action,
-	{_State45, ReturnToken}:         _GotoState17Action,
-	{_State45, ErrorToken}:          _GotoState14Action,
-	{_State45, StatementType}:       _GotoState24Action,
-	{_State45, AtomType}:            _GotoState21Action,
-	{_State45, ForType}:             _GotoState22Action,
-	{_State45, SwitchType}:          _GotoState25Action,
-	{_State45, IfType}:              _GotoState23Action,
-	{_State46, ForToken}:            _GotoState15Action,
-	{_State46, SwitchToken}:         _GotoState19Action,
-	{_State46, IfToken}:             _GotoState16Action,
-	{_State46, TextToken}:           _GotoState20Action,
-	{_State46, SubstitutionToken}:   _GotoState18Action,
-	{_State46, EmbedToken}:          _GotoState13Action,
-	{_State46, CopySectionToken}:    _GotoState12Action,
-	{_State46, CommentToken}:        _GotoState10Action,
-	{_State46, ContinueToken}:       _GotoState11Action,
-	{_State46, BreakToken}:          _GotoState9Action,
-	{_State46, ReturnToken}:         _GotoState17Action,
-	{_State46, ErrorToken}:          _GotoState14Action,
-	{_State46, StatementType}:       _GotoState24Action,
-	{_State46, AtomType}:            _GotoState21Action,
-	{_State46, ForType}:             _GotoState22Action,
-	{_State46, SwitchType}:          _GotoState25Action,
-	{_State46, IfType}:              _GotoState23Action,
-	{_State3, TemplateDeclToken}:    _ReduceNilToOptionalImportsAction,
-	{_State4, TemplateDeclToken}:    _ReduceImportToOptionalImportsAction,
-	{_State7, _WildcardMarker}:      _ReduceNilToBodyAction,
-	{_State8, _EndMarker}:           _ReduceToFileAction,
-	{_State9, _WildcardMarker}:      _ReduceBreakToAtomAction,
-	{_State10, _WildcardMarker}:     _ReduceCommentToAtomAction,
-	{_State11, _WildcardMarker}:     _ReduceContinueToAtomAction,
-	{_State12, _WildcardMarker}:     _ReduceCopySectionToAtomAction,
-	{_State13, _WildcardMarker}:     _ReduceEmbedToAtomAction,
-	{_State14, _WildcardMarker}:     _ReduceErrorToAtomAction,
-	{_State15, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State16, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State17, _WildcardMarker}:     _ReduceReturnToAtomAction,
-	{_State18, _WildcardMarker}:     _ReduceSubstitutionToAtomAction,
-	{_State20, _WildcardMarker}:     _ReduceTextToAtomAction,
-	{_State21, _WildcardMarker}:     _ReduceAtomToStatementAction,
-	{_State22, _WildcardMarker}:     _ReduceForToStatementAction,
-	{_State23, _WildcardMarker}:     _ReduceIfToStatementAction,
-	{_State24, _WildcardMarker}:     _ReduceAddToBodyAction,
-	{_State25, _WildcardMarker}:     _ReduceSwitchToStatementAction,
-	{_State27, _WildcardMarker}:     _ReduceNilToElseIfListAction,
-	{_State28, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State30, EndToken}:            _ReduceNilToOptionalDefaultAction,
-	{_State31, _WildcardMarker}:     _ReduceToForAction,
-	{_State32, EndToken}:            _ReduceNilToOptionalElseAction,
-	{_State33, _WildcardMarker}:     _ReduceCaseToCaseListAction,
-	{_State34, EndToken}:            _ReduceNilToOptionalDefaultAction,
-	{_State35, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State36, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State38, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State39, _WildcardMarker}:     _ReduceNilToBodyAction,
-	{_State42, _WildcardMarker}:     _ReduceAddToCaseListAction,
-	{_State43, EndToken}:            _ReduceDefaultToOptionalDefaultAction,
-	{_State44, _WildcardMarker}:     _ReduceWithoutWhitespaceToSwitchAction,
-	{_State45, EndToken}:            _ReduceElseToOptionalElseAction,
-	{_State46, _WildcardMarker}:     _ReduceAddToElseIfListAction,
-	{_State47, _WildcardMarker}:     _ReduceToIfAction,
-	{_State48, _WildcardMarker}:     _ReduceWithWhitespaceToSwitchAction,
-}
+var _ActionTable = _ActionTableType{}
 
 /*
 Parser Debug States:
@@ -1243,6 +1449,8 @@ Parser Debug States:
     Kernel Items:
       #accept: ^.file
     Reduce:
+      (nil)
+    ShiftAndReduce:
       (nil)
     Goto:
       PACKAGE -> State 3
@@ -1253,6 +1461,8 @@ Parser Debug States:
       #accept: ^ file., $
     Reduce:
       $ -> [#accept]
+    ShiftAndReduce:
+      (nil)
     Goto:
       (nil)
 
@@ -1260,525 +1470,419 @@ Parser Debug States:
     Kernel Items:
       file: PACKAGE.optional_imports TEMPLATE_DECL SECTION_MARKER body
     Reduce:
-      TEMPLATE_DECL -> [optional_imports]
+      * -> [optional_imports]
+    ShiftAndReduce:
+      IMPORT -> [optional_imports]
     Goto:
-      IMPORT -> State 4
-      optional_imports -> State 5
+      optional_imports -> State 4
 
   State 4:
-    Kernel Items:
-      optional_imports: IMPORT., TEMPLATE_DECL
-    Reduce:
-      TEMPLATE_DECL -> [optional_imports]
-    Goto:
-      (nil)
-
-  State 5:
     Kernel Items:
       file: PACKAGE optional_imports.TEMPLATE_DECL SECTION_MARKER body
     Reduce:
       (nil)
+    ShiftAndReduce:
+      (nil)
     Goto:
-      TEMPLATE_DECL -> State 6
+      TEMPLATE_DECL -> State 5
 
-  State 6:
+  State 5:
     Kernel Items:
       file: PACKAGE optional_imports TEMPLATE_DECL.SECTION_MARKER body
     Reduce:
       (nil)
+    ShiftAndReduce:
+      (nil)
     Goto:
-      SECTION_MARKER -> State 7
+      SECTION_MARKER -> State 6
 
-  State 7:
+  State 6:
     Kernel Items:
       file: PACKAGE optional_imports TEMPLATE_DECL SECTION_MARKER.body
     Reduce:
       * -> [body]
+    ShiftAndReduce:
+      (nil)
     Goto:
-      body -> State 8
+      body -> State 7
 
-  State 8:
+  State 7:
     Kernel Items:
-      file: PACKAGE optional_imports TEMPLATE_DECL SECTION_MARKER body., $
+      file: PACKAGE optional_imports TEMPLATE_DECL SECTION_MARKER body., *
       body: body.statement
     Reduce:
-      $ -> [file]
+      * -> [file]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
     Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
 
-  State 9:
-    Kernel Items:
-      atom: BREAK., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 10:
-    Kernel Items:
-      atom: COMMENT., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 11:
-    Kernel Items:
-      atom: CONTINUE., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 12:
-    Kernel Items:
-      atom: COPY_SECTION., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 13:
-    Kernel Items:
-      atom: EMBED., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 14:
-    Kernel Items:
-      atom: ERROR., *
-    Reduce:
-      * -> [atom]
-    Goto:
-      (nil)
-
-  State 15:
+  State 8:
     Kernel Items:
       for: FOR.body END
     Reduce:
       * -> [body]
+    ShiftAndReduce:
+      (nil)
     Goto:
-      body -> State 26
+      body -> State 11
 
-  State 16:
+  State 9:
     Kernel Items:
       if: IF.body else_if_list optional_else END
     Reduce:
       * -> [body]
-    Goto:
-      body -> State 27
-
-  State 17:
-    Kernel Items:
-      atom: RETURN., *
-    Reduce:
-      * -> [atom]
-    Goto:
+    ShiftAndReduce:
       (nil)
-
-  State 18:
-    Kernel Items:
-      atom: SUBSTITUTION., *
-    Reduce:
-      * -> [atom]
     Goto:
-      (nil)
+      body -> State 12
 
-  State 19:
+  State 10:
     Kernel Items:
       switch: SWITCH.TEXT case_list optional_default END
       switch: SWITCH.case_list optional_default END
     Reduce:
       (nil)
+    ShiftAndReduce:
+      (nil)
     Goto:
-      CASE -> State 28
-      TEXT -> State 29
-      case_list -> State 30
+      CASE -> State 13
+      TEXT -> State 14
+      case_list -> State 15
+
+  State 11:
+    Kernel Items:
+      body: body.statement
+      for: FOR body.END
+    Reduce:
+      (nil)
+    ShiftAndReduce:
+      END -> [for]
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
+    Goto:
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
+
+  State 12:
+    Kernel Items:
+      body: body.statement
+      if: IF body.else_if_list optional_else END
+    Reduce:
+      * -> [else_if_list]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
+    Goto:
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
+      else_if_list -> State 16
+
+  State 13:
+    Kernel Items:
+      case_list: CASE.body
+    Reduce:
+      * -> [body]
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      body -> State 17
+
+  State 14:
+    Kernel Items:
+      switch: SWITCH TEXT.case_list optional_default END
+    Reduce:
+      (nil)
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      CASE -> State 13
+      case_list -> State 18
+
+  State 15:
+    Kernel Items:
+      switch: SWITCH case_list.optional_default END
+      case_list: case_list.CASE body
+    Reduce:
+      * -> [optional_default]
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      CASE -> State 19
+      DEFAULT -> State 20
+      optional_default -> State 21
+
+  State 16:
+    Kernel Items:
+      if: IF body else_if_list.optional_else END
+      else_if_list: else_if_list.ELSE_IF body
+    Reduce:
+      * -> [optional_else]
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      ELSE_IF -> State 23
+      ELSE -> State 22
+      optional_else -> State 24
+
+  State 17:
+    Kernel Items:
+      body: body.statement
+      case_list: CASE body., *
+    Reduce:
+      * -> [case_list]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
+    Goto:
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
+
+  State 18:
+    Kernel Items:
+      switch: SWITCH TEXT case_list.optional_default END
+      case_list: case_list.CASE body
+    Reduce:
+      * -> [optional_default]
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      CASE -> State 19
+      DEFAULT -> State 20
+      optional_default -> State 25
+
+  State 19:
+    Kernel Items:
+      case_list: case_list CASE.body
+    Reduce:
+      * -> [body]
+    ShiftAndReduce:
+      (nil)
+    Goto:
+      body -> State 26
 
   State 20:
     Kernel Items:
-      atom: TEXT., *
+      optional_default: DEFAULT.body
     Reduce:
-      * -> [atom]
-    Goto:
+      * -> [body]
+    ShiftAndReduce:
       (nil)
+    Goto:
+      body -> State 27
 
   State 21:
     Kernel Items:
-      statement: atom., *
+      switch: SWITCH case_list optional_default.END
     Reduce:
-      * -> [statement]
+      (nil)
+    ShiftAndReduce:
+      END -> [switch]
     Goto:
       (nil)
 
   State 22:
     Kernel Items:
-      statement: for., *
+      optional_else: ELSE.body
     Reduce:
-      * -> [statement]
-    Goto:
+      * -> [body]
+    ShiftAndReduce:
       (nil)
+    Goto:
+      body -> State 28
 
   State 23:
     Kernel Items:
-      statement: if., *
+      else_if_list: else_if_list ELSE_IF.body
     Reduce:
-      * -> [statement]
-    Goto:
+      * -> [body]
+    ShiftAndReduce:
       (nil)
+    Goto:
+      body -> State 29
 
   State 24:
     Kernel Items:
-      body: body statement., *
+      if: IF body else_if_list optional_else.END
     Reduce:
-      * -> [body]
+      (nil)
+    ShiftAndReduce:
+      END -> [if]
     Goto:
       (nil)
 
   State 25:
     Kernel Items:
-      statement: switch., *
+      switch: SWITCH TEXT case_list optional_default.END
     Reduce:
-      * -> [statement]
+      (nil)
+    ShiftAndReduce:
+      END -> [switch]
     Goto:
       (nil)
 
   State 26:
     Kernel Items:
       body: body.statement
-      for: FOR body.END
+      case_list: case_list CASE body., *
     Reduce:
-      (nil)
+      * -> [case_list]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
     Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      END -> State 31
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
 
   State 27:
     Kernel Items:
       body: body.statement
-      if: IF body.else_if_list optional_else END
+      optional_default: DEFAULT body., *
     Reduce:
-      * -> [else_if_list]
+      * -> [optional_default]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
     Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
-      else_if_list -> State 32
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
 
   State 28:
     Kernel Items:
-      case_list: CASE.body
+      body: body.statement
+      optional_else: ELSE body., *
     Reduce:
-      * -> [body]
+      * -> [optional_else]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
     Goto:
-      body -> State 33
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
 
   State 29:
-    Kernel Items:
-      switch: SWITCH TEXT.case_list optional_default END
-    Reduce:
-      (nil)
-    Goto:
-      CASE -> State 28
-      case_list -> State 34
-
-  State 30:
-    Kernel Items:
-      switch: SWITCH case_list.optional_default END
-      case_list: case_list.CASE body
-    Reduce:
-      END -> [optional_default]
-    Goto:
-      CASE -> State 35
-      DEFAULT -> State 36
-      optional_default -> State 37
-
-  State 31:
-    Kernel Items:
-      for: FOR body END., *
-    Reduce:
-      * -> [for]
-    Goto:
-      (nil)
-
-  State 32:
-    Kernel Items:
-      if: IF body else_if_list.optional_else END
-      else_if_list: else_if_list.ELSE_IF body
-    Reduce:
-      END -> [optional_else]
-    Goto:
-      ELSE_IF -> State 39
-      ELSE -> State 38
-      optional_else -> State 40
-
-  State 33:
-    Kernel Items:
-      body: body.statement
-      case_list: CASE body., *
-    Reduce:
-      * -> [case_list]
-    Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
-
-  State 34:
-    Kernel Items:
-      switch: SWITCH TEXT case_list.optional_default END
-      case_list: case_list.CASE body
-    Reduce:
-      END -> [optional_default]
-    Goto:
-      CASE -> State 35
-      DEFAULT -> State 36
-      optional_default -> State 41
-
-  State 35:
-    Kernel Items:
-      case_list: case_list CASE.body
-    Reduce:
-      * -> [body]
-    Goto:
-      body -> State 42
-
-  State 36:
-    Kernel Items:
-      optional_default: DEFAULT.body
-    Reduce:
-      * -> [body]
-    Goto:
-      body -> State 43
-
-  State 37:
-    Kernel Items:
-      switch: SWITCH case_list optional_default.END
-    Reduce:
-      (nil)
-    Goto:
-      END -> State 44
-
-  State 38:
-    Kernel Items:
-      optional_else: ELSE.body
-    Reduce:
-      * -> [body]
-    Goto:
-      body -> State 45
-
-  State 39:
-    Kernel Items:
-      else_if_list: else_if_list ELSE_IF.body
-    Reduce:
-      * -> [body]
-    Goto:
-      body -> State 46
-
-  State 40:
-    Kernel Items:
-      if: IF body else_if_list optional_else.END
-    Reduce:
-      (nil)
-    Goto:
-      END -> State 47
-
-  State 41:
-    Kernel Items:
-      switch: SWITCH TEXT case_list optional_default.END
-    Reduce:
-      (nil)
-    Goto:
-      END -> State 48
-
-  State 42:
-    Kernel Items:
-      body: body.statement
-      case_list: case_list CASE body., *
-    Reduce:
-      * -> [case_list]
-    Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
-
-  State 43:
-    Kernel Items:
-      body: body.statement
-      optional_default: DEFAULT body., END
-    Reduce:
-      END -> [optional_default]
-    Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
-
-  State 44:
-    Kernel Items:
-      switch: SWITCH case_list optional_default END., *
-    Reduce:
-      * -> [switch]
-    Goto:
-      (nil)
-
-  State 45:
-    Kernel Items:
-      body: body.statement
-      optional_else: ELSE body., END
-    Reduce:
-      END -> [optional_else]
-    Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
-
-  State 46:
     Kernel Items:
       body: body.statement
       else_if_list: else_if_list ELSE_IF body., *
     Reduce:
       * -> [else_if_list]
+    ShiftAndReduce:
+      TEXT -> [atom]
+      SUBSTITUTION -> [atom]
+      EMBED -> [atom]
+      COPY_SECTION -> [atom]
+      COMMENT -> [atom]
+      CONTINUE -> [atom]
+      BREAK -> [atom]
+      RETURN -> [atom]
+      ERROR -> [atom]
+      statement -> [body]
+      atom -> [statement]
+      for -> [statement]
+      switch -> [statement]
+      if -> [statement]
     Goto:
-      FOR -> State 15
-      SWITCH -> State 19
-      IF -> State 16
-      TEXT -> State 20
-      SUBSTITUTION -> State 18
-      EMBED -> State 13
-      COPY_SECTION -> State 12
-      COMMENT -> State 10
-      CONTINUE -> State 11
-      BREAK -> State 9
-      RETURN -> State 17
-      ERROR -> State 14
-      statement -> State 24
-      atom -> State 21
-      for -> State 22
-      switch -> State 25
-      if -> State 23
+      FOR -> State 8
+      SWITCH -> State 10
+      IF -> State 9
 
-  State 47:
-    Kernel Items:
-      if: IF body else_if_list optional_else END., *
-    Reduce:
-      * -> [if]
-    Goto:
-      (nil)
-
-  State 48:
-    Kernel Items:
-      switch: SWITCH TEXT case_list optional_default END., *
-    Reduce:
-      * -> [switch]
-    Goto:
-      (nil)
-
-Number of states: 48
-Number of shift actions: 169
-Number of reduce actions: 39
+Number of states: 29
+Number of shift actions: 52
+Number of reduce actions: 20
+Number of shift-and-reduce actions: 117
 Number of shift/reduce conflicts: 0
 Number of reduce/reduce conflicts: 0
 Number of unoptimized states: 138

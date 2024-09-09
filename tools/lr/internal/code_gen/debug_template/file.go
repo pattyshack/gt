@@ -87,10 +87,11 @@ func (_template *File) WriteTo(
 
 	gotoCount := 0
 	reduceCount := 0
+	shiftAndReduceCount := 0
 	shiftReduceCount := 0
 	reduceReduceCount := 0
 
-	// file.template:21:3
+	// file.template:22:3
 	{
 		_n, _err := _output.Write([]byte(`Parser Debug States:`))
 		_numWritten += int64(_n)
@@ -98,9 +99,9 @@ func (_template *File) WriteTo(
 			return _numWritten, _err
 		}
 	}
-	// file.template:23:0
+	// file.template:24:0
 	for _, state := range States.OrderedStates {
-		// file.template:23:47
+		// file.template:24:47
 		{
 			_n, _err := _output.Write([]byte(`
   State `))
@@ -109,18 +110,18 @@ func (_template *File) WriteTo(
 				return _numWritten, _err
 			}
 		}
-		// file.template:24:8
+		// file.template:25:8
 		{
 			_n, _err := _template.writeValue(
 				_output,
 				(state.StateNum),
-				"file.template:24:8")
+				"file.template:25:8")
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:24:25
+		// file.template:25:25
 		{
 			_n, _err := _output.Write([]byte(`:
     Kernel Items:`))
@@ -129,13 +130,13 @@ func (_template *File) WriteTo(
 				return _numWritten, _err
 			}
 		}
-		// file.template:26:4
-		firstNonKernel := true
 		// file.template:27:4
+		firstNonKernel := true
+		// file.template:28:4
 		for _, item := range state.Items {
-			// file.template:28:8
+			// file.template:29:8
 			if !item.IsKernel && firstNonKernel {
-				// file.template:29:12
+				// file.template:30:12
 
 				if !OutputDebugNonKernelItems &&
 					len(state.ShiftReduceConflictSymbols) == 0 &&
@@ -146,7 +147,7 @@ func (_template *File) WriteTo(
 
 				firstNonKernel = false
 
-				// file.template:40:14
+				// file.template:41:14
 				{
 					_n, _err := _output.Write([]byte(`
     Non-kernel Items:`))
@@ -156,7 +157,7 @@ func (_template *File) WriteTo(
 					}
 				}
 			}
-			// file.template:42:17
+			// file.template:43:17
 			{
 				_n, _err := _output.Write([]byte(`
       `))
@@ -165,19 +166,19 @@ func (_template *File) WriteTo(
 					return _numWritten, _err
 				}
 			}
-			// file.template:44:6
+			// file.template:45:6
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(item),
-					"file.template:44:6")
+					"file.template:45:6")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
 		}
-		// file.template:45:13
+		// file.template:46:13
 		{
 			_n, _err := _output.Write([]byte(`
     Reduce:`))
@@ -186,9 +187,9 @@ func (_template *File) WriteTo(
 				return _numWritten, _err
 			}
 		}
-		// file.template:48:4
+		// file.template:49:4
 		if len(state.Reduce) == 0 {
-			// file.template:48:34
+			// file.template:49:34
 			{
 				_n, _err := _output.Write([]byte(`
       (nil)`))
@@ -198,9 +199,9 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:52:4
+		// file.template:53:4
 		for _, symbolName := range OrderedSymbolNames {
-			// file.template:53:8
+			// file.template:54:8
 
 			items := state.Reduce[symbolName]
 			reduceCount += len(items)
@@ -209,7 +210,7 @@ func (_template *File) WriteTo(
 				continue
 			}
 
-			// file.template:62:11
+			// file.template:63:11
 			{
 				_n, _err := _output.Write([]byte(`
       `))
@@ -218,18 +219,18 @@ func (_template *File) WriteTo(
 					return _numWritten, _err
 				}
 			}
-			// file.template:64:6
+			// file.template:65:6
 			{
 				_n, _err := _template.writeValue(
 					_output,
 					(symbolName),
-					"file.template:64:6")
+					"file.template:65:6")
 				_numWritten += int64(_n)
 				if _err != nil {
 					return _numWritten, _err
 				}
 			}
-			// file.template:64:17
+			// file.template:65:17
 			{
 				_n, _err := _output.Write([]byte(` -> [`))
 				_numWritten += int64(_n)
@@ -237,22 +238,22 @@ func (_template *File) WriteTo(
 					return _numWritten, _err
 				}
 			}
-			// file.template:65:8
+			// file.template:66:8
 			for idx, item := range items {
-				// file.template:66:0
+				// file.template:67:0
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(item.Name),
-						"file.template:66:0")
+						"file.template:67:0")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:67:12
+				// file.template:68:12
 				if idx != len(items)-1 {
-					// file.template:67:41
+					// file.template:68:41
 					{
 						_n, _err := _output.Write([]byte(` `))
 						_numWritten += int64(_n)
@@ -262,7 +263,7 @@ func (_template *File) WriteTo(
 					}
 				}
 			}
-			// file.template:68:17
+			// file.template:69:17
 			{
 				_n, _err := _output.Write([]byte(`]`))
 				_numWritten += int64(_n)
@@ -271,20 +272,20 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:70:13
+		// file.template:71:13
 		{
 			_n, _err := _output.Write([]byte(`
-    Goto:`))
+    ShiftAndReduce:`))
 			_numWritten += int64(_n)
 			if _err != nil {
 				return _numWritten, _err
 			}
 		}
-		// file.template:73:4
-		gotoCount += len(state.Goto)
 		// file.template:74:4
-		if len(state.Goto) == 0 {
-			// file.template:74:33
+		shiftAndReduceCount += len(state.ShiftAndReduce)
+		// file.template:75:4
+		if len(state.ShiftAndReduce) == 0 {
+			// file.template:75:43
 			{
 				_n, _err := _output.Write([]byte(`
       (nil)`))
@@ -294,13 +295,93 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:78:4
+		// file.template:79:4
 		for _, symbolName := range OrderedSymbolNames {
-			// file.template:79:8
+			// file.template:80:6
+
+			item, ok := state.ShiftAndReduce[symbolName]
+			if !ok {
+				continue
+			}
+
+			// file.template:86:8
+			{
+				_n, _err := _output.Write([]byte(`
+      `))
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+			// file.template:87:6
+			{
+				_n, _err := _template.writeValue(
+					_output,
+					(symbolName),
+					"file.template:87:6")
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+			// file.template:87:17
+			{
+				_n, _err := _output.Write([]byte(` -> [`))
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+			// file.template:87:22
+			{
+				_n, _err := _template.writeValue(
+					_output,
+					(item.Name),
+					"file.template:87:22")
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+			// file.template:87:34
+			{
+				_n, _err := _output.Write([]byte(`]`))
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+		}
+		// file.template:88:13
+		{
+			_n, _err := _output.Write([]byte(`
+    Goto:`))
+			_numWritten += int64(_n)
+			if _err != nil {
+				return _numWritten, _err
+			}
+		}
+		// file.template:91:4
+		gotoCount += len(state.Goto)
+		// file.template:92:4
+		if len(state.Goto) == 0 {
+			// file.template:92:33
+			{
+				_n, _err := _output.Write([]byte(`
+      (nil)`))
+				_numWritten += int64(_n)
+				if _err != nil {
+					return _numWritten, _err
+				}
+			}
+		}
+		// file.template:96:4
+		for _, symbolName := range OrderedSymbolNames {
+			// file.template:97:8
 			child, ok := state.Goto[symbolName]
-			// file.template:80:8
+			// file.template:98:8
 			if ok {
-				// file.template:80:18
+				// file.template:98:18
 				{
 					_n, _err := _output.Write([]byte(`
       `))
@@ -309,18 +390,18 @@ func (_template *File) WriteTo(
 						return _numWritten, _err
 					}
 				}
-				// file.template:81:6
+				// file.template:99:6
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(symbolName),
-						"file.template:81:6")
+						"file.template:99:6")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:81:17
+				// file.template:99:17
 				{
 					_n, _err := _output.Write([]byte(` -> State `))
 					_numWritten += int64(_n)
@@ -328,12 +409,12 @@ func (_template *File) WriteTo(
 						return _numWritten, _err
 					}
 				}
-				// file.template:81:27
+				// file.template:99:27
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(child.StateNum),
-						"file.template:81:27")
+						"file.template:99:27")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
@@ -341,11 +422,11 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:85:4
+		// file.template:103:4
 		if len(state.ShiftReduceConflictSymbols) > 0 {
-			// file.template:86:8
+			// file.template:104:8
 			shiftReduceCount += len(state.ShiftReduceConflictSymbols)
-			// file.template:86:73
+			// file.template:104:73
 			{
 				_n, _err := _output.Write([]byte(`
     Shift/reduce conflict symbols:
@@ -355,22 +436,22 @@ func (_template *File) WriteTo(
 					return _numWritten, _err
 				}
 			}
-			// file.template:89:8
+			// file.template:107:8
 			for idx, symbol := range state.ShiftReduceConflictSymbols {
-				// file.template:90:0
+				// file.template:108:0
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(symbol),
-						"file.template:90:0")
+						"file.template:108:0")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:91:12
+				// file.template:109:12
 				if idx != len(state.ShiftReduceConflictSymbols)-1 {
-					// file.template:91:68
+					// file.template:109:68
 					{
 						_n, _err := _output.Write([]byte(` `))
 						_numWritten += int64(_n)
@@ -380,7 +461,7 @@ func (_template *File) WriteTo(
 					}
 				}
 			}
-			// file.template:92:17
+			// file.template:110:17
 			{
 				_n, _err := _output.Write([]byte(`]`))
 				_numWritten += int64(_n)
@@ -389,11 +470,11 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:96:4
+		// file.template:114:4
 		if len(state.ReduceReduceConflictSymbols) > 0 {
-			// file.template:97:8
+			// file.template:115:8
 			reduceReduceCount += len(state.ReduceReduceConflictSymbols)
-			// file.template:97:75
+			// file.template:115:75
 			{
 				_n, _err := _output.Write([]byte(`
     Reduce/reduce conflict symbols:
@@ -403,22 +484,22 @@ func (_template *File) WriteTo(
 					return _numWritten, _err
 				}
 			}
-			// file.template:100:8
+			// file.template:118:8
 			for idx, symbol := range state.ReduceReduceConflictSymbols {
-				// file.template:101:0
+				// file.template:119:0
 				{
 					_n, _err := _template.writeValue(
 						_output,
 						(symbol),
-						"file.template:101:0")
+						"file.template:119:0")
 					_numWritten += int64(_n)
 					if _err != nil {
 						return _numWritten, _err
 					}
 				}
-				// file.template:102:12
+				// file.template:120:12
 				if idx != len(state.ShiftReduceConflictSymbols)-1 {
-					// file.template:102:68
+					// file.template:120:68
 					{
 						_n, _err := _output.Write([]byte(` `))
 						_numWritten += int64(_n)
@@ -428,7 +509,7 @@ func (_template *File) WriteTo(
 					}
 				}
 			}
-			// file.template:103:17
+			// file.template:121:17
 			{
 				_n, _err := _output.Write([]byte(`]`))
 				_numWritten += int64(_n)
@@ -437,7 +518,7 @@ func (_template *File) WriteTo(
 				}
 			}
 		}
-		// file.template:105:13
+		// file.template:123:13
 		{
 			_n, _err := _output.Write([]byte(`
 `))
@@ -447,7 +528,7 @@ func (_template *File) WriteTo(
 			}
 		}
 	}
-	// file.template:107:7
+	// file.template:125:7
 	{
 		_n, _err := _output.Write([]byte(`
 Number of states: `))
@@ -456,18 +537,18 @@ Number of states: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:108:18
+	// file.template:126:18
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(len(States.OrderedStates)),
-			"file.template:108:18")
+			"file.template:126:18")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:108:46
+	// file.template:126:46
 	{
 		_n, _err := _output.Write([]byte(`
 Number of shift actions: `))
@@ -476,18 +557,18 @@ Number of shift actions: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:109:25
+	// file.template:127:25
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(gotoCount),
-			"file.template:109:25")
+			"file.template:127:25")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:109:35
+	// file.template:127:35
 	{
 		_n, _err := _output.Write([]byte(`
 Number of reduce actions: `))
@@ -496,18 +577,38 @@ Number of reduce actions: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:110:26
+	// file.template:128:26
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(reduceCount),
-			"file.template:110:26")
+			"file.template:128:26")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:110:38
+	// file.template:128:38
+	{
+		_n, _err := _output.Write([]byte(`
+Number of shift-and-reduce actions: `))
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:129:36
+	{
+		_n, _err := _template.writeValue(
+			_output,
+			(shiftAndReduceCount),
+			"file.template:129:36")
+		_numWritten += int64(_n)
+		if _err != nil {
+			return _numWritten, _err
+		}
+	}
+	// file.template:129:56
 	{
 		_n, _err := _output.Write([]byte(`
 Number of shift/reduce conflicts: `))
@@ -516,18 +617,18 @@ Number of shift/reduce conflicts: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:111:34
+	// file.template:130:34
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(shiftReduceCount),
-			"file.template:111:34")
+			"file.template:130:34")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:111:51
+	// file.template:130:51
 	{
 		_n, _err := _output.Write([]byte(`
 Number of reduce/reduce conflicts: `))
@@ -536,18 +637,18 @@ Number of reduce/reduce conflicts: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:112:35
+	// file.template:131:35
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(reduceReduceCount),
-			"file.template:112:35")
+			"file.template:131:35")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:112:53
+	// file.template:131:53
 	{
 		_n, _err := _output.Write([]byte(`
 Number of unoptimized states: `))
@@ -556,18 +657,18 @@ Number of unoptimized states: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:113:30
+	// file.template:132:30
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(States.NumPreMergedStates),
-			"file.template:113:30")
+			"file.template:132:30")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:113:58
+	// file.template:132:58
 	{
 		_n, _err := _output.Write([]byte(`
 Number of unoptimized shift actions: `))
@@ -576,18 +677,18 @@ Number of unoptimized shift actions: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:114:37
+	// file.template:133:37
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(States.NumPreMergedShift),
-			"file.template:114:37")
+			"file.template:133:37")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:114:64
+	// file.template:133:64
 	{
 		_n, _err := _output.Write([]byte(`
 Number of unoptimized reduce actions: `))
@@ -596,18 +697,18 @@ Number of unoptimized reduce actions: `))
 			return _numWritten, _err
 		}
 	}
-	// file.template:115:38
+	// file.template:134:38
 	{
 		_n, _err := _template.writeValue(
 			_output,
 			(States.NumPreMergedReduce),
-			"file.template:115:38")
+			"file.template:134:38")
 		_numWritten += int64(_n)
 		if _err != nil {
 			return _numWritten, _err
 		}
 	}
-	// file.template:115:66
+	// file.template:134:66
 	{
 		_n, _err := _output.Write([]byte(`
 `))

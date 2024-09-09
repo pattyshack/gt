@@ -208,6 +208,10 @@ type ItemSet struct {
 
 	Reduce map[string]Items
 
+	ShiftAndReduce map[string]*Item
+
+	Reachable bool
+
 	ReduceReduceConflictSymbols []string
 	ShiftReduceConflictSymbols  []string
 
@@ -215,13 +219,15 @@ type ItemSet struct {
 	CodeGenAction string
 }
 
-func newItemSet(kernelItems Items) *ItemSet {
+func newItemSet(kernelItems Items, reachable bool) *ItemSet {
 	sort.Sort(kernelItems)
 	return &ItemSet{
-		Kernel:      kernelItems.String(),
-		KernelItems: kernelItems,
-		Items:       kernelItems,
-		Goto:        map[string]*ItemSet{},
+		Kernel:         kernelItems.String(),
+		KernelItems:    kernelItems,
+		Items:          kernelItems,
+		Goto:           map[string]*ItemSet{},
+		ShiftAndReduce: map[string]*Item{},
+		Reachable:      reachable,
 	}
 }
 
@@ -481,6 +487,47 @@ func (set *ItemSet) compress() {
 	set.Reduce = reduce
 }
 
+func (set *ItemSet) unconditionalReduce() (*Item, bool) {
+	if len(set.ReduceReduceConflictSymbols) > 0 ||
+		len(set.ShiftReduceConflictSymbols) > 0 {
+
+		return nil, false
+	}
+
+	if len(set.Goto) > 0 || len(set.Reduce) != 1 {
+		return nil, false
+	}
+
+	for _, items := range set.Reduce { // only has an single entry
+		if len(items) != 1 {
+			return nil, false
+		}
+
+		item := items[0]
+		if item.Name == AcceptRule {
+			return nil, false
+		}
+
+		return items[0], true
+	}
+
+	panic("should never get here")
+}
+
+func (set *ItemSet) populateShiftAndReduce() {
+	newGoto := make(map[string]*ItemSet, len(set.Goto))
+	for symbol, next := range set.Goto {
+		reduceItem, ok := next.unconditionalReduce()
+		if ok {
+			set.ShiftAndReduce[symbol] = reduceItem
+		} else {
+			newGoto[symbol] = next
+		}
+	}
+
+	set.Goto = newGoto
+}
+
 type firstTermsEntry struct {
 	hasNil    bool
 	terminals []string
@@ -539,7 +586,7 @@ func (states *LRStates) populateStartStates() {
 			},
 			1,
 			EndMarker)
-		states.maybeAdd(newItemSet(Items{item}))
+		states.maybeAdd(newItemSet(Items{item}, true))
 	}
 }
 
@@ -579,7 +626,7 @@ func (states *LRStates) generateStates() {
 					gotoKernelItems = append(gotoKernelItems, item.Shift())
 				}
 
-				gotoState, _ := states.maybeAdd(newItemSet(gotoKernelItems))
+				gotoState, _ := states.maybeAdd(newItemSet(gotoKernelItems, false))
 				if gotoState == nil {
 					continue
 				}
@@ -897,6 +944,31 @@ func (states *LRStates) shuffleAcceptStates() {
 	states.OrderedStates = orderedStates
 }
 
+func (states *LRStates) pruneUnreachableStates() {
+	newStates := make(map[string]*ItemSet, len(states.States))
+	newOrderedStates := make([]*ItemSet, 0, len(states.OrderedStates))
+
+	stateNum := 1
+	for _, state := range states.OrderedStates {
+		if !state.Reachable {
+			continue
+		}
+
+		for _, next := range state.Goto {
+			next.Reachable = true
+		}
+
+		state.StateNum = stateNum
+		stateNum++
+
+		newOrderedStates = append(newOrderedStates, state)
+		newStates[state.Kernel] = state
+	}
+
+	states.States = newStates
+	states.OrderedStates = newOrderedStates
+}
+
 func NewLRStates(grammar *Grammar) *LRStates {
 	states := &LRStates{
 		Grammar:  grammar,
@@ -920,6 +992,12 @@ func NewLRStates(grammar *Grammar) *LRStates {
 		shiftReduceCount += len(state.ShiftReduceConflictSymbols)
 		reduceReduceCount += len(state.ReduceReduceConflictSymbols)
 	}
+
+	for _, state := range states.OrderedStates {
+		state.populateShiftAndReduce()
+	}
+
+	states.pruneUnreachableStates()
 
 	states.ShiftReduceConflictsCount = shiftReduceCount
 	states.ReduceReduceConflictsCount = reduceReduceCount
