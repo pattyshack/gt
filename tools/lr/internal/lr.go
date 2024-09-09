@@ -423,7 +423,7 @@ func (set *ItemSet) compress() {
 
 	counts := make(map[string]int, len(set.Items))
 	for _, item := range set.Items {
-		if item.IsReduce {
+		if item.IsReduce && item.Name != AcceptRule {
 			counts[item.Core.String()] += 1
 		}
 	}
@@ -439,10 +439,6 @@ func (set *ItemSet) compress() {
 		}
 	}
 
-	if max == 1 {
-		maxKey = ""
-	}
-
 	added := map[string]struct{}{}
 	kernelCount := 0
 	items := make(Items, 0, len(set.Items))
@@ -451,7 +447,7 @@ func (set *ItemSet) compress() {
 		var toAdd *Item
 		if item.IsReduce {
 			toAdd = item
-			if item.Core.String() == maxKey {
+			if item.Name != AcceptRule && item.Core.String() == maxKey {
 				toAdd = item.ReplaceLookAhead(Wildcard)
 			}
 
