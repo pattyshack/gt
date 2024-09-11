@@ -945,6 +945,24 @@ func (states *LRStates) shuffleAcceptStates() {
 }
 
 func (states *LRStates) pruneUnreachableStates() {
+	modified := true
+	for modified {
+		modified = false
+
+		for _, state := range states.OrderedStates {
+			if !state.Reachable {
+				continue
+			}
+
+			for _, next := range state.Goto {
+				if !next.Reachable {
+					next.Reachable = true
+					modified = true
+				}
+			}
+		}
+	}
+
 	newStates := make(map[string]*ItemSet, len(states.States))
 	newOrderedStates := make([]*ItemSet, 0, len(states.OrderedStates))
 
@@ -952,10 +970,6 @@ func (states *LRStates) pruneUnreachableStates() {
 	for _, state := range states.OrderedStates {
 		if !state.Reachable {
 			continue
-		}
-
-		for _, next := range state.Goto {
-			next.Reachable = true
 		}
 
 		state.StateNum = stateNum
