@@ -4,6 +4,7 @@ package template
 
 import (
 	fmt "fmt"
+	lexutil "github.com/pattyshack/gt/lexutil"
 	io "io"
 )
 
@@ -33,19 +34,7 @@ const (
 	ErrorToken         = SymbolId(276)
 )
 
-type Location struct {
-	FileName string
-	Line     int
-	Column   int
-}
-
-func (l Location) String() string {
-	return fmt.Sprintf("%v:%v:%v", l.FileName, l.Line, l.Column)
-}
-
-func (l Location) ShortString() string {
-	return fmt.Sprintf("%v:%v", l.Line, l.Column)
-}
+type Location = lexutil.Location
 
 type Token interface {
 	Id() SymbolId

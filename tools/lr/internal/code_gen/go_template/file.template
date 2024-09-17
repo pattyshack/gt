@@ -40,6 +40,7 @@ template File {
     WildcardSymbolId        string
 
     LocationType            string
+    RealLocationType        interface{}
     TokenType               string
 
     LexerType               string
@@ -120,19 +121,7 @@ nextId := func() int {
 [[-end]]
 )
 
-type $LocationType struct {
-    FileName string
-    Line int
-    Column int
-}
-
-func (l $LocationType) String() string {
-    return $Sprintf("%v:%v:%v", l.FileName, l.Line, l.Column)
-}
-
-func (l $LocationType) ShortString() string {
-    return $Sprintf("%v:%v", l.Line, l.Column)
-}
+type $LocationType = $RealLocationType
 
 type $TokenType interface {
     Id() $SymbolIdType

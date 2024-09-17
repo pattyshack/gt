@@ -65,7 +65,7 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 }
 
 func (lexer *LexerImpl) CurrentLocation() Location {
-	return Location(lexer.reader.Location)
+	return lexer.reader.Location
 }
 
 func (lexer *LexerImpl) Next() (Token, error) {
@@ -107,11 +107,11 @@ func (lexer *headerLexer) Next() (Token, error) {
 
 	switch string(val) {
 	case "package":
-		return lexer.tokenizePackage(Location(loc))
+		return lexer.tokenizePackage(loc)
 	case "import":
-		return lexer.tokenizeImport(Location(loc))
+		return lexer.tokenizeImport(loc)
 	case "template":
-		return lexer.tokenizeTemplateDecl(Location(loc))
+		return lexer.tokenizeTemplateDecl(loc)
 	case "":
 		// try to tokenize symbol below
 	default:
@@ -130,7 +130,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 	if symbolStr != "" {
 		return GenericSymbol{
 			SymbolId: SectionMarkerToken,
-			StartPos: Location(loc),
+			StartPos: loc,
 		}, nil
 	}
 
@@ -233,7 +233,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	body = body[:len(body)-1]
 
 	declReader := lexutil.NewBufferedByteLocationReaderFromSlice("", body)
-	declReader.Location = lexutil.Location(loc)
+	declReader.Location = loc
 
 	args := []Argument{}
 	for {
@@ -264,7 +264,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 		line = line[:len(line)-1]
 		lineReader := lexutil.NewBufferedByteLocationReaderFromSlice("", line)
-		lineReader.Location = lexutil.Location(loc)
+		lineReader.Location = loc
 
 		argName, _, err := lexutil.MaybeTokenizeIdentifier(
 			lineReader,

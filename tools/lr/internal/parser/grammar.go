@@ -4,6 +4,7 @@ package parser
 
 import (
 	fmt "fmt"
+	lexutil "github.com/pattyshack/gt/lexutil"
 	io "io"
 )
 
@@ -26,19 +27,7 @@ const (
 	LRSectionContentToken = LRSymbolId(264)
 )
 
-type LRLocation struct {
-	FileName string
-	Line     int
-	Column   int
-}
-
-func (l LRLocation) String() string {
-	return fmt.Sprintf("%v:%v:%v", l.FileName, l.Line, l.Column)
-}
-
-func (l LRLocation) ShortString() string {
-	return fmt.Sprintf("%v:%v", l.Line, l.Column)
-}
+type LRLocation = lexutil.Location
 
 type LRToken interface {
 	Id() LRSymbolId

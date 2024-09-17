@@ -87,7 +87,7 @@ func newRawBodyLexer(
 }
 
 func (lexer *rawBodyLexer) CurrentLocation() Location {
-	return Location(lexer.reader.Location)
+	return lexer.reader.Location
 }
 
 func (lexer *rawBodyLexer) Next() (BodyToken, error) {
@@ -195,7 +195,7 @@ func (lexer *rawBodyLexer) maybeTokenizeText() (BodyToken, error) {
 	// https://github.com/golang/go/issues/24475
 	value = strings.ReplaceAll(value, "`", "`+\"`\"+`")
 
-	return NewAtom(TextToken, Location(loc), value, false, false), nil
+	return NewAtom(TextToken, loc, value, false, false), nil
 }
 
 func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
@@ -218,7 +218,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	}
 
 	directiveReader := lexutil.NewBufferedByteLocationReaderFromSlice("", content)
-	directiveReader.Location = lexutil.Location(loc)
+	directiveReader.Location = loc
 
 	err = lexutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
@@ -381,7 +381,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 
 			return NewAtom(
 				SubstitutionToken,
-				Location(loc),
+				loc,
 				string(value),
 				false,
 				false), nil
@@ -489,7 +489,7 @@ func readDirective(
 						}
 
 						if terminal == string(bytes[checkIdx:checkIdx+len(terminal)]) {
-							loc := Location(reader.Location)
+							loc := reader.Location
 
 							bytes = make([]byte, checkIdx+len(terminal))
 							n, err := reader.Read(bytes)

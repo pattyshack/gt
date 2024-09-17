@@ -92,7 +92,7 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
 
 	return LRGenericSymbol{
 		LRSymbolId: LRSymbolId(symbolId),
-		StartPos:   LRLocation(loc),
+		StartPos:   loc,
 	}, nil
 }
 
@@ -107,7 +107,7 @@ func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
 	}
 
 	return &Token{
-		LRLocation: LRLocation(loc),
+		LRLocation: loc,
 		LRSymbolId: LRCharacterToken,
 		Value:      value,
 	}, nil
@@ -126,7 +126,7 @@ func (lexer *rawLexer) maybeTokenizeIdentifier() (LRToken, error) {
 	}
 
 	return &Token{
-		LRLocation: LRLocation(loc),
+		LRLocation: loc,
 		LRSymbolId: LRIdentifierToken,
 		Value:      value,
 	}, nil
@@ -139,7 +139,7 @@ func (lexer *rawLexer) maybeTokenizeSectionContent() (LRToken, error) {
 	}
 
 	token := &Token{
-		LRLocation: LRLocation(lexer.reader.Location),
+		LRLocation: lexer.reader.Location,
 		LRSymbolId: LRSectionContentToken,
 		Value:      "",
 	}
@@ -232,7 +232,7 @@ func (lexer *Lexer) Next() (LRToken, error) {
 func (lexer *Lexer) CurrentLocation() LRLocation {
 	tokens, err := lexer.buffered.Peek(1)
 	if err != nil || len(tokens) == 0 {
-		return LRLocation(lexer.base.reader.Location)
+		return lexer.base.reader.Location
 	}
 
 	return tokens[0].Loc()

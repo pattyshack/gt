@@ -218,6 +218,10 @@ func (loc Location) String() string {
 	return fmt.Sprintf("%s:%v:%v", loc.FileName, loc.Line, loc.Column)
 }
 
+func (loc Location) ShortString() string {
+	return fmt.Sprintf("%v:%v", loc.Line, loc.Column)
+}
+
 type LocationStatsCollector struct {
 	Location
 }
