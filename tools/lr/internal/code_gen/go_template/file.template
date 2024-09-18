@@ -256,7 +256,10 @@ func $ExpectedTerminalsFunc(id $StateIdType) []$SymbolIdType {
       }
       -]]
       $(term.CodeGenSymbolConst),
-    [[-end]]
+    [[-end-]]
+    [[-if _, ok := state.Reduce[lr.EndMarker]; ok-]]
+      $EndSymbolId,
+    [[-end-]]
     }
 [[-end]]
   }

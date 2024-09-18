@@ -159,7 +159,7 @@ func ExpectedTerminals(id _StateId) []SymbolId {
 	case _State1:
 		return []SymbolId{PackageToken}
 	case _State2:
-		return []SymbolId{}
+		return []SymbolId{_EndMarker}
 	case _State4:
 		return []SymbolId{TemplateDeclToken}
 	case _State5:

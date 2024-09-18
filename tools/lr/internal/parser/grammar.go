@@ -187,7 +187,7 @@ func LRExpectedTerminals(id _LRStateId) []LRSymbolId {
 	case _LRState1:
 		return []LRSymbolId{LRTokenToken, LRTypeToken, LRStartToken, LRRuleDefToken}
 	case _LRState2:
-		return []LRSymbolId{}
+		return []LRSymbolId{_LREndMarker}
 	case _LRState4:
 		return []LRSymbolId{LRIdentifierToken}
 	case _LRState7:
