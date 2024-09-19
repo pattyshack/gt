@@ -515,6 +515,12 @@ func (set *ItemSet) unconditionalReduce() (*Item, bool) {
 }
 
 func (set *ItemSet) populateShiftAndReduce() {
+	if len(set.ReduceReduceConflictSymbols) > 0 ||
+		len(set.ShiftReduceConflictSymbols) > 0 {
+
+		return
+	}
+
 	newGoto := make(map[string]*ItemSet, len(set.Goto))
 	for symbol, next := range set.Goto {
 		reduceItem, ok := next.unconditionalReduce()
