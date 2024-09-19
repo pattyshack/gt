@@ -203,6 +203,26 @@ func (reader *BufferedReader[T]) Read(output []T) (int, error) {
 	return numDiscarded, err
 }
 
+func (reader *BufferedReader[T]) Next() (T, error) {
+	var t T
+	peeked, err := reader.Peek(1)
+	if err != nil {
+		return t, err
+	}
+
+	if len(peeked) != 1 {
+		panic("should never happen")
+	}
+
+	t = peeked[0]
+	_, err = reader.Discard(1)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return t, nil
+}
+
 type Location struct {
 	FileName string
 
