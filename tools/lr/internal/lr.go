@@ -1004,13 +1004,8 @@ func NewLRStates(grammar *Grammar) *LRStates {
 
 	states.shuffleAcceptStates()
 
-	shiftReduceCount := 0
-	reduceReduceCount := 0
 	for _, state := range states.OrderedStates {
 		state.compress()
-
-		shiftReduceCount += len(state.ShiftReduceConflictSymbols)
-		reduceReduceCount += len(state.ReduceReduceConflictSymbols)
 	}
 
 	for _, state := range states.OrderedStates {
@@ -1018,6 +1013,13 @@ func NewLRStates(grammar *Grammar) *LRStates {
 	}
 
 	states.pruneUnreachableStates()
+
+	shiftReduceCount := 0
+	reduceReduceCount := 0
+	for _, state := range states.OrderedStates {
+		shiftReduceCount += len(state.ShiftReduceConflictSymbols)
+		reduceReduceCount += len(state.ReduceReduceConflictSymbols)
+	}
 
 	states.ShiftReduceConflictsCount = shiftReduceCount
 	states.ReduceReduceConflictsCount = reduceReduceCount
