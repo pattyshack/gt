@@ -227,10 +227,10 @@ type $DefaultErrHandlerType struct {}
 
 func ($DefaultErrHandlerType) Error(nextToken $TokenType, stack $StackType) error {
     return $Errorf(
-        "Syntax error: unexpected symbol %v. Expecting %v (%v)",
+        "%s: syntax error: unexpected symbol %s. expecting %v",
+        nextToken.Loc(),
         nextToken.Id(),
-        $ExpectedTerminalsFunc(stack[len(stack)-1].StateId),
-        nextToken.Loc())
+        $ExpectedTerminalsFunc(stack[len(stack)-1].StateId))
 }
 
 func $ExpectedTerminalsFunc(id $StateIdType) []$SymbolIdType {
@@ -538,15 +538,18 @@ $kconst [[-if idx != len(consts)-1 ]], [[end-]]
         val, ok := token.($(valueType.ParamType))
         if !ok {
             return nil, $Errorf(
-                "Invalid value type for token %s.  "+
-                    "Expecting $(valueType.ParamType) (%v)",
-                token.Id(),
-                token.Loc())
+                "%s: invalid value type for token %s. "+
+                    "expecting $(valueType.ParamType)",
+                token.Loc(),
+                token.Id())
         }
         symbol.$(valueType.Name) = val
 [[-end]]
     default:
-        return nil, $Errorf("Unexpected token type: %s", symbol.Id())
+        return nil, $Errorf(
+          "%s: unexpected token type: %s",
+          token.Loc(),
+          token.Id())
     }
     return symbol, nil
 }
@@ -619,7 +622,10 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
         token, err := stack.lexer.Next()
         if err != nil {
             if err != $EOF {
-                return nil, $Errorf("Unexpected lex error: %s", err)
+                return nil, $Errorf(
+                  "%s: unexpected lex error: %s",
+                  stack.lexer.CurrentLocation(),
+                  err)
             }
             token = $GenericSymbolType{
               $SymbolIdType: $EndSymbolId,
@@ -704,7 +710,7 @@ func (act *$ActionType) ReduceSymbol(
     }
 
     if err != nil {
-        err = $Errorf("Unexpected %s reduce error: %s", act.ReduceType, err)
+        err = $Errorf("unexpected %s reduce error: %s", act.ReduceType, err)
     }
 
     return stack, symbol, err

@@ -176,10 +176,10 @@ type LRDefaultParseErrorHandler struct{}
 
 func (LRDefaultParseErrorHandler) Error(nextToken LRToken, stack _LRStack) error {
 	return fmt.Errorf(
-		"Syntax error: unexpected symbol %v. Expecting %v (%v)",
+		"%s: syntax error: unexpected symbol %s. expecting %v",
+		nextToken.Loc(),
 		nextToken.Id(),
-		LRExpectedTerminals(stack[len(stack)-1].StateId),
-		nextToken.Loc())
+		LRExpectedTerminals(stack[len(stack)-1].StateId))
 }
 
 func LRExpectedTerminals(id _LRStateId) []LRSymbolId {
@@ -577,34 +577,37 @@ func NewSymbol(token LRToken) (*LRSymbol, error) {
 		val, ok := token.(LRGenericSymbol)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting LRGenericSymbol (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting LRGenericSymbol",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Generic_ = val
 	case LRRuleDefToken:
 		val, ok := token.(*RuleDef)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *RuleDef (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *RuleDef",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.RuleDef = val
 	case LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
 		val, ok := token.(*Token)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *Token (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *Token",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Token = val
 	default:
-		return nil, fmt.Errorf("Unexpected token type: %s", symbol.Id())
+		return nil, fmt.Errorf(
+			"%s: unexpected token type: %s",
+			token.Loc(),
+			token.Id())
 	}
 	return symbol, nil
 }
@@ -685,7 +688,10 @@ func (stack *_LRPseudoSymbolStack) Top() (*LRSymbol, error) {
 		token, err := stack.lexer.Next()
 		if err != nil {
 			if err != io.EOF {
-				return nil, fmt.Errorf("Unexpected lex error: %s", err)
+				return nil, fmt.Errorf(
+					"%s: unexpected lex error: %s",
+					stack.lexer.CurrentLocation(),
+					err)
 			}
 			token = LRGenericSymbol{
 				LRSymbolId: _LREndMarker,
@@ -893,7 +899,7 @@ func (act *_LRAction) ReduceSymbol(
 	}
 
 	if err != nil {
-		err = fmt.Errorf("Unexpected %s reduce error: %s", act.ReduceType, err)
+		err = fmt.Errorf("unexpected %s reduce error: %s", act.ReduceType, err)
 	}
 
 	return stack, symbol, err

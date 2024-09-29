@@ -148,10 +148,10 @@ type DefaultParseErrorHandler struct{}
 
 func (DefaultParseErrorHandler) Error(nextToken Token, stack _Stack) error {
 	return fmt.Errorf(
-		"Syntax error: unexpected symbol %v. Expecting %v (%v)",
+		"%s: syntax error: unexpected symbol %s. expecting %v",
+		nextToken.Loc(),
 		nextToken.Id(),
-		ExpectedTerminals(stack[len(stack)-1].StateId),
-		nextToken.Loc())
+		ExpectedTerminals(stack[len(stack)-1].StateId))
 }
 
 func ExpectedTerminals(id _StateId) []SymbolId {
@@ -571,54 +571,57 @@ func NewSymbol(token Token) (*Symbol, error) {
 		val, ok := token.(*Atom)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *Atom (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *Atom",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Atom = val
 	case _EndMarker, SectionMarkerToken:
 		val, ok := token.(GenericSymbol)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting GenericSymbol (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting GenericSymbol",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Generic_ = val
 	case TemplateDeclToken:
 		val, ok := token.(*TemplateDeclaration)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *TemplateDeclaration (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *TemplateDeclaration",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.TemplateDecl = val
 	case DefaultToken, ElseToken, EndToken:
 		val, ok := token.(*TToken)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *TToken (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *TToken",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Token = val
 	case PackageToken, ImportToken, ForToken, SwitchToken, CaseToken, IfToken, ElseIfToken:
 		val, ok := token.(*Value)
 		if !ok {
 			return nil, fmt.Errorf(
-				"Invalid value type for token %s.  "+
-					"Expecting *Value (%v)",
-				token.Id(),
-				token.Loc())
+				"%s: invalid value type for token %s. "+
+					"expecting *Value",
+				token.Loc(),
+				token.Id())
 		}
 		symbol.Value = val
 	default:
-		return nil, fmt.Errorf("Unexpected token type: %s", symbol.Id())
+		return nil, fmt.Errorf(
+			"%s: unexpected token type: %s",
+			token.Loc(),
+			token.Id())
 	}
 	return symbol, nil
 }
@@ -689,7 +692,10 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 		token, err := stack.lexer.Next()
 		if err != nil {
 			if err != io.EOF {
-				return nil, fmt.Errorf("Unexpected lex error: %s", err)
+				return nil, fmt.Errorf(
+					"%s: unexpected lex error: %s",
+					stack.lexer.CurrentLocation(),
+					err)
 			}
 			token = GenericSymbol{
 				SymbolId: _EndMarker,
@@ -920,7 +926,7 @@ func (act *_Action) ReduceSymbol(
 	}
 
 	if err != nil {
-		err = fmt.Errorf("Unexpected %s reduce error: %s", act.ReduceType, err)
+		err = fmt.Errorf("unexpected %s reduce error: %s", act.ReduceType, err)
 	}
 
 	return stack, symbol, err
