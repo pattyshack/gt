@@ -223,25 +223,6 @@ func (reader *BufferedReader[T]) Next() (T, error) {
 	return t, nil
 }
 
-type Location struct {
-	FileName string
-
-	Line int // 1 based
-
-	// Note: We'll use byte position within the line instead of unicode symbol
-	// position since some unicode symbols are composed of multiple unicode
-	// runes.  It's too much work to figure out all the cases.
-	Column int // 0 based
-}
-
-func (loc Location) String() string {
-	return fmt.Sprintf("%s:%v:%v", loc.FileName, loc.Line, loc.Column)
-}
-
-func (loc Location) ShortString() string {
-	return fmt.Sprintf("%v:%v", loc.Line, loc.Column)
-}
-
 type LocationStatsCollector struct {
 	Location
 }

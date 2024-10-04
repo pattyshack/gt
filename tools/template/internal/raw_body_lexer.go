@@ -101,7 +101,9 @@ func (lexer *rawBodyLexer) Next() (BodyToken, error) {
 		return token, err
 	}
 
-	return nil, fmt.Errorf("Unexpected character at %s", lexer.reader.Location)
+	return nil, lexutil.NewLocationError(
+		lexer.reader.Location,
+		"Unexpected character")
 }
 
 func (lexer *rawBodyLexer) maybeTokenizeText() (BodyToken, error) {
@@ -288,24 +290,25 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 
 	_, ok := parameterlessOnlyDirectives[id]
 	if ok && len(param) > 0 {
-		return nil, fmt.Errorf(
-			"unexpected parameter specified in [[%s]] directive (%s)",
-			id,
-			loc)
+		return nil, lexutil.NewLocationError(
+			loc,
+			"unexpected parameter specified in [[%s]] directive",
+			id)
 	}
 
 	_, ok = parameteredOnlyDirectives[id]
 	if ok && param == "" {
-		return nil, fmt.Errorf(
-			"expected parameter not specified in [[%s]] directive (%s)",
-			id,
-			loc)
+		return nil, lexutil.NewLocationError(
+			loc,
+			"expected parameter not specified in [[%s]] directive",
+			id)
 	}
 
 	switch id {
 	case "":
-		return nil, fmt.Errorf(
-			"invalid directive. directive type not specified (%s)", loc)
+		return nil, lexutil.NewLocationError(
+			loc,
+			"invalid directive. directive type not specified")
 	case "end":
 		return NewTToken(EndToken, loc, trimLeading, trimTrailing), nil
 	case "default":
@@ -339,10 +342,10 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		return NewAtom(EmbedToken, loc, param, trimLeading, trimTrailing), nil
 	}
 
-	return nil, fmt.Errorf(
-		"invalid directive. unknown directive type %s (%s)",
-		id,
-		loc)
+	return nil, lexutil.NewLocationError(
+		loc,
+		"invalid directive. unknown directive type %s",
+		id)
 }
 
 func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
@@ -399,9 +402,9 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 		} else if content[1] == '$' {
 			panic("Programming error")
 		} else {
-			return nil, fmt.Errorf(
-				"invalid substitute directive (%s)",
-				lexer.reader.Location)
+			return nil, lexutil.NewLocationError(
+				lexer.reader.Location,
+				"invalid substitute directive")
 		}
 	}
 
@@ -423,14 +426,18 @@ func readDirective(
 ) {
 
 	if terminal == "" {
-		return nil, Location{}, fmt.Errorf("Invalid terminal")
+		return nil, Location{}, lexutil.NewLocationError(
+			reader.Location,
+			"Invalid terminal")
 	}
 
 	if terminal[0] != '}' &&
 		terminal[0] != ')' &&
 		terminal[0] != ']' &&
 		terminal[0] != '\n' {
-		return nil, Location{}, fmt.Errorf("Invalid terminal: " + terminal)
+		return nil, Location{}, lexutil.NewLocationError(
+			reader.Location,
+			"Invalid terminal: "+terminal)
 	}
 
 	currentScope := []string{"#root"}
@@ -441,14 +448,17 @@ func readDirective(
 
 	bytes, err := reader.Peek(peekRange)
 	if err != nil && err != io.EOF {
-		return nil, Location{}, err
+		return nil, Location{}, lexutil.LocationError{
+			Loc: reader.Location,
+			Err: err,
+		}
 	}
 
 	if len(bytes) <= startIdx {
-		return nil, Location{}, fmt.Errorf(
-			"lex error: \"%s\" not found (%s)",
-			terminal,
-			reader.Location)
+		return nil, Location{}, lexutil.NewLocationError(
+			reader.Location,
+			"lex error: \"%s\" not found",
+			terminal)
 	}
 
 	for {
@@ -509,10 +519,10 @@ func readDirective(
 							panic(err) // should never happen
 						}
 
-						return nil, Location{}, fmt.Errorf(
-							"lex error: no matching pair for %c (%s)",
-							char,
-							reader.Location)
+						return nil, Location{}, lexutil.NewLocationError(
+							reader.Location,
+							"lex error: no matching pair for %c",
+							char)
 					}
 				}
 			case "//":
@@ -555,10 +565,10 @@ func readDirective(
 		}
 
 		if prevLen == len(bytes) { // not found
-			return nil, Location{}, fmt.Errorf(
-				"lex error: \"%s\" not found (%s)",
-				terminal,
-				reader.Location)
+			return nil, Location{}, lexutil.NewLocationError(
+				reader.Location,
+				"lex error: \"%s\" not found",
+				terminal)
 		}
 	}
 }

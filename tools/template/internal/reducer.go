@@ -1,8 +1,6 @@
 package template
 
 import (
-	"fmt"
-
 	"github.com/pattyshack/gt/lexutil"
 )
 
@@ -71,9 +69,9 @@ func (ReducerImpl) WithWhitespaceToSwitch(
 
 	for _, char := range whitespace.Value {
 		if !lexutil.IsWhitespace(char) {
-			return nil, fmt.Errorf(
-				"Text found between [[switch]] and [[case]] (%s)",
-				whitespace.Loc())
+			return nil, lexutil.NewLocationError(
+				whitespace.Loc(),
+				"Text found between [[switch]] and [[case]]")
 		}
 	}
 

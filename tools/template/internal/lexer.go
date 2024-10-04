@@ -1,7 +1,6 @@
 package template
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -115,10 +114,10 @@ func (lexer *headerLexer) Next() (Token, error) {
 	case "":
 		// try to tokenize symbol below
 	default:
-		return nil, fmt.Errorf(
-			"Unexpected IDENTIFIER %s (%s)",
-			string(val),
-			loc)
+		return nil, lexutil.NewLocationError(
+			loc,
+			"Unexpected IDENTIFIER %s",
+			string(val))
 	}
 
 	symbolStr, _, loc, err := lexer.sectionMarker.MaybeTokenizeSymbol(
@@ -134,7 +133,9 @@ func (lexer *headerLexer) Next() (Token, error) {
 		}, nil
 	}
 
-	return nil, fmt.Errorf("Unexpected character at %s", lexer.reader.Location)
+	return nil, lexutil.NewLocationError(
+		lexer.reader.Location,
+		"Unexpected character")
 }
 
 func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
@@ -154,7 +155,9 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 		return NewValue(PackageToken, pkgLoc, val, false, false), nil
 	}
 
-	return nil, fmt.Errorf("Unexpected character at %s", lexer.reader.Location)
+	return nil, lexutil.NewLocationError(
+		lexer.reader.Location,
+		"Unexpected character")
 }
 
 func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
@@ -170,9 +173,9 @@ func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
 	}
 
 	if symbolStr == "" {
-		return nil, fmt.Errorf(
-			"Unexpected character at %s",
-			lexer.reader.Location)
+		return nil, lexutil.NewLocationError(
+			lexer.reader.Location,
+			"Unexpected character")
 	}
 
 	value, _, err := readDirective(lexer.reader, 0, ")")
@@ -203,9 +206,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	}
 
 	if templateName == "" {
-		return nil, fmt.Errorf(
-			"Unexpected character at %s",
-			lexer.reader.Location)
+		return nil, lexutil.NewLocationError(
+			lexer.reader.Location,
+			"Unexpected character")
 	}
 
 	err = lexutil.StripLeadingWhitespaces(lexer.reader)
@@ -220,9 +223,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	}
 
 	if lcurl == "" {
-		return nil, fmt.Errorf(
-			"Unexpected character at %s",
-			lexer.reader.Location)
+		return nil, lexutil.NewLocationError(
+			lexer.reader.Location,
+			"Unexpected character")
 	}
 
 	body, loc, err := readDirective(lexer.reader, 0, "}")
@@ -274,9 +277,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		if argName == "" {
-			return nil, fmt.Errorf(
-				"Expecting argument name (%s)",
-				lineReader.Location)
+			return nil, lexutil.NewLocationError(
+				lineReader.Location,
+				"Expecting argument name")
 		}
 
 		err = lexutil.StripLeadingWhitespaces(lineReader)
@@ -290,9 +293,9 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		if len(typeName) == 0 {
-			return nil, fmt.Errorf(
-				"Expecting argument type (%s)",
-				lineReader.Location)
+			return nil, lexutil.NewLocationError(
+				lineReader.Location,
+				"Expecting argument type")
 		}
 
 		args = append(args, Argument{string(argName), string(typeName)})

@@ -59,7 +59,7 @@ template File {
     ActionTable             string
 
     Sprintf                 interface{}
-    Errorf                  interface{}
+    NewLocationError        interface{}
     EOF                     interface{}
 
     OrderedSymbolNames      []string  // ^, *, $, terminals, non-terminals
@@ -226,9 +226,9 @@ type $ErrHandlerType interface {
 type $DefaultErrHandlerType struct {}
 
 func ($DefaultErrHandlerType) Error(nextToken $TokenType, stack $StackType) error {
-    return $Errorf(
-        "%s: syntax error: unexpected symbol %s. expecting %v",
+    return $NewLocationError(
         nextToken.Loc(),
+        "syntax error: unexpected symbol %s. expecting %v",
         nextToken.Id(),
         $ExpectedTerminalsFunc(stack[len(stack)-1].StateId))
 }
@@ -289,10 +289,11 @@ $(start.CodeGenType), error) {
 func $(ParseFuncPrefix)$(parseSuffix)WithCustomErrorHandler(
     lexer $LexerType,
     reducer $ReducerType,
-    errHandler $ErrHandlerType) (
+    errHandler $ErrHandlerType,
+) (
     $(start.CodeGenType),
-    error) {
-
+    error,
+) {
     item, err := $InternalParseFunc(lexer, reducer, errHandler, $(
         States.OrderedStates[idx].CodeGenConst))
     if err != nil {
@@ -312,10 +313,11 @@ func $InternalParseFunc(
     lexer $LexerType,
     reducer $ReducerType,
     errHandler $ErrHandlerType,
-    startState $StateIdType) (
+    startState $StateIdType,
+) (
     *$StackItemType,
-    error) {
-
+    error,
+) {
     stateStack := $StackType{
         // Note: we don't have to populate the start symbol since its value
         // is never accessed.
@@ -348,7 +350,8 @@ func $InternalParseFunc(
             var reduceSymbol *$SymbolType
             stateStack, reduceSymbol, err = action.ReduceSymbol(
                 reducer,
-                stateStack)
+                stateStack,
+                nextSymbol.Loc())
             if err != nil {
                 return nil, err
             }
@@ -365,7 +368,8 @@ func $InternalParseFunc(
             var reduceSymbol *$SymbolType
             stateStack, reduceSymbol, err = action.ReduceSymbol(
                 reducer,
-                stateStack)
+                stateStack,
+                nextSymbol.Loc())
             if err != nil {
                 return nil, err
             }
@@ -537,18 +541,18 @@ $kconst [[-if idx != len(consts)-1 ]], [[end-]]
 :
         val, ok := token.($(valueType.ParamType))
         if !ok {
-            return nil, $Errorf(
-                "%s: invalid value type for token %s. "+
-                    "expecting $(valueType.ParamType)",
+            return nil, $NewLocationError(
                 token.Loc(),
+                "invalid value type for token %s. "+
+                    "expecting $(valueType.ParamType)",
                 token.Id())
         }
         symbol.$(valueType.Name) = val
 [[-end]]
     default:
-        return nil, $Errorf(
-          "%s: unexpected token type: %s",
+        return nil, $NewLocationError(
           token.Loc(),
+          "unexpected token type: %s",
           token.Id())
     }
     return symbol, nil
@@ -622,9 +626,9 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
         token, err := stack.lexer.Next()
         if err != nil {
             if err != $EOF {
-                return nil, $Errorf(
-                  "%s: unexpected lex error: %s",
+                return nil, $NewLocationError(
                   stack.lexer.CurrentLocation(),
+                  "unexpected lex error: %s",
                   err)
             }
             token = $GenericSymbolType{
@@ -647,7 +651,9 @@ func (stack *$SymbolStackType) Push(symbol *$SymbolType) {
 
 func (stack *$SymbolStackType) Pop() (*$SymbolType, error) {
     if len(stack.top) == 0 {
-        return nil, $Errorf("internal error: cannot pop an empty top")
+        return nil, $NewLocationError(
+          stack.lexer.CurrentLocation(),
+          "internal error: cannot pop an empty top")
     }
     ret := stack.top[len(stack.top)-1]
     stack.top = stack.top[:len(stack.top)-1]
@@ -675,11 +681,13 @@ func (act *$ActionType) ShiftItem(symbol *$SymbolType) *$StackItemType {
 
 func (act *$ActionType) ReduceSymbol(
     reducer $ReducerType,
-    stack $StackType) (
+    stack $StackType,
+    nextLoc $LocationType,
+) (
     $StackType,
     *$SymbolType,
-    error) {
-
+    error,
+) {
     var err error
     symbol := &$SymbolType{}
     switch act.ReduceType {
@@ -710,7 +718,9 @@ func (act *$ActionType) ReduceSymbol(
     }
 
     if err != nil {
-        err = $Errorf("unexpected %s reduce error: %s", act.ReduceType, err)
+        err = $NewLocationError(
+          nextLoc,
+          "unexpected %s reduce error: %s", act.ReduceType, err)
     }
 
     return stack, symbol, err
