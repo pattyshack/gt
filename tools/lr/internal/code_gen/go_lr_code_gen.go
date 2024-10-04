@@ -223,6 +223,7 @@ func GenerateGoLRCode(
 		ActionTableType:       nameGen.Internal("ActionTableType"),
 		ActionTable:           nameGen.Internal("ActionTable"),
 		Sprintf:               imports.Obj("fmt.Sprintf"),
+		Errorf:                imports.Obj("fmt.Errorf"),
 		NewLocationError: imports.Obj(
 			"github.com/pattyshack/gt/lexutil.NewLocationError"),
 		EOF:                       imports.Obj("io.EOF"),

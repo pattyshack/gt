@@ -1,6 +1,7 @@
 package lexutil
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -55,8 +56,11 @@ func (s ErrorsByLocation) Len() int { return len(s) }
 func (s ErrorsByLocation) Swap(i int, j int) { s[i], s[j] = s[j], s[i] }
 
 func (s ErrorsByLocation) Less(i int, j int) bool {
-	err1, ok1 := s[i].(LocationError)
-	err2, ok2 := s[j].(LocationError)
+	var err1 LocationError
+	ok1 := errors.As(s[i], &err1)
+
+	var err2 LocationError
+	ok2 := errors.As(s[j], &err2)
 
 	if !ok1 {
 		return ok2

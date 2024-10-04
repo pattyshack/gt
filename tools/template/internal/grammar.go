@@ -251,8 +251,7 @@ func _Parse(
 			var reduceSymbol *Symbol
 			stateStack, reduceSymbol, err = action.ReduceSymbol(
 				reducer,
-				stateStack,
-				nextSymbol.Loc())
+				stateStack)
 			if err != nil {
 				return nil, err
 			}
@@ -269,8 +268,7 @@ func _Parse(
 			var reduceSymbol *Symbol
 			stateStack, reduceSymbol, err = action.ReduceSymbol(
 				reducer,
-				stateStack,
-				nextSymbol.Loc())
+				stateStack)
 			if err != nil {
 				return nil, err
 			}
@@ -698,7 +696,7 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 			if err != io.EOF {
 				return nil, lexutil.NewLocationError(
 					stack.lexer.CurrentLocation(),
-					"unexpected lex error: %s",
+					"unexpected lex error: %w",
 					err)
 			}
 			token = GenericSymbol{
@@ -721,9 +719,7 @@ func (stack *_PseudoSymbolStack) Push(symbol *Symbol) {
 
 func (stack *_PseudoSymbolStack) Pop() (*Symbol, error) {
 	if len(stack.top) == 0 {
-		return nil, lexutil.NewLocationError(
-			stack.lexer.CurrentLocation(),
-			"internal error: cannot pop an empty top")
+		return nil, fmt.Errorf("internal error: cannot pop an empty top")
 	}
 	ret := stack.top[len(stack.top)-1]
 	stack.top = stack.top[:len(stack.top)-1]
@@ -752,7 +748,6 @@ func (act *_Action) ShiftItem(symbol *Symbol) *_StackItem {
 func (act *_Action) ReduceSymbol(
 	reducer Reducer,
 	stack _Stack,
-	nextLoc Location,
 ) (
 	_Stack,
 	*Symbol,
@@ -934,9 +929,7 @@ func (act *_Action) ReduceSymbol(
 	}
 
 	if err != nil {
-		err = lexutil.NewLocationError(
-			nextLoc,
-			"unexpected %s reduce error: %s", act.ReduceType, err)
+		err = fmt.Errorf("unexpected %s reduce error: %w", act.ReduceType, err)
 	}
 
 	return stack, symbol, err
