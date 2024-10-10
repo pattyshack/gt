@@ -24,6 +24,33 @@ func (loc Location) ShortString() string {
 	return fmt.Sprintf("%v:%v", loc.Line, loc.Column)
 }
 
+// return -1 if less than, 0 if equal, 1 if greater
+func (loc Location) Compare(other Location) int {
+	if loc.FileName != other.FileName {
+		if loc.FileName < other.FileName {
+			return -1
+		} else {
+			return 1
+		}
+	}
+
+	if loc.Line != other.Line {
+		if loc.Line < other.Line {
+			return -1
+		} else {
+			return 1
+		}
+	}
+
+	if loc.Column == other.Column {
+		return 0
+	} else if loc.Column < other.Column {
+		return -1
+	} else {
+		return 1
+	}
+}
+
 type LocationError struct {
 	Loc Location
 	Err error
@@ -70,13 +97,5 @@ func (s ErrorsByLocation) Less(i int, j int) bool {
 		return false
 	}
 
-	if err1.Loc.FileName != err2.Loc.FileName {
-		return err1.Loc.FileName < err2.Loc.FileName
-	}
-
-	if err1.Loc.Line != err2.Loc.Line {
-		return err1.Loc.Line < err2.Loc.Line
-	}
-
-	return err1.Loc.Column < err2.Loc.Column
+	return err1.Loc.Compare(err2.Loc) < 0
 }
