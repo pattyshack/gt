@@ -5,15 +5,17 @@ import (
 )
 
 type ErrorEmitter struct {
-	Errs []error
+	mutex sync.Mutex
+	errs  []error // guarded by mutex
 }
 
 func (emitter *ErrorEmitter) Errors() []error {
-	return emitter.Errs
-}
+	emitter.mutex.Lock()
+	defer emitter.mutex.Unlock()
 
-func (emitter *ErrorEmitter) MergeFrom(other *ErrorEmitter) {
-	emitter.Errs = append(emitter.Errs, other.Errs...)
+	errs := make([]error, len(emitter.errs), len(emitter.errs))
+	copy(errs, emitter.errs)
+	return errs
 }
 
 func (emitter *ErrorEmitter) Emit(
@@ -21,11 +23,14 @@ func (emitter *ErrorEmitter) Emit(
 	format string,
 	args ...interface{}) {
 
-	emitter.Errs = append(emitter.Errs, NewLocationError(loc, format, args...))
+	emitter.EmitErrors(NewLocationError(loc, format, args...))
 }
 
 func (emitter *ErrorEmitter) EmitErrors(errs ...error) {
-	emitter.Errs = append(emitter.Errs, errs...)
+	emitter.mutex.Lock()
+	defer emitter.mutex.Unlock()
+
+	emitter.errs = append(emitter.errs, errs...)
 }
 
 // Analysis or transform pass
