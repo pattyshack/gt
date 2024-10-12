@@ -13,6 +13,23 @@ func IsWhitespace(char rune) bool {
 	return char == ' ' || char == '\n' || char == '\t' || char == '\r'
 }
 
+func IsValidIdentifier(id string) bool {
+	if id == "" {
+		return false
+	}
+
+	for idx, utf8Char := range id {
+		if !(unicode.IsLetter(utf8Char) ||
+			utf8Char == '_' ||
+			(idx > 0 && unicode.IsNumber(utf8Char))) {
+
+			return false
+		}
+	}
+
+	return true
+}
+
 // Peek for identifier of the form
 //
 //	(unicode-letter | '_') (unicode-letter | unicode-number | '_')*
