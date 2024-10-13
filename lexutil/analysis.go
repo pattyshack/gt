@@ -1,6 +1,7 @@
 package lexutil
 
 import (
+	"sort"
 	"sync"
 )
 
@@ -9,12 +10,18 @@ type ErrorEmitter struct {
 	errs  []error // guarded by mutex
 }
 
-func (emitter *ErrorEmitter) Errors() []error {
+func (emitter *ErrorEmitter) errors() []error {
 	emitter.mutex.Lock()
 	defer emitter.mutex.Unlock()
 
 	errs := make([]error, len(emitter.errs), len(emitter.errs))
 	copy(errs, emitter.errs)
+	return errs
+}
+
+func (emitter *ErrorEmitter) Errors() []error {
+	errs := emitter.errors()
+	sort.Sort(ErrorsByLocation(errs))
 	return errs
 }
 
