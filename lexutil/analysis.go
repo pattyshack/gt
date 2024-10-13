@@ -36,17 +36,13 @@ func (emitter *ErrorEmitter) EmitErrors(errs ...error) {
 // Analysis or transform pass
 type Pass[T any] interface {
 	Process(T)
-
-	// Accumulated errors from Process
-	Errors() []error
 }
 
 func Process[T any](
 	node T,
 	passes [][]Pass[T], // sequence of parallelizable passes
-	earlyExitErrThreshold int, // 0 or less = unlimited
-) []error {
-	errors := []error{}
+	shouldEarlyExit func() bool, // optional
+) {
 	for _, parallelPasses := range passes {
 		wg := sync.WaitGroup{}
 		wg.Add(len(parallelPasses))
@@ -59,14 +55,8 @@ func Process[T any](
 
 		wg.Wait()
 
-		for _, pass := range parallelPasses {
-			errors = append(errors, pass.Errors()...)
-		}
-
-		if earlyExitErrThreshold > 0 && len(errors) >= earlyExitErrThreshold {
-			return errors
+		if shouldEarlyExit != nil && shouldEarlyExit() {
+			return
 		}
 	}
-
-	return errors
 }
