@@ -31,6 +31,13 @@ func (emitter *ErrorEmitter) Errors() []error {
 	return sorted
 }
 
+func (emitter *ErrorEmitter) HasErrors() bool {
+	emitter.mutex.Lock()
+	defer emitter.mutex.Unlock()
+
+	return len(emitter.errs) > 0
+}
+
 func (emitter *ErrorEmitter) Emit(
 	loc Location,
 	format string,
