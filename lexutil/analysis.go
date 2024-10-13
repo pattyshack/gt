@@ -10,19 +10,25 @@ type ErrorEmitter struct {
 	errs  []error // guarded by mutex
 }
 
+func (emitter *ErrorEmitter) MergeFrom(other *ErrorEmitter) {
+	emitter.EmitErrors(other.errors()...)
+}
+
 func (emitter *ErrorEmitter) errors() []error {
 	emitter.mutex.Lock()
 	defer emitter.mutex.Unlock()
 
-	errs := make([]error, len(emitter.errs), len(emitter.errs))
-	copy(errs, emitter.errs)
-	return errs
+	return emitter.errs
 }
 
 func (emitter *ErrorEmitter) Errors() []error {
 	errs := emitter.errors()
-	sort.Sort(ErrorsByLocation(errs))
-	return errs
+
+	sorted := make([]error, len(errs), len(errs))
+	copy(sorted, errs)
+	sort.Sort(ErrorsByLocation(sorted))
+
+	return sorted
 }
 
 func (emitter *ErrorEmitter) Emit(
