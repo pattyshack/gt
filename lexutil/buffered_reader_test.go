@@ -463,7 +463,15 @@ func (s *BufferedReaderSuite) TestFromSlice(t *testing.T) {
 	expect.Equal(t, io.EOF, err)
 	expect.Equal(t, 1, numRead)
 	expect.Equal(t, '9', result[0])
-	expect.Equal(t, "9123456789", string(s.buffered.buffer))
+	expect.Equal(t, "0123456789", string(s.buffered.buffer))
+	expect.Equal(t, 0, s.buffered.startIdx)
+	expect.Equal(t, 0, s.buffered.numBuffered)
+
+	result = make([]byte, 2)
+	numRead, err = s.buffered.Read(result)
+	expect.Equal(t, io.EOF, err)
+	expect.Equal(t, 0, numRead)
+	expect.Equal(t, "0123456789", string(s.buffered.buffer))
 	expect.Equal(t, 0, s.buffered.startIdx)
 	expect.Equal(t, 0, s.buffered.numBuffered)
 }

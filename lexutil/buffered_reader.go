@@ -124,6 +124,11 @@ func (reader *BufferedReader[T]) fill(num int) (int, error) {
 		return reader.startIdx + num, nil
 	}
 
+	_, ok := reader.base.(eofReader[T])
+	if ok {
+		return reader.startIdx + reader.numBuffered, io.EOF
+	}
+
 	if len(reader.buffer) < num {
 		resizedBuffer := make([]T, num)
 		copy(
