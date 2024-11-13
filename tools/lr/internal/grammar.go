@@ -107,7 +107,7 @@ func classifyDefinitions(
 							"Duplicate token/type declaration: %s %s %s",
 							term.Value,
 							prev.LRLocation.ShortString(),
-							term.LRLocation.ShortString()))
+							term.StartPos.ShortString()))
 				}
 
 				valueType := Generic
@@ -117,7 +117,7 @@ func classifyDefinitions(
 
 				terms[term.Value] = &Term{
 					Name:       term.Value,
-					LRLocation: term.LRLocation,
+					LRLocation: term.StartPos,
 					SymbolId:   term.Id(),
 					IsTerminal: def.IsTerminal,
 					ValueType:  valueType,

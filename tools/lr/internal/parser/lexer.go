@@ -106,30 +106,31 @@ func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
 		return nil, nil
 	}
 
-	return &Token{
-		LRLocation: loc,
-		LRSymbolId: LRCharacterToken,
-		Value:      value,
-	}, nil
+	token := &Token{
+		SymbolId: LRCharacterToken,
+		Value:    value,
+	}
+	token.StartPos = loc
+
+	return token, nil
 }
 
 func (lexer *rawLexer) maybeTokenizeIdentifier() (LRToken, error) {
-	value, loc, err := lexutil.MaybeTokenizeIdentifier(
+	// NOTE: cannot return this directly since nil token gets wrapped by LRToken,
+	// which then becomes "non-nil" ...
+	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
-		lexer.internPool)
+		lexer.internPool,
+		LRIdentifierToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if value == "" {
+	if token == nil {
 		return nil, nil
 	}
 
-	return &Token{
-		LRLocation: loc,
-		LRSymbolId: LRIdentifierToken,
-		Value:      value,
-	}, nil
+	return token, nil
 }
 
 func (lexer *rawLexer) maybeTokenizeSectionContent() (LRToken, error) {
@@ -139,10 +140,10 @@ func (lexer *rawLexer) maybeTokenizeSectionContent() (LRToken, error) {
 	}
 
 	token := &Token{
-		LRLocation: lexer.reader.Location,
-		LRSymbolId: LRSectionContentToken,
-		Value:      "",
+		SymbolId: LRSectionContentToken,
+		Value:    "",
 	}
+	token.StartPos = lexer.reader.Location
 
 	n, err := lexer.reader.Read(peek)
 	if n != 1 || err != nil {
@@ -206,7 +207,7 @@ func (lexer *Lexer) Next() (LRToken, error) {
 			Name: curr.(*Token),
 		}, nil
 	} else if next.Id() == ':' {
-		curr.(*Token).LRSymbolId = LRLabelToken
+		curr.(*Token).SymbolId = LRLabelToken
 
 		lexer.buffered.Discard(2)
 		return curr, nil

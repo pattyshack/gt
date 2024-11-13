@@ -117,21 +117,21 @@ func PeekIdentifier(
 
 // If the reader's leading bytes are an identifier, read the identifer bytes
 // and return the identifier value.  Otherwise, return ""
-func MaybeTokenizeIdentifier(
+func MaybeTokenizeIdentifier[SymbolId any](
 	reader BufferedByteLocationReader,
 	internPool *stringutil.InternPool,
+	identifierToken SymbolId,
 ) (
-	string,
-	Location,
+	*TokenValue[SymbolId],
 	error,
 ) {
 	size, err := PeekIdentifier(reader, 0, 32)
 	if err != nil {
-		return "", Location{}, err
+		return nil, err
 	}
 
 	if size == 0 {
-		return "", Location{}, nil
+		return nil, nil
 	}
 
 	loc := reader.Location
@@ -142,9 +142,16 @@ func MaybeTokenizeIdentifier(
 	}
 	value := internPool.InternBytes(bytes)
 
-	reader.Discard(size)
+	_, err = reader.Discard(size)
+	if err != nil {
+		panic("should never happen")
+	}
 
-	return value, loc, nil
+	return &TokenValue[SymbolId]{
+		SymbolId:    identifierToken,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+	}, nil
 }
 
 // Peek for spaces of the form
@@ -184,6 +191,36 @@ func PeekSpaces(
 	}
 
 	return numBytes, nil
+}
+
+func MaybeTokenizeSpaces[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	spacesToken SymbolId,
+) (
+	*TokenCount[SymbolId],
+	error,
+) {
+	numBytes, err := PeekSpaces(reader, initialPeekWindowSize)
+	if err != nil {
+		return nil, err
+	}
+
+	if numBytes == 0 {
+		return nil, nil
+	}
+
+	loc := reader.Location
+	_, err = reader.Discard(numBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return &TokenCount[SymbolId]{
+		SymbolId:    spacesToken,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Count:       numBytes,
+	}, nil
 }
 
 // Peek for newlines of the form
@@ -248,6 +285,47 @@ func PeekNewlines(
 	return numBytes, numNewlines, false, nil
 }
 
+func MaybeTokenizeNewlines[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	newlinesToken SymbolId,
+) (
+	*TokenCount[SymbolId],
+	bool, // found and discarded invalid stand-alone \r
+	error,
+) {
+	numBytes, numNewlines, foundInvalidNewline, err := PeekNewlines(
+		reader,
+		initialPeekWindowSize)
+	if err != nil {
+		return nil, false, err
+	}
+
+	loc := reader.Location
+	if foundInvalidNewline {
+		numBytes = 1
+	}
+
+	if numBytes == 0 {
+		return nil, false, nil
+	}
+
+	_, err = reader.Discard(numBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	if foundInvalidNewline {
+		return nil, true, nil
+	}
+
+	return &TokenCount[SymbolId]{
+		SymbolId:    newlinesToken,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Count:       numNewlines,
+	}, false, nil
+}
+
 // Peek for comment of the form
 //
 //	//<optional comment string>
@@ -263,7 +341,7 @@ func PeekLineComment(
 ) {
 	hasMore := true
 	peekSize := initialPeekWindowSize
-	numBytes := 0 // "//" already peeked by peekNextToken
+	numBytes := 0
 
 	for hasMore {
 		peeked, err := reader.Peek(peekSize)
@@ -306,6 +384,47 @@ func PeekLineComment(
 	}
 
 	return numBytes, nil
+}
+
+func MaybeTokenizeLineComment[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	lineCommentToken SymbolId,
+	preserveContent bool,
+) (
+	*TokenValue[SymbolId],
+	error,
+) {
+	numBytes, err := PeekLineComment(reader, initialPeekWindowSize)
+	if err != nil {
+		return nil, err
+	}
+
+	if numBytes == 0 {
+		return nil, nil
+	}
+
+	loc := reader.Location
+
+	value := ""
+	if preserveContent {
+		peeked, err := reader.Peek(numBytes)
+		if err != nil {
+			panic("should never happen")
+		}
+		value = string(peeked)
+	}
+
+	_, err = reader.Discard(numBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return &TokenValue[SymbolId]{
+		SymbolId:    lineCommentToken,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+	}, nil
 }
 
 // Peek for block comment of the form
@@ -391,6 +510,56 @@ func PeekBlockComment(
 	}
 
 	return numBytes, scopeLevel, nil
+}
+
+func MaybeTokenizeBlockComment[SymbolId any](
+	reader BufferedByteLocationReader,
+	scoped bool,
+	initialPeekWindowSize int,
+	blockCommentToken SymbolId,
+	preserveContent bool,
+) (
+	*TokenValue[SymbolId],
+	bool, // block comment not terminated
+	error,
+) {
+	numBytes, scopeLevel, err := PeekBlockComment(
+		reader,
+		scoped,
+		initialPeekWindowSize)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if numBytes == 0 {
+		return nil, false, nil
+	}
+
+	loc := reader.Location
+
+	value := ""
+	if preserveContent && (!scoped || scopeLevel == 0) {
+		peeked, err := reader.Peek(numBytes)
+		if err != nil {
+			panic("should never happen")
+		}
+		value = string(peeked)
+	}
+
+	_, err = reader.Discard(numBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	if scoped && scopeLevel > 0 {
+		return nil, true, nil
+	}
+
+	return &TokenValue[SymbolId]{
+		SymbolId:    blockCommentToken,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+	}, false, nil
 }
 
 // Strip all leading whitespaces.

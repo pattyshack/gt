@@ -197,10 +197,10 @@ func (Reducer) ToRule(
 					label = fmt.Sprintf("char_slash_%d", charToken.Value[2])
 				}
 				clause.Label = &Token{
-					LRLocation: charToken.Loc(),
-					LRSymbolId: LRIdentifierToken,
-					Value:      label,
+					SymbolId: LRIdentifierToken,
+					Value:    label,
 				}
+				clause.Label.StartPos = charToken.Loc()
 				continue
 			}
 		}

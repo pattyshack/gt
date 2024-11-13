@@ -97,27 +97,33 @@ func (lexer *headerLexer) Next() (Token, error) {
 		return nil, err
 	}
 
-	val, loc, err := lexutil.MaybeTokenizeIdentifier(
+	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
-		lexer.internPool)
+		lexer.internPool,
+		struct{}{})
 	if err != nil {
 		return nil, err
 	}
 
-	switch string(val) {
+	value := ""
+	if token != nil {
+		value = token.Value
+	}
+
+	switch value {
 	case "package":
-		return lexer.tokenizePackage(loc)
+		return lexer.tokenizePackage(token.StartPos)
 	case "import":
-		return lexer.tokenizeImport(loc)
+		return lexer.tokenizeImport(token.StartPos)
 	case "template":
-		return lexer.tokenizeTemplateDecl(loc)
+		return lexer.tokenizeTemplateDecl(token.StartPos)
 	case "":
 		// try to tokenize symbol below
 	default:
 		return nil, lexutil.NewLocationError(
-			loc,
+			token.StartPos,
 			"Unexpected IDENTIFIER %s",
-			string(val))
+			value)
 	}
 
 	symbolStr, _, loc, err := lexer.sectionMarker.MaybeTokenizeSymbol(
@@ -144,20 +150,21 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 		return nil, err
 	}
 
-	val, _, err := lexutil.MaybeTokenizeIdentifier(
+	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
-		lexer.internPool)
+		lexer.internPool,
+		PackageToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if val != "" {
-		return NewValue(PackageToken, pkgLoc, val, false, false), nil
+	if token == nil {
+		return nil, lexutil.NewLocationError(
+			lexer.reader.Location,
+			"Unexpected character")
 	}
 
-	return nil, lexutil.NewLocationError(
-		lexer.reader.Location,
-		"Unexpected character")
+	return NewValue(PackageToken, pkgLoc, token.Value, false, false), nil
 }
 
 func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
@@ -191,21 +198,23 @@ func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
 func (lexer *headerLexer) tokenizeTemplateDecl(
 	declLoc Location) (
 	Token,
-	error) {
+	error,
+) {
 
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	templateName, _, err := lexutil.MaybeTokenizeIdentifier(
+	template, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
-		lexer.internPool)
+		lexer.internPool,
+		"")
 	if err != nil {
 		return nil, err
 	}
 
-	if templateName == "" {
+	if template == nil {
 		return nil, lexutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
@@ -269,14 +278,15 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		lineReader := lexutil.NewBufferedByteLocationReaderFromSlice("", line)
 		lineReader.Location = loc
 
-		argName, _, err := lexutil.MaybeTokenizeIdentifier(
+		argName, err := lexutil.MaybeTokenizeIdentifier(
 			lineReader,
-			lexer.internPool)
+			lexer.internPool,
+			"")
 		if err != nil {
 			return nil, err
 		}
 
-		if argName == "" {
+		if argName == nil {
 			return nil, lexutil.NewLocationError(
 				lineReader.Location,
 				"Expecting argument name")
@@ -298,10 +308,10 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 				"Expecting argument type")
 		}
 
-		args = append(args, Argument{string(argName), string(typeName)})
+		args = append(args, Argument{string(argName.Value), string(typeName)})
 	}
 
-	return NewTemplateDeclaration(declLoc, templateName, args), nil
+	return NewTemplateDeclaration(declLoc, template.Value, args), nil
 }
 
 // Strip all comments from the header section of template.  Note that

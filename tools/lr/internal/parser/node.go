@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/pattyshack/gt/lexutil"
 )
 
 type Definition interface {
@@ -12,24 +13,7 @@ type Definition interface {
 
 var _ LRToken = &Token{}
 
-type Token struct {
-	LRLocation
-
-	LRSymbolId
-	Value string
-}
-
-func (t *Token) Id() LRSymbolId {
-	return t.LRSymbolId
-}
-
-func (t *Token) Loc() LRLocation {
-	return t.LRLocation
-}
-
-func (t *Token) String() string {
-	return fmt.Sprintf("%v: %s (%v)", t.LRSymbolId, t.Value, t.Loc())
-}
+type Token = lexutil.TokenValue[LRSymbolId]
 
 type StartDeclaration struct {
 	LRLocation
@@ -164,9 +148,9 @@ func NewRule(name *RuleDef, clauses []*Clause) *Rule {
 	for _, clause := range clauses {
 		loc := name.Loc()
 		if clause.Label != nil {
-			loc = clause.Label.LRLocation
+			loc = clause.Label.StartPos
 		} else if len(clause.Body) > 0 {
-			loc = clause.Body[0].LRLocation
+			loc = clause.Body[0].StartPos
 		}
 
 		clause.LRLocation = loc
@@ -177,7 +161,7 @@ func NewRule(name *RuleDef, clauses []*Clause) *Rule {
 }
 
 func (r *Rule) Loc() LRLocation {
-	return r.Name.LRLocation
+	return r.Name.StartPos
 }
 
 func (r *Rule) String() string {

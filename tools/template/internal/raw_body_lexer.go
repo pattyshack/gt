@@ -247,11 +247,17 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			trimTrailing), nil
 	}
 
-	id, _, err := lexutil.MaybeTokenizeIdentifier(
+	idToken, err := lexutil.MaybeTokenizeIdentifier(
 		directiveReader,
-		lexer.internPool)
+		lexer.internPool,
+		"")
 	if err != nil && err != io.EOF {
 		return nil, err
+	}
+
+	id := ""
+	if idToken != nil {
+		id = idToken.Value
 	}
 
 	err = lexutil.StripLeadingWhitespaces(directiveReader)
@@ -262,11 +268,17 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	param := ""
 	// check for "else if" compound identifier
 	if id == "else" {
-		second, _, err := lexutil.MaybeTokenizeIdentifier(
+		secondToken, err := lexutil.MaybeTokenizeIdentifier(
 			directiveReader,
-			lexer.internPool)
+			lexer.internPool,
+			"")
 		if err != nil && err != io.EOF {
 			return nil, err
+		}
+
+		second := ""
+		if secondToken != nil {
+			second = secondToken.Value
 		}
 
 		if second == "if" {
@@ -277,7 +289,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 				return nil, err
 			}
 		} else {
-			param = string(second)
+			param = second
 		}
 	}
 
@@ -375,17 +387,22 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 				panic(err) // Should never happen
 			}
 
-			value, _, err := lexutil.MaybeTokenizeIdentifier(
+			value, err := lexutil.MaybeTokenizeIdentifier(
 				lexer.reader,
-				lexer.internPool)
+				lexer.internPool,
+				"")
 			if err != nil {
 				return nil, err
 			}
 
+			val := ""
+			if value != nil {
+				val = value.Value
+			}
 			return NewAtom(
 				SubstitutionToken,
 				loc,
-				string(value),
+				val,
 				false,
 				false), nil
 
