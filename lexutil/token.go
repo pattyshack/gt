@@ -4,6 +4,26 @@ import (
 	"fmt"
 )
 
+type LiteralSubType string
+
+func (t LiteralSubType) String() string { return string(t) }
+
+const (
+	DecimalInteger            = LiteralSubType("decimal integer")
+	HexadecimalInteger        = LiteralSubType("hexadecimal integer")
+	ZeroOPrefixedOctalInteger = LiteralSubType("0o-prefixed octal integer")
+	ZeroPrefixedOctalInteger  = LiteralSubType("0-prefixed octal integer")
+	BinaryInteger             = LiteralSubType("binary integer")
+
+	DecimalFloat     = LiteralSubType("decimal float")
+	HexadecimalFloat = LiteralSubType("hexadecimal float")
+
+	SingleLineString    = LiteralSubType("single line string")
+	MultiLineString     = LiteralSubType("mutli line string")
+	RawSingleLineString = LiteralSubType("raw single line string")
+	RawMultiLineString  = LiteralSubType("raw mutli line string")
+)
+
 type StartEndPos struct {
 	StartPos Location
 	EndPos   Location

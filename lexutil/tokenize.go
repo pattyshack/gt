@@ -737,10 +737,12 @@ func (symbols ConstantSymbols[T]) MaybeTokenizeSymbol(
 }
 
 type PeekStringResult struct {
-	FoundStartMarker bool
-	NumBytes         int
-	ContentLength    int
-	ErrorMsg         string
+	StartMarkerLength int // includes the raw string prefix
+	EndMarkerLength   int
+	FoundStartMarker  bool
+	NumBytes          int
+	ContentLength     int
+	ErrorMsg          string
 }
 
 func PeekString(
@@ -759,10 +761,13 @@ func PeekString(
 	peekSize := initialPeekWindowSize
 	hasMore := true
 
-	result := PeekStringResult{}
+	leadingBytes := skipLeadingBytes + markerLength
+	result := PeekStringResult{
+		StartMarkerLength: leadingBytes,
+		EndMarkerLength:   markerLength,
+	}
 
 	checkStartMarker := true
-	leadingBytes := skipLeadingBytes + markerLength
 	for hasMore {
 		peeked, err := reader.Peek(leadingBytes + peekSize)
 		if len(peeked) > 0 && err == io.EOF {
@@ -927,6 +932,176 @@ func PeekString(
 
 	result.ErrorMsg = typeName + " not terminated"
 	return result, nil
+}
+
+// Rune character literal of the form: 'c'
+func MaybeTokenizeRuneLiteral[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	internPool *stringutil.InternPool,
+	runeSymbol SymbolId,
+) (
+	*TokenValue[SymbolId],
+	string,
+	error,
+) {
+	result, err := PeekString(
+		reader,
+		initialPeekWindowSize,
+		"rune",
+		0, // skip leading bytes
+		'\'',
+		1,     // marker length
+		false, // allow multiline
+		true)  // allow escaped
+	if err != nil {
+		return nil, "", err
+	}
+
+	if !result.FoundStartMarker {
+		return nil, "", nil
+	}
+
+	loc := reader.Location
+
+	value := ""
+	if result.ErrorMsg == "" {
+		if result.ContentLength > 1 {
+			result.ErrorMsg = "more than one character in rune literal"
+		} else if result.ContentLength < 1 {
+			result.ErrorMsg = "empty rune literal or unescaped '"
+		} else {
+			peeked, err := reader.Peek(result.NumBytes)
+			if err != nil {
+				panic("should never happen")
+			}
+
+			if len(peeked) == 3 ||
+				(len(peeked) == 4 && peeked[1] == '\\') { // intern ascii
+				value = internPool.InternBytes(peeked)
+			} else {
+				value = string(peeked)
+			}
+		}
+	}
+
+	_, err = reader.Discard(result.NumBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return &TokenValue[SymbolId]{
+		SymbolId:    runeSymbol,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+	}, result.ErrorMsg, nil
+}
+
+func PeekStringLiteral[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	internPool *stringutil.InternPool,
+	stringSymbol SymbolId,
+	subType LiteralSubType,
+	useBacktickMarker bool, // false for double quote
+) (
+	PeekStringResult,
+	error,
+) {
+	allowEscaped := true
+	leadingBytes := 0
+	if subType == RawSingleLineString || subType == RawMultiLineString {
+		peeked, err := reader.Peek(1)
+		if err != nil {
+			return PeekStringResult{}, err
+		}
+
+		if peeked[0] != 'r' {
+			return PeekStringResult{}, nil
+		}
+
+		allowEscaped = false
+		leadingBytes = 1
+	}
+
+	allowMultiline := false
+	markerLength := 1
+	if subType == MultiLineString || subType == RawMultiLineString {
+		allowMultiline = true
+		markerLength = 3
+	}
+
+	marker := byte('"')
+	if useBacktickMarker {
+		marker = '`'
+	}
+
+	return PeekString(
+		reader,
+		initialPeekWindowSize,
+		string(subType),
+		leadingBytes,
+		marker,
+		markerLength,
+		allowMultiline,
+		allowEscaped)
+}
+
+func MaybeTokenizeStringLiteral[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	internPool *stringutil.InternPool,
+	stringSymbol SymbolId,
+	subType LiteralSubType,
+	useBacktickMarker bool, // false for double quote
+) (
+	*TokenValue[SymbolId],
+	string,
+	error,
+) {
+	result, err := PeekStringLiteral(
+		reader,
+		initialPeekWindowSize,
+		internPool,
+		stringSymbol,
+		subType,
+		useBacktickMarker)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if !result.FoundStartMarker {
+		return nil, "", nil
+	}
+
+	loc := reader.Location
+
+	value := ""
+	if result.ErrorMsg == "" {
+		peeked, err := reader.Peek(result.NumBytes)
+		if err != nil {
+			panic("should never happen")
+		}
+
+		if len(peeked) <= result.StartMarkerLength+result.EndMarkerLength+1 {
+			// intern empty string and single char string
+			value = internPool.InternBytes(peeked)
+		} else {
+			value = string(peeked)
+		}
+	}
+
+	_, err = reader.Discard(result.NumBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	return &TokenValue[SymbolId]{
+		SymbolId:    stringSymbol,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+		SubType:     subType,
+	}, result.ErrorMsg, nil
 }
 
 func peekDigits(
@@ -1101,26 +1276,6 @@ func peekFloat(
 
 	return 0, nil
 }
-
-type LiteralSubType string
-
-func (t LiteralSubType) String() string { return string(t) }
-
-const (
-	DecimalInteger            = LiteralSubType("decimal integer")
-	HexadecimalInteger        = LiteralSubType("hexadecimal integer")
-	ZeroOPrefixedOctalInteger = LiteralSubType("0o-prefixed octal integer")
-	ZeroPrefixedOctalInteger  = LiteralSubType("0-prefixed octal integer")
-	BinaryInteger             = LiteralSubType("binary integer")
-
-	DecimalFloat     = LiteralSubType("decimal float")
-	HexadecimalFloat = LiteralSubType("hexadecimal float")
-
-	SingleLineString    = LiteralSubType("single line string")
-	MultiLineString     = LiteralSubType("mutli line string")
-	RawSingleLineString = LiteralSubType("raw single line string")
-	RawMultiLineString  = LiteralSubType("raw mutli line string")
-)
 
 type PeekIntegerOrFloatResult struct {
 	NumBytes   int
