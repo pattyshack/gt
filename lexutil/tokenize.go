@@ -119,13 +119,14 @@ func PeekIdentifier(
 // and return the identifier value.  Otherwise, return ""
 func MaybeTokenizeIdentifier[SymbolId any](
 	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
 	internPool *stringutil.InternPool,
 	identifierToken SymbolId,
 ) (
 	*TokenValue[SymbolId],
 	error,
 ) {
-	size, err := PeekIdentifier(reader, 0, 32)
+	size, err := PeekIdentifier(reader, 0, initialPeekWindowSize)
 	if err != nil {
 		return nil, err
 	}
@@ -551,15 +552,13 @@ func MaybeTokenizeBlockComment[SymbolId any](
 		panic("should never happen")
 	}
 
-	if scoped && scopeLevel > 0 {
-		return nil, true, nil
-	}
+	notTerminated := scoped && scopeLevel > 0
 
 	return &TokenValue[SymbolId]{
 		SymbolId:    blockCommentToken,
 		StartEndPos: NewStartEndPos(loc, reader.Location),
 		Value:       value,
-	}, false, nil
+	}, notTerminated, nil
 }
 
 // Strip all leading whitespaces.
