@@ -316,15 +316,11 @@ func MaybeTokenizeNewlines[SymbolId any](
 		panic("should never happen")
 	}
 
-	if foundInvalidNewline {
-		return nil, true, nil
-	}
-
 	return &TokenCount[SymbolId]{
 		SymbolId:    newlinesToken,
 		StartEndPos: NewStartEndPos(loc, reader.Location),
 		Count:       numNewlines,
-	}, false, nil
+	}, foundInvalidNewline, nil
 }
 
 // Peek for comment of the form
