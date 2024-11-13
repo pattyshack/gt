@@ -753,3 +753,373 @@ func PeekString(
 	result.ErrorMsg = typeName + " not terminated"
 	return result, nil
 }
+
+func peekDigits(
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	offset int,
+	isDigit func(rune) bool,
+	requireLeadingDigit bool,
+) (
+	int,
+	error,
+) {
+	hasMore := true
+	peekSize := initialPeekWindowSize
+	numBytes := 0
+
+	for hasMore {
+		peeked, err := reader.Peek(offset + peekSize)
+		if len(peeked) >= offset && err == io.EOF {
+			hasMore = false
+			err = nil
+		}
+		if err != nil {
+			return 0, err
+		}
+
+		remaining := peeked[offset+numBytes:]
+		for len(remaining) > 0 {
+			char := remaining[0]
+			if isDigit(rune(char)) {
+				numBytes++
+				remaining = remaining[1:]
+			} else if char == '_' {
+				if requireLeadingDigit && numBytes == 0 {
+					return numBytes, nil
+				}
+
+				if len(remaining) < 2 {
+					if hasMore {
+						// read more bytes
+						break
+					} else { // the int is followed by a '_'
+						return numBytes, nil
+					}
+				}
+
+				if isDigit(rune(remaining[1])) {
+					numBytes += 2
+					remaining = remaining[2:]
+				} else { // the int is followed by a '_'
+					return numBytes, nil
+				}
+			} else {
+				return numBytes, nil
+			}
+		}
+
+		peekSize *= 2
+	}
+
+	return numBytes, nil
+}
+
+func peekFloat(
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	leadingIntBytes int,
+	isHex bool, // false = decimal
+) (
+	int,
+	error,
+) {
+	isDigit := IsDecimalDigit
+	intPrefixLen := 0 // no prefix
+	lowerExp := byte('e')
+	upperExp := byte('E')
+	if isHex {
+		isDigit = IsHexadecimalDigit
+		intPrefixLen = 2 // "0x" or "0X"
+		lowerExp = 'p'
+		upperExp = 'P'
+	}
+
+	// peek for (hexa)decimal points of the form DOT digits
+
+	floatBytes := leadingIntBytes
+	peeked, err := reader.Peek(floatBytes + 1)
+	if len(peeked) > 0 && err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	if len(peeked) <= floatBytes {
+		// can't be a float without decimal point or exponent
+		return 0, nil
+	}
+
+	if peeked[floatBytes] == '.' {
+		floatBytes++
+
+		digitBytes, err := peekDigits(
+			reader,
+			initialPeekWindowSize,
+			floatBytes,
+			isDigit,
+			true)
+		if err != nil {
+			return 0, err
+		}
+
+		if digitBytes == 0 && leadingIntBytes == intPrefixLen {
+			// ".", without leading and trailing digits, is not a valid float
+			return 0, err
+		}
+
+		floatBytes += digitBytes
+	}
+
+	// peek for exponent of the form [eEpP][+-]?digits
+
+	peeked, err = reader.Peek(floatBytes + 2)
+	if len(peeked) > 0 && err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	if len(peeked) <= floatBytes {
+		if isHex { // exponent is not optional for hexadecimal
+			return 0, nil
+		} else if floatBytes > leadingIntBytes {
+			// a valid decimal float without exponent
+			return floatBytes, nil
+		}
+	}
+
+	exp := peeked[floatBytes]
+	if exp == lowerExp || exp == upperExp {
+		prefix := 1
+		if len(peeked) == floatBytes+2 {
+			char := peeked[floatBytes+1]
+			if char == '+' || char == '-' {
+				prefix = 2
+			}
+		}
+
+		exponentDigits, err := peekDigits(
+			reader,
+			initialPeekWindowSize,
+			floatBytes+prefix,
+			isDigit,
+			true)
+		if err != nil {
+			return 0, err
+		}
+
+		if exponentDigits > 0 {
+			floatBytes += prefix + exponentDigits
+		} else if isHex { // exponent is not optional for hexadecimal
+			return 0, err
+		}
+	} else if isHex { // exponent is not optional for hexadecimal
+		return 0, err
+	}
+
+	if floatBytes > leadingIntBytes {
+		return floatBytes, nil
+	}
+
+	return 0, nil
+}
+
+type LiteralSubType string
+
+func (t LiteralSubType) String() string { return string(t) }
+
+const (
+	DecimalInteger            = LiteralSubType("decimal integer")
+	HexadecimalInteger        = LiteralSubType("hexadecimal integer")
+	ZeroOPrefixedOctalInteger = LiteralSubType("0o-prefixed octal integer")
+	ZeroPrefixedOctalInteger  = LiteralSubType("0-prefixed octal integer")
+	BinaryInteger             = LiteralSubType("binary integer")
+
+	DecimalFloat     = LiteralSubType("decimal float")
+	HexadecimalFloat = LiteralSubType("hexadecimal float")
+
+	SingleLineString    = LiteralSubType("single line string")
+	MultiLineString     = LiteralSubType("mutli line string")
+	RawSingleLineString = LiteralSubType("raw single line string")
+	RawMultiLineString  = LiteralSubType("raw mutli line string")
+)
+
+type PeekIntegerOrFloatResult struct {
+	NumBytes   int
+	IsNegative bool
+	IsFloat    bool
+	SubType    LiteralSubType
+	HasDigits  bool
+}
+
+func PeekIntegerOrFloat(
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+) (
+	PeekIntegerOrFloatResult,
+	error,
+) {
+	peeked, err := reader.Peek(3)
+	if len(peeked) > 0 && err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return PeekIntegerOrFloatResult{}, err
+	}
+
+	isNegative := false
+	totalBytes := 0
+
+	if peeked[0] == '-' {
+		isNegative = true
+		totalBytes = 1
+		peeked = peeked[1:]
+	}
+
+	if len(peeked) == 0 {
+		return PeekIntegerOrFloatResult{}, err
+	}
+
+	char := peeked[0]
+	if char == '.' {
+		totalFloatBytes, err := peekFloat(
+			reader,
+			initialPeekWindowSize,
+			totalBytes,
+			false)
+		if err != nil {
+			return PeekIntegerOrFloatResult{}, err
+		}
+
+		if totalFloatBytes == 0 {
+			return PeekIntegerOrFloatResult{}, nil
+		} else {
+			return PeekIntegerOrFloatResult{
+				NumBytes:   totalFloatBytes,
+				IsNegative: isNegative,
+				IsFloat:    true,
+				SubType:    DecimalFloat,
+				HasDigits:  true,
+			}, nil
+		}
+	}
+
+	if !IsDecimalDigit(rune(char)) {
+		return PeekIntegerOrFloatResult{}, nil
+	}
+
+	subType := DecimalInteger
+	hasDigits := true
+	totalBytes++
+
+	if char != '0' {
+		numDigits, err := peekDigits(
+			reader,
+			initialPeekWindowSize,
+			totalBytes,
+			IsDecimalDigit,
+			false)
+		if err != nil {
+			return PeekIntegerOrFloatResult{}, err
+		}
+
+		totalBytes += numDigits
+	} else if len(peeked) > 1 {
+		switch peeked[1] {
+		case 'b', 'B':
+			totalBytes++
+			numDigits, err := peekDigits(
+				reader,
+				initialPeekWindowSize,
+				totalBytes,
+				IsBinaryDigit,
+				false)
+			if err != nil {
+				return PeekIntegerOrFloatResult{}, err
+			}
+
+			subType = BinaryInteger
+			hasDigits = numDigits != 0
+			totalBytes += numDigits
+		case 'o', 'O':
+			totalBytes++
+			numDigits, err := peekDigits(
+				reader,
+				initialPeekWindowSize,
+				totalBytes,
+				IsOctalDigit,
+				false)
+			if err != nil {
+				return PeekIntegerOrFloatResult{}, err
+			}
+
+			subType = ZeroOPrefixedOctalInteger
+			hasDigits = numDigits != 0
+			totalBytes += numDigits
+		case 'x', 'X':
+			totalBytes++
+			numDigits, err := peekDigits(
+				reader,
+				initialPeekWindowSize,
+				totalBytes,
+				IsHexadecimalDigit,
+				false)
+			if err != nil {
+				return PeekIntegerOrFloatResult{}, err
+			}
+
+			subType = HexadecimalInteger
+			hasDigits = numDigits != 0
+			totalBytes += numDigits
+		default:
+			numDigits, err := peekDigits(
+				reader,
+				initialPeekWindowSize,
+				totalBytes,
+				IsOctalDigit,
+				false)
+			if err != nil {
+				return PeekIntegerOrFloatResult{}, err
+			}
+
+			if numDigits > 0 { // otherwise is a decimal "0"
+				subType = ZeroPrefixedOctalInteger
+				totalBytes += numDigits
+			}
+		}
+	}
+
+	result := PeekIntegerOrFloatResult{
+		NumBytes:   totalBytes,
+		IsNegative: isNegative,
+		SubType:    subType,
+		HasDigits:  hasDigits,
+	}
+
+	if subType == DecimalInteger || subType == HexadecimalInteger {
+		isHex := subType == HexadecimalInteger
+		totalFloatBytes, err := peekFloat(
+			reader,
+			initialPeekWindowSize,
+			totalBytes,
+			isHex)
+		if err != nil {
+			return result, nil // we still have a valid integer
+		}
+
+		if totalFloatBytes > 0 {
+			result.NumBytes = totalFloatBytes
+			result.IsFloat = true
+			result.HasDigits = true
+			result.SubType = DecimalFloat
+			if isHex {
+				result.SubType = HexadecimalFloat
+			}
+		}
+	}
+
+	return result, nil
+}
