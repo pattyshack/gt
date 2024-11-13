@@ -302,14 +302,17 @@ func MaybeTokenizeNewlines[SymbolId any](
 		return nil, false, err
 	}
 
-	loc := reader.Location
-	if foundInvalidNewline {
-		numBytes = 1
+	if numBytes == 0 {
+		if foundInvalidNewline {
+			numBytes = 1
+		} else {
+			return nil, false, nil
+		}
+	} else {
+		foundInvalidNewline = false
 	}
 
-	if numBytes == 0 {
-		return nil, false, nil
-	}
+	loc := reader.Location
 
 	_, err = reader.Discard(numBytes)
 	if err != nil {
@@ -575,9 +578,13 @@ func StripLeadingWhitespaces(
 			modified = true
 		}
 
-		num, _, _, err = PeekNewlines(reader, 32)
+		num, _, foundInvalid, err := PeekNewlines(reader, 32)
 		if err != nil {
 			return err
+		}
+
+		if num == 0 && foundInvalid {
+			num = 1
 		}
 
 		if num > 0 {
@@ -608,9 +615,13 @@ func StripLeadingWhitespacesAndComments(
 			modified = true
 		}
 
-		num, _, _, err = PeekNewlines(reader, 32)
+		num, _, foundInvalid, err := PeekNewlines(reader, 32)
 		if err != nil {
 			return err
+		}
+
+		if num == 0 && foundInvalid {
+			num = 1
 		}
 
 		if num > 0 {
