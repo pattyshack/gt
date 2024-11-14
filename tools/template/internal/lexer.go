@@ -24,7 +24,7 @@ var (
 )
 
 type currentLexer interface {
-	Next() (Token, error)
+	Next() (lexutil.Token[SymbolId], error)
 }
 
 type LexerImpl struct {
@@ -67,7 +67,7 @@ func (lexer *LexerImpl) CurrentLocation() lexutil.Location {
 	return lexer.reader.Location
 }
 
-func (lexer *LexerImpl) Next() (Token, error) {
+func (lexer *LexerImpl) Next() (lexutil.Token[SymbolId], error) {
 	token, err := lexer.currentLexer.Next()
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ type headerLexer struct {
 	templateDeclMarker lexutil.ConstantSymbols[struct{}]
 }
 
-func (lexer *headerLexer) Next() (Token, error) {
+func (lexer *headerLexer) Next() (lexutil.Token[SymbolId], error) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 func (lexer *headerLexer) tokenizePackage(
 	pkgPos lexutil.StartEndPos,
 ) (
-	Token,
+	lexutil.Token[SymbolId],
 	error,
 ) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
@@ -177,7 +177,7 @@ func (lexer *headerLexer) tokenizePackage(
 func (lexer *headerLexer) tokenizeImport(
 	importPos lexutil.StartEndPos,
 ) (
-	Token,
+	lexutil.Token[SymbolId],
 	error,
 ) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
@@ -211,7 +211,7 @@ func (lexer *headerLexer) tokenizeImport(
 func (lexer *headerLexer) tokenizeTemplateDecl(
 	declPos lexutil.StartEndPos,
 ) (
-	Token,
+	lexutil.Token[SymbolId],
 	error,
 ) {
 
@@ -493,7 +493,7 @@ func (lexer *bodyLexer) fillTokensAndMaybeTrimWhitespaces() {
 	}
 }
 
-func (lexer *bodyLexer) Next() (Token, error) {
+func (lexer *bodyLexer) Next() (lexutil.Token[SymbolId], error) {
 	lexer.fillTokensAndMaybeTrimWhitespaces()
 
 	if len(lexer.lookAhead) > 0 {

@@ -41,7 +41,7 @@ template File {
 
     Location                interface{}
     StartEndPos             interface{}
-    TokenType               string
+    TokenType               interface{}
 
     LexerType               string
     ReducerType             string
@@ -71,7 +71,6 @@ template File {
     OrderedValueTypes       lr.ParamList
 
     OutputDebugNonKernelItems bool
-    GenerateEndPos            bool
 }
 
 %%
@@ -121,14 +120,6 @@ nextId := func() int {
     [[-end-]]
 [[-end]]
 )
-
-type $TokenType interface {
-    Id() $SymbolIdType
-    Loc() $Location
-[[-if GenerateEndPos]]
-    End() $Location
-[[-end]]
-}
 
 type $LexerType interface {
     // Note: Return io.EOF to indicate end of stream
@@ -569,7 +560,6 @@ $(term.CodeGenSymbolConst)
     return s.Generic_.Loc()
 }
 
-[[-if GenerateEndPos]]
 func (s *$SymbolType) End() $Location {
     type locator interface { End() $Location }
     switch s.SymbolId_ {
@@ -595,7 +585,6 @@ $(term.CodeGenSymbolConst)
     }
     return s.Generic_.End()
 }
-[[-end]]
 
 type $SymbolStackType struct {
     lexer $LexerType

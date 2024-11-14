@@ -54,7 +54,8 @@ func (ReducerImpl) ToFor(
 	error) {
 
 	return &For{
-		Branch{for_, body},
+		StartEndPos: lexutil.NewStartEndPos(for_.StartPos, end.EndPos),
+		Branch:      Branch{for_, body},
 	}, nil
 }
 
@@ -76,6 +77,7 @@ func (ReducerImpl) WithWhitespaceToSwitch(
 	}
 
 	return &Switch{
+		lexutil.NewStartEndPos(switch_.StartPos, end.EndPos),
 		switch_,
 		cases,
 		default_,
@@ -91,6 +93,7 @@ func (ReducerImpl) WithoutWhitespaceToSwitch(
 	error) {
 
 	return &Switch{
+		lexutil.NewStartEndPos(switch_.StartPos, end.EndPos),
 		switch_,
 		cases,
 		default_,
@@ -139,6 +142,7 @@ func (ReducerImpl) ToIf(
 	error) {
 
 	return &If{
+		lexutil.NewStartEndPos(predicate.StartPos, end.EndPos),
 		Branch{predicate, body},
 		elseIfs,
 		else_,

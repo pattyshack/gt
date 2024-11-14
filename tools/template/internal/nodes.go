@@ -13,8 +13,7 @@ import (
 type Statement interface {
 	IsStatement()
 
-	Id() SymbolId
-	Loc() lexutil.Location
+	lexutil.Token[SymbolId]
 }
 
 type TToken struct {
@@ -96,6 +95,8 @@ type Branch struct {
 }
 
 type For struct {
+	lexutil.StartEndPos
+
 	Branch
 }
 
@@ -103,11 +104,9 @@ func (For) IsStatement() {}
 
 func (For) Id() SymbolId { return ForType }
 
-func (f *For) Loc() lexutil.Location {
-	return f.Predicate.Loc()
-}
-
 type Switch struct {
+	lexutil.StartEndPos
+
 	Switch  *Value
 	Cases   []*Branch
 	Default *Branch
@@ -117,11 +116,9 @@ func (Switch) IsStatement() {}
 
 func (Switch) Id() SymbolId { return SwitchType }
 
-func (s *Switch) Loc() lexutil.Location {
-	return s.Switch.Loc()
-}
-
 type If struct {
+	lexutil.StartEndPos
+
 	If      Branch
 	ElseIfs []*Branch
 	Else    *Branch
@@ -130,10 +127,6 @@ type If struct {
 func (If) IsStatement() {}
 
 func (If) Id() SymbolId { return IfType }
-
-func (i *If) Loc() lexutil.Location {
-	return i.If.Predicate.Loc()
-}
 
 type Argument struct {
 	Name string

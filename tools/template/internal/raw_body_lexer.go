@@ -55,7 +55,7 @@ func init() {
 }
 
 type BodyToken interface {
-	Token
+	lexutil.Token[SymbolId]
 
 	// When true, and the previous statement is text, remove the whitespaces
 	// in the text that are adjacent to this statement, potentially up to and

@@ -23,7 +23,7 @@ var (
 type String string
 
 func (s String) String() string {
-  return string(s)
+	return string(s)
 }
 
 type NameGenerator struct {
@@ -223,7 +223,9 @@ func GenerateGoLRCode(
 			"github.com/pattyshack/gt/lexutil.Location"),
 		StartEndPos: imports.Obj(
 			"github.com/pattyshack/gt/lexutil.StartEndPos"),
-		TokenType:             nameGen.Public("Token"),
+		TokenType: imports.GenericObj(
+			"github.com/pattyshack/gt/lexutil.Token",
+			String(symbolIdType)),
 		LexerType:             nameGen.Public("Lexer"),
 		ReducerType:           nameGen.Public("Reducer"),
 		ErrHandlerType:        nameGen.Public("ParseErrorHandler"),
@@ -244,7 +246,6 @@ func GenerateGoLRCode(
 		States:                    states,
 		OrderedValueTypes:         orderedValueTypes,
 		OutputDebugNonKernelItems: cfg.OutputDebugNonKernelItems,
-		GenerateEndPos:            cfg.GenerateEndPos,
 	}
 
 	return codegen.NewFormattedGoSource(file), nil

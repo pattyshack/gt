@@ -10,7 +10,6 @@ type GoSpec struct {
 	Prefix                    string            `yaml:"prefix"`
 	ValueTypes                map[string]string `yaml:"value_types"`
 	OutputDebugNonKernelItems bool              `yaml:"output_debug_non_kernel_items"`
-	GenerateEndPos            bool              `yaml:"generate_end_pos"`
 }
 
 type RustSpec struct {

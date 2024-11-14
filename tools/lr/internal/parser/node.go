@@ -11,12 +11,10 @@ type Definition interface {
 	String() string
 }
 
-var _ LRToken = &Token{}
-
 type Token = lexutil.TokenValue[LRSymbolId]
 
 type StartDeclaration struct {
-	lexutil.Location
+	lexutil.StartEndPos
 
 	Ids []*Token
 }
@@ -25,14 +23,15 @@ func NewStartDeclaration(
 	start lexutil.TokenValue[LRSymbolId],
 	ids []*Token) *StartDeclaration {
 
-	return &StartDeclaration{
-		Location: start.StartPos,
-		Ids:      ids,
+	pos := start.StartEndPos
+	if len(ids) > 0 {
+		pos.EndPos = ids[len(ids)-1].EndPos
 	}
-}
 
-func (sd *StartDeclaration) Loc() lexutil.Location {
-	return sd.Location
+	return &StartDeclaration{
+		StartEndPos: pos,
+		Ids:         ids,
+	}
 }
 
 func (sd *StartDeclaration) String() string {
@@ -44,6 +43,8 @@ func (sd *StartDeclaration) String() string {
 }
 
 type TermDeclaration struct {
+	lexutil.StartEndPos
+
 	TermType lexutil.TokenValue[LRSymbolId]
 
 	IsTerminal bool
@@ -58,16 +59,21 @@ func NewTermDeclaration(
 	valueType *Token,
 	terms []*Token) *TermDeclaration {
 
-	return &TermDeclaration{
-		TermType:   termType,
-		IsTerminal: termType.Id() == LRTokenToken,
-		ValueType:  valueType,
-		Terms:      terms,
+	pos := termType.StartEndPos
+	if valueType != nil {
+		pos.EndPos = valueType.EndPos
 	}
-}
+	if len(terms) > 0 {
+		pos.EndPos = terms[len(terms)-1].EndPos
+	}
 
-func (td *TermDeclaration) Loc() lexutil.Location {
-	return td.TermType.StartPos
+	return &TermDeclaration{
+		StartEndPos: pos,
+		TermType:    termType,
+		IsTerminal:  termType.Id() == LRTokenToken,
+		ValueType:   valueType,
+		Terms:       terms,
+	}
 }
 
 func (td *TermDeclaration) String() string {
@@ -132,6 +138,10 @@ func (RuleDef) Id() LRSymbolId {
 
 func (def *RuleDef) Loc() lexutil.Location {
 	return def.Name.Loc()
+}
+
+func (def *RuleDef) End() lexutil.Location {
+	return def.ValueType.Loc()
 }
 
 type Rule struct {

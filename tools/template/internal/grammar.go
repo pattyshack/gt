@@ -34,15 +34,10 @@ const (
 	ErrorToken         = SymbolId(276)
 )
 
-type Token interface {
-	Id() SymbolId
-	Loc() lexutil.Location
-}
-
 type Lexer interface {
 	// Note: Return io.EOF to indicate end of stream
 	// Token with unspecified value type should return lexutil.TokenValue[SymbolId]
-	Next() (Token, error)
+	Next() (lexutil.Token[SymbolId], error)
 
 	CurrentLocation() lexutil.Location
 }
@@ -130,12 +125,12 @@ type Reducer interface {
 }
 
 type ParseErrorHandler interface {
-	Error(nextToken Token, parseStack _Stack) error
+	Error(nextToken lexutil.Token[SymbolId], parseStack _Stack) error
 }
 
 type DefaultParseErrorHandler struct{}
 
-func (DefaultParseErrorHandler) Error(nextToken Token, stack _Stack) error {
+func (DefaultParseErrorHandler) Error(nextToken lexutil.Token[SymbolId], stack _Stack) error {
 	return lexutil.NewLocationError(
 		nextToken.Loc(),
 		"syntax error: unexpected symbol %s. expecting %v",
@@ -550,7 +545,7 @@ type Symbol struct {
 	Value        *Value
 }
 
-func NewSymbol(token Token) (*Symbol, error) {
+func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 	symbol, ok := token.(*Symbol)
 	if ok {
 		return symbol, nil
@@ -671,6 +666,58 @@ func (s *Symbol) Loc() lexutil.Location {
 		}
 	}
 	return s.Generic_.Loc()
+}
+
+func (s *Symbol) End() lexutil.Location {
+	type locator interface{ End() lexutil.Location }
+	switch s.SymbolId_ {
+	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
+		loc, ok := interface{}(s.Atom).(locator)
+		if ok {
+			return loc.End()
+		}
+	case OptionalDefaultType, OptionalElseType:
+		loc, ok := interface{}(s.Branch).(locator)
+		if ok {
+			return loc.End()
+		}
+	case CaseListType, ElseIfListType:
+		loc, ok := interface{}(s.Branches).(locator)
+		if ok {
+			return loc.End()
+		}
+	case FileType:
+		loc, ok := interface{}(s.File).(locator)
+		if ok {
+			return loc.End()
+		}
+	case StatementType, AtomType, ForType, SwitchType, IfType:
+		loc, ok := interface{}(s.Statement).(locator)
+		if ok {
+			return loc.End()
+		}
+	case BodyType:
+		loc, ok := interface{}(s.Statements).(locator)
+		if ok {
+			return loc.End()
+		}
+	case TemplateDeclToken:
+		loc, ok := interface{}(s.TemplateDecl).(locator)
+		if ok {
+			return loc.End()
+		}
+	case DefaultToken, ElseToken, EndToken:
+		loc, ok := interface{}(s.Token).(locator)
+		if ok {
+			return loc.End()
+		}
+	case PackageToken, ImportToken, ForToken, SwitchToken, CaseToken, IfToken, ElseIfToken, OptionalImportsType:
+		loc, ok := interface{}(s.Value).(locator)
+		if ok {
+			return loc.End()
+		}
+	}
+	return s.Generic_.End()
 }
 
 type _PseudoSymbolStack struct {
