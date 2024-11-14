@@ -99,6 +99,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 
 	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
+		initialPeekSize,
 		lexer.internPool,
 		struct{}{})
 	if err != nil {
@@ -152,6 +153,7 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 
 	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
+		initialPeekSize,
 		lexer.internPool,
 		PackageToken)
 	if err != nil {
@@ -208,6 +210,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 	template, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
+		initialPeekSize,
 		lexer.internPool,
 		"")
 	if err != nil {
@@ -280,6 +283,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 		argName, err := lexutil.MaybeTokenizeIdentifier(
 			lineReader,
+			initialPeekSize,
 			lexer.internPool,
 			"")
 		if err != nil {

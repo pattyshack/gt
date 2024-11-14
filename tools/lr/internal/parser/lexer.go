@@ -10,6 +10,10 @@ import (
 	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
+const (
+	initialPeekSize = 64
+)
+
 type rawLexer struct {
 	reader lexutil.BufferedByteLocationReader
 
@@ -44,6 +48,10 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 		ConstantSymbols: lexutil.NewConstantSymbols(markersAndSymbols, pool),
 		internPool:      pool,
 	}
+}
+
+func (lexer *rawLexer) CurrentLocation() lexutil.Location {
+	return lexer.reader.Location
 }
 
 func (lexer *rawLexer) Next() (LRToken, error) {
@@ -120,6 +128,7 @@ func (lexer *rawLexer) maybeTokenizeIdentifier() (LRToken, error) {
 	// which then becomes "non-nil" ...
 	token, err := lexutil.MaybeTokenizeIdentifier(
 		lexer.reader,
+		initialPeekSize,
 		lexer.internPool,
 		LRIdentifierToken)
 	if err != nil {

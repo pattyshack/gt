@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	textPeekSize = 1024
+	textPeekSize    = 1024
+	initialPeekSize = 64
 )
 
 var (
@@ -249,6 +250,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 
 	idToken, err := lexutil.MaybeTokenizeIdentifier(
 		directiveReader,
+		initialPeekSize,
 		lexer.internPool,
 		"")
 	if err != nil && err != io.EOF {
@@ -270,6 +272,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	if id == "else" {
 		secondToken, err := lexutil.MaybeTokenizeIdentifier(
 			directiveReader,
+			initialPeekSize,
 			lexer.internPool,
 			"")
 		if err != nil && err != io.EOF {
@@ -389,6 +392,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 
 			value, err := lexutil.MaybeTokenizeIdentifier(
 				lexer.reader,
+				initialPeekSize,
 				lexer.internPool,
 				"")
 			if err != nil {
