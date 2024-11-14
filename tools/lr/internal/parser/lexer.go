@@ -7,7 +7,6 @@ import (
 
 	"github.com/pattyshack/gt/lexutil"
 	"github.com/pattyshack/gt/stringutil"
-	"github.com/pattyshack/gt/tools/lr/parseutil"
 )
 
 const (
@@ -105,20 +104,22 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
 }
 
 func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {
-	value, loc, err := parseutil.MaybeTokenizeCharacter(lexer.reader)
+	token, errMsg, err := lexutil.MaybeTokenizeRuneLiteral(
+		lexer.reader,
+		8,
+		lexer.internPool,
+		LRCharacterToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if value == "" {
+	if token == nil {
 		return nil, nil
 	}
 
-	token := &Token{
-		SymbolId: LRCharacterToken,
-		Value:    value,
+	if errMsg != "" {
+		return nil, lexutil.NewLocationError(token.StartPos, errMsg)
 	}
-	token.StartPos = loc
 
 	return token, nil
 }
