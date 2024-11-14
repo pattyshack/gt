@@ -65,7 +65,7 @@ func populateGoCodeGenVariables(
 			return fmt.Errorf(
 				"Undefined value type for <%s> %s",
 				term.ValueType,
-				term.LRLocation)
+				term.Location)
 		}
 		term.CodeGenType = valueType.ParamType
 
@@ -208,8 +208,7 @@ func GenerateGoLRCode(
 		SymbolIdType:         nameGen.Public("SymbolId"),
 		EndSymbolId:          endSymbol,
 		WildcardSymbolId:     wildcardSymbol,
-		LocationType:         nameGen.Public("Location"),
-		RealLocationType: imports.Obj(
+		LocationType: imports.Obj(
 			"github.com/pattyshack/gt/lexutil.Location"),
 		TokenType:             nameGen.Public("Token"),
 		LexerType:             nameGen.Public("Lexer"),

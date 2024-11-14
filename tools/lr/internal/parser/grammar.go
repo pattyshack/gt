@@ -27,28 +27,26 @@ const (
 	LRSectionContentToken = LRSymbolId(264)
 )
 
-type LRLocation = lexutil.Location
-
 type LRToken interface {
 	Id() LRSymbolId
-	Loc() LRLocation
+	Loc() lexutil.Location
 }
 
 type LRGenericSymbol struct {
 	LRSymbolId
-	StartPos LRLocation
+	StartPos lexutil.Location
 }
 
 func (t LRGenericSymbol) Id() LRSymbolId { return t.LRSymbolId }
 
-func (t LRGenericSymbol) Loc() LRLocation { return t.StartPos }
+func (t LRGenericSymbol) Loc() lexutil.Location { return t.StartPos }
 
 type LRLexer interface {
 	// Note: Return io.EOF to indicate end of stream
 	// Token with unspecified value type should return LRGenericSymbol
 	Next() (LRToken, error)
 
-	CurrentLocation() LRLocation
+	CurrentLocation() lexutil.Location
 }
 
 type LRGrammarReducer interface {
@@ -618,8 +616,8 @@ func (s *LRSymbol) Id() LRSymbolId {
 	return s.SymbolId_
 }
 
-func (s *LRSymbol) Loc() LRLocation {
-	type locator interface{ Loc() LRLocation }
+func (s *LRSymbol) Loc() lexutil.Location {
+	type locator interface{ Loc() lexutil.Location }
 	switch s.SymbolId_ {
 	case LRAdditionalSectionType:
 		loc, ok := interface{}(s.AdditionalSection).(locator)

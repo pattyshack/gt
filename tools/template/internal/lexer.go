@@ -63,7 +63,7 @@ func NewLexer(filename string, input io.Reader) (Lexer, error) {
 	}, nil
 }
 
-func (lexer *LexerImpl) CurrentLocation() Location {
+func (lexer *LexerImpl) CurrentLocation() lexutil.Location {
 	return lexer.reader.Location
 }
 
@@ -145,7 +145,7 @@ func (lexer *headerLexer) Next() (Token, error) {
 		"Unexpected character")
 }
 
-func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
+func (lexer *headerLexer) tokenizePackage(pkgLoc lexutil.Location) (Token, error) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc Location) (Token, error) {
 	return NewValue(PackageToken, pkgLoc, token.Value, false, false), nil
 }
 
-func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
+func (lexer *headerLexer) tokenizeImport(importLoc lexutil.Location) (Token, error) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func (lexer *headerLexer) tokenizeImport(importLoc Location) (Token, error) {
 }
 
 func (lexer *headerLexer) tokenizeTemplateDecl(
-	declLoc Location) (
+	declLoc lexutil.Location) (
 	Token,
 	error,
 ) {

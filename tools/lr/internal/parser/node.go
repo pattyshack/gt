@@ -7,7 +7,7 @@ import (
 )
 
 type Definition interface {
-	Loc() LRLocation
+	Loc() lexutil.Location
 	String() string
 }
 
@@ -16,7 +16,7 @@ var _ LRToken = &Token{}
 type Token = lexutil.TokenValue[LRSymbolId]
 
 type StartDeclaration struct {
-	LRLocation
+	lexutil.Location
 
 	Ids []*Token
 }
@@ -26,13 +26,13 @@ func NewStartDeclaration(
 	ids []*Token) *StartDeclaration {
 
 	return &StartDeclaration{
-		LRLocation: start.StartPos,
-		Ids:        ids,
+		Location: start.StartPos,
+		Ids:      ids,
 	}
 }
 
-func (sd *StartDeclaration) Loc() LRLocation {
-	return sd.LRLocation
+func (sd *StartDeclaration) Loc() lexutil.Location {
+	return sd.Location
 }
 
 func (sd *StartDeclaration) String() string {
@@ -66,7 +66,7 @@ func NewTermDeclaration(
 	}
 }
 
-func (td *TermDeclaration) Loc() LRLocation {
+func (td *TermDeclaration) Loc() lexutil.Location {
 	return td.TermType.StartPos
 }
 
@@ -94,7 +94,7 @@ type Clause struct {
 	Passthrough bool
 
 	// set by NewRule
-	LRLocation
+	lexutil.Location
 	Parent *Rule
 
 	SortId int
@@ -130,7 +130,7 @@ func (RuleDef) Id() LRSymbolId {
 	return LRRuleDefToken
 }
 
-func (def *RuleDef) Loc() LRLocation {
+func (def *RuleDef) Loc() lexutil.Location {
 	return def.Name.Loc()
 }
 
@@ -153,14 +153,14 @@ func NewRule(name *RuleDef, clauses []*Clause) *Rule {
 			loc = clause.Body[0].StartPos
 		}
 
-		clause.LRLocation = loc
+		clause.Location = loc
 		clause.Parent = rule
 	}
 
 	return rule
 }
 
-func (r *Rule) Loc() LRLocation {
+func (r *Rule) Loc() lexutil.Location {
 	return r.Name.StartPos
 }
 

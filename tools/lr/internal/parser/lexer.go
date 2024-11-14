@@ -240,7 +240,7 @@ func (lexer *Lexer) Next() (LRToken, error) {
 	return curr, nil
 }
 
-func (lexer *Lexer) CurrentLocation() LRLocation {
+func (lexer *Lexer) CurrentLocation() lexutil.Location {
 	tokens, err := lexer.buffered.Peek(1)
 	if err != nil || len(tokens) == 0 {
 		return lexer.base.reader.Location

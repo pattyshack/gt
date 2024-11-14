@@ -1,5 +1,9 @@
 package template
 
+import (
+	"github.com/pattyshack/gt/lexutil"
+)
+
 // Note: in case of text, we need to modify the value and escape ` and /
 // correctly
 
@@ -10,7 +14,7 @@ type Statement interface {
 	IsStatement()
 
 	Id() SymbolId
-	Loc() Location
+	Loc() lexutil.Location
 }
 
 type TToken struct {
@@ -29,7 +33,7 @@ type TToken struct {
 
 func NewTToken(
 	id SymbolId,
-	loc Location,
+	loc lexutil.Location,
 	trimLeading bool,
 	trimTrailing bool) *TToken {
 
@@ -56,7 +60,7 @@ type Value struct {
 
 func NewValue(
 	id SymbolId,
-	loc Location,
+	loc lexutil.Location,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Value {
@@ -72,7 +76,7 @@ type Atom struct {
 
 func NewAtom(
 	id SymbolId,
-	loc Location,
+	loc lexutil.Location,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Atom {
@@ -95,7 +99,7 @@ func (For) IsStatement() {}
 
 func (For) Id() SymbolId { return ForType }
 
-func (f *For) Loc() Location {
+func (f *For) Loc() lexutil.Location {
 	return f.Predicate.Loc()
 }
 
@@ -109,7 +113,7 @@ func (Switch) IsStatement() {}
 
 func (Switch) Id() SymbolId { return SwitchType }
 
-func (s *Switch) Loc() Location {
+func (s *Switch) Loc() lexutil.Location {
 	return s.Switch.Loc()
 }
 
@@ -123,7 +127,7 @@ func (If) IsStatement() {}
 
 func (If) Id() SymbolId { return IfType }
 
-func (i *If) Loc() Location {
+func (i *If) Loc() lexutil.Location {
 	return i.If.Predicate.Loc()
 }
 
@@ -140,7 +144,7 @@ type TemplateDeclaration struct {
 }
 
 func NewTemplateDeclaration(
-	loc Location,
+	loc lexutil.Location,
 	name string,
 	args []Argument) *TemplateDeclaration {
 

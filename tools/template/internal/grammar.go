@@ -34,28 +34,26 @@ const (
 	ErrorToken         = SymbolId(276)
 )
 
-type Location = lexutil.Location
-
 type Token interface {
 	Id() SymbolId
-	Loc() Location
+	Loc() lexutil.Location
 }
 
 type GenericSymbol struct {
 	SymbolId
-	StartPos Location
+	StartPos lexutil.Location
 }
 
 func (t GenericSymbol) Id() SymbolId { return t.SymbolId }
 
-func (t GenericSymbol) Loc() Location { return t.StartPos }
+func (t GenericSymbol) Loc() lexutil.Location { return t.StartPos }
 
 type Lexer interface {
 	// Note: Return io.EOF to indicate end of stream
 	// Token with unspecified value type should return GenericSymbol
 	Next() (Token, error)
 
-	CurrentLocation() Location
+	CurrentLocation() lexutil.Location
 }
 
 type FileReducer interface {
@@ -632,8 +630,8 @@ func (s *Symbol) Id() SymbolId {
 	return s.SymbolId_
 }
 
-func (s *Symbol) Loc() Location {
-	type locator interface{ Loc() Location }
+func (s *Symbol) Loc() lexutil.Location {
+	type locator interface{ Loc() lexutil.Location }
 	switch s.SymbolId_ {
 	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
 		loc, ok := interface{}(s.Atom).(locator)

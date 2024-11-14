@@ -39,8 +39,7 @@ template File {
     EndSymbolId             string
     WildcardSymbolId        string
 
-    LocationType            string
-    RealLocationType        interface{}
+    LocationType            interface{}
     TokenType               string
 
     LexerType               string
@@ -122,8 +121,6 @@ nextId := func() int {
 [[-end]]
 )
 
-type $LocationType = $RealLocationType
-
 type $TokenType interface {
     Id() $SymbolIdType
     Loc() $LocationType
@@ -170,9 +167,9 @@ type $(rule.CodeGenReducerInterface) interface {
         [[-end-]]
 
         [[-if clause.Label == ""]]
-    // $(clause.LRLocation.ShortString()): $(rule.Name) -> ...
+    // $(clause.Location.ShortString()): $(rule.Name) -> ...
         [[-else]]
-    // $(clause.LRLocation.ShortString()): $(rule.Name) -> $(clause.Label): ...
+    // $(clause.Location.ShortString()): $(rule.Name) -> $(clause.Label): ...
         [[-end-]]
 
         [[-$ paramNameCount := map[string]int{}]]
@@ -696,7 +693,7 @@ func (act *$ActionType) ReduceSymbol(
         [[-end]]
         symbol.SymbolId_ = $(rule.CodeGenSymbolConst)
         [[-if clause.Passthrough]]
-        //line $(clause.LRLocation)
+        //line $(clause.Location)
         symbol.$(rule.ValueType) = args[0].$(clause.Bindings[0].ValueType)
         err = nil
         [[-else]]

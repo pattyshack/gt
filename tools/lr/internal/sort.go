@@ -7,11 +7,11 @@ func (list ByDeclLoc) Len() int {
 }
 
 func (list ByDeclLoc) Less(i int, j int) bool {
-	if list[i].LRLocation.Line == list[j].LRLocation.Line {
-		return list[i].LRLocation.Column < list[j].LRLocation.Column
+	if list[i].Location.Line == list[j].Location.Line {
+		return list[i].Location.Column < list[j].Location.Column
 	}
 
-	return list[i].LRLocation.Line < list[j].LRLocation.Line
+	return list[i].Location.Line < list[j].Location.Line
 }
 
 func (list ByDeclLoc) Swap(i int, j int) {

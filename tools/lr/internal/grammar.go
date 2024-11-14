@@ -5,9 +5,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pattyshack/gt/tools/lr/internal/parser"
-
 	"gopkg.in/yaml.v3"
+
+	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 type Clause struct {
 	SortId int // 0 (and negatives) are reserved for the start rules.
-	parser.LRLocation
+	lexutil.Location
 
 	Label string
 
@@ -31,7 +32,7 @@ type Clause struct {
 
 type Term struct {
 	Name string
-	parser.LRLocation
+	lexutil.Location
 
 	SymbolId parser.LRSymbolId
 
@@ -39,7 +40,7 @@ type Term struct {
 
 	ValueType string
 
-	RuleLocation      parser.LRLocation
+	RuleLocation      lexutil.Location
 	NumReducerClauses int
 	Clauses           []*Clause
 
@@ -106,7 +107,7 @@ func classifyDefinitions(
 						fmt.Sprintf(
 							"Duplicate token/type declaration: %s %s %s",
 							term.Value,
-							prev.LRLocation.ShortString(),
+							prev.Location.ShortString(),
 							term.StartPos.ShortString()))
 				}
 
@@ -117,7 +118,7 @@ func classifyDefinitions(
 
 				terms[term.Value] = &Term{
 					Name:       term.Value,
-					LRLocation: term.StartPos,
+					Location:   term.StartPos,
 					SymbolId:   term.Id(),
 					IsTerminal: def.IsTerminal,
 					ValueType:  valueType,
@@ -136,7 +137,7 @@ func classifyDefinitions(
 
 				terms[def.Name.Value] = &Term{
 					Name:       def.Name.Value,
-					LRLocation: def.Loc(),
+					Location:   def.Loc(),
 					SymbolId:   def.Name.Id(),
 					IsTerminal: false,
 					ValueType:  valueType,
@@ -150,7 +151,7 @@ func classifyDefinitions(
 					fmt.Sprintf(
 						"Rule has conflicting value type declarations: %s %v vs %v",
 						def.Name.Value,
-						term.LRLocation,
+						term.Location,
 						def.Loc().ShortString()))
 			}
 
@@ -179,7 +180,7 @@ func classifyDefinitions(
 
 	startRules := []string{}
 	if start != nil {
-		ids := map[string]parser.LRLocation{}
+		ids := map[string]lexutil.Location{}
 		for _, id := range start.Ids {
 			prev, ok := ids[id.Value]
 			if ok {
@@ -228,7 +229,7 @@ func bindTerms(
 			}
 			clause := &Clause{
 				SortId:      parsedClause.SortId,
-				LRLocation:  parsedClause.LRLocation,
+				Location:    parsedClause.Location,
 				Label:       label,
 				Passthrough: parsedClause.Passthrough,
 				Bindings:    []*Term{},
@@ -263,7 +264,7 @@ func bindTerms(
 				fmt.Sprintf(
 					"No rule specified for type: %s %v",
 					name,
-					term.LRLocation))
+					term.Location))
 		} else if term.IsTerminal && ok {
 			errStrs = append(
 				errStrs,
@@ -328,7 +329,7 @@ func checkReachability(starts []*Term, terms map[string]*Term) []string {
 				fmt.Sprintf(
 					"Unused token/type. Not reachable from start rule: %s %v",
 					term.Name,
-					term.LRLocation))
+					term.Location))
 		}
 	}
 

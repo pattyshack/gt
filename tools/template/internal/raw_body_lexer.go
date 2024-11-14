@@ -87,7 +87,7 @@ func newRawBodyLexer(
 	}
 }
 
-func (lexer *rawBodyLexer) CurrentLocation() Location {
+func (lexer *rawBodyLexer) CurrentLocation() lexutil.Location {
 	return lexer.reader.Location
 }
 
@@ -442,12 +442,12 @@ func readDirective(
 	terminal string,
 ) (
 	[]byte,
-	Location,
+	lexutil.Location,
 	error,
 ) {
 
 	if terminal == "" {
-		return nil, Location{}, lexutil.NewLocationError(
+		return nil, lexutil.Location{}, lexutil.NewLocationError(
 			reader.Location,
 			"Invalid terminal")
 	}
@@ -456,7 +456,7 @@ func readDirective(
 		terminal[0] != ')' &&
 		terminal[0] != ']' &&
 		terminal[0] != '\n' {
-		return nil, Location{}, lexutil.NewLocationError(
+		return nil, lexutil.Location{}, lexutil.NewLocationError(
 			reader.Location,
 			"Invalid terminal: "+terminal)
 	}
@@ -469,14 +469,14 @@ func readDirective(
 
 	bytes, err := reader.Peek(peekRange)
 	if err != nil && err != io.EOF {
-		return nil, Location{}, lexutil.LocationError{
+		return nil, lexutil.Location{}, lexutil.LocationError{
 			Loc: reader.Location,
 			Err: err,
 		}
 	}
 
 	if len(bytes) <= startIdx {
-		return nil, Location{}, lexutil.NewLocationError(
+		return nil, lexutil.Location{}, lexutil.NewLocationError(
 			reader.Location,
 			"lex error: \"%s\" not found",
 			terminal)
@@ -540,7 +540,7 @@ func readDirective(
 							panic(err) // should never happen
 						}
 
-						return nil, Location{}, lexutil.NewLocationError(
+						return nil, lexutil.Location{}, lexutil.NewLocationError(
 							reader.Location,
 							"lex error: no matching pair for %c",
 							char)
@@ -582,11 +582,11 @@ func readDirective(
 
 		bytes, err = reader.Peek(peekRange)
 		if err != nil && err != io.EOF {
-			return nil, Location{}, err
+			return nil, lexutil.Location{}, err
 		}
 
 		if prevLen == len(bytes) { // not found
-			return nil, Location{}, lexutil.NewLocationError(
+			return nil, lexutil.Location{}, lexutil.NewLocationError(
 				reader.Location,
 				"lex error: \"%s\" not found",
 				terminal)
