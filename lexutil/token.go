@@ -48,6 +48,12 @@ func (sep StartEndPos) End() Location {
 	return sep.EndPos
 }
 
+type Token[SymbolId any] interface {
+	Id() SymbolId
+	Loc() Location
+	End() Location
+}
+
 type TokenValue[SymbolId any] struct {
 	SymbolId SymbolId
 	StartEndPos

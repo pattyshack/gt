@@ -5,34 +5,6 @@ import (
 	"io"
 )
 
-type Lexer[T any] interface {
-	Next() (T, error)
-}
-
-type LexerReader[T any] struct {
-	Lexer[T]
-}
-
-func (lexer *LexerReader[T]) Read(buffer []T) (int, error) {
-	if len(buffer) == 0 {
-		return 0, nil
-	}
-
-	t, err := lexer.Next()
-	if err != nil {
-		return 0, err
-	}
-
-	buffer[0] = t
-	return 1, nil
-}
-
-func NewLexerReader[T any](lexer Lexer[T]) *LexerReader[T] {
-	return &LexerReader[T]{
-		Lexer: lexer,
-	}
-}
-
 type Reader[T any] interface {
 	// Use io.EOF to indicate end of reader stream.
 	Read(buffer []T) (int, error)
