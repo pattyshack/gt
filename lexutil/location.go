@@ -51,6 +51,30 @@ func (loc Location) Compare(other Location) int {
 	}
 }
 
+type StartEndPos struct {
+	StartPos Location
+	EndPos   Location
+}
+
+func NewStartEndPos(start Location, end Location) StartEndPos {
+	return StartEndPos{
+		StartPos: start,
+		EndPos:   end,
+	}
+}
+
+func (sep StartEndPos) StartEnd() StartEndPos {
+	return sep
+}
+
+func (sep StartEndPos) Loc() Location {
+	return sep.StartPos
+}
+
+func (sep StartEndPos) End() Location {
+	return sep.EndPos
+}
+
 type LocationError struct {
 	Loc Location
 	Err error

@@ -39,18 +39,9 @@ type Token interface {
 	Loc() lexutil.Location
 }
 
-type GenericSymbol struct {
-	SymbolId
-	StartPos lexutil.Location
-}
-
-func (t GenericSymbol) Id() SymbolId { return t.SymbolId }
-
-func (t GenericSymbol) Loc() lexutil.Location { return t.StartPos }
-
 type Lexer interface {
 	// Note: Return io.EOF to indicate end of stream
-	// Token with unspecified value type should return GenericSymbol
+	// Token with unspecified value type should return lexutil.TokenValue[SymbolId]
 	Next() (Token, error)
 
 	CurrentLocation() lexutil.Location
@@ -58,7 +49,7 @@ type Lexer interface {
 
 type FileReducer interface {
 	// 22:8: file -> ...
-	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ GenericSymbol, Body_ []Statement) (*File, error)
+	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ lexutil.TokenValue[SymbolId], Body_ []Statement) (*File, error)
 }
 
 type OptionalImportsReducer interface {
@@ -546,7 +537,7 @@ const (
 type Symbol struct {
 	SymbolId_ SymbolId
 
-	Generic_ GenericSymbol
+	Generic_ lexutil.TokenValue[SymbolId]
 
 	Atom         *Atom
 	Branch       *Branch
@@ -578,12 +569,12 @@ func NewSymbol(token Token) (*Symbol, error) {
 		}
 		symbol.Atom = val
 	case _EndMarker, SectionMarkerToken:
-		val, ok := token.(GenericSymbol)
+		val, ok := token.(lexutil.TokenValue[SymbolId])
 		if !ok {
 			return nil, lexutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
-					"expecting GenericSymbol",
+					"expecting lexutil.TokenValue[SymbolId]",
 				token.Id())
 		}
 		symbol.Generic_ = val
@@ -697,9 +688,12 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 					"unexpected lex error: %w",
 					err)
 			}
-			token = GenericSymbol{
+			token = lexutil.TokenValue[SymbolId]{
 				SymbolId: _EndMarker,
-				StartPos: stack.lexer.CurrentLocation(),
+				StartEndPos: lexutil.StartEndPos{
+					StartPos: stack.lexer.CurrentLocation(),
+					EndPos:   stack.lexer.CurrentLocation(),
+				},
 			}
 		}
 		item, err := NewSymbol(token)

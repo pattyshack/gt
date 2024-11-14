@@ -716,14 +716,12 @@ func (symbols ConstantSymbols[T]) PeekSymbol(
 func (symbols ConstantSymbols[T]) MaybeTokenizeSymbol(
 	reader BufferedByteLocationReader,
 ) (
-	string,
-	T,
-	Location,
+	*TokenValue[T],
 	error,
 ) {
 	symbolStr, entry, found, err := symbols.PeekSymbol(reader)
 	if err != nil || !found {
-		return "", entry, Location{}, err
+		return nil, err
 	}
 
 	loc := reader.Location
@@ -733,7 +731,11 @@ func (symbols ConstantSymbols[T]) MaybeTokenizeSymbol(
 		panic("should never happen")
 	}
 
-	return symbolStr, entry, loc, nil
+	return &TokenValue[T]{
+		SymbolId:    entry,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       symbolStr,
+	}, nil
 }
 
 type PeekStringResult struct {

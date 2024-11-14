@@ -22,7 +22,7 @@ type StartDeclaration struct {
 }
 
 func NewStartDeclaration(
-	start LRGenericSymbol,
+	start lexutil.TokenValue[LRSymbolId],
 	ids []*Token) *StartDeclaration {
 
 	return &StartDeclaration{
@@ -44,7 +44,7 @@ func (sd *StartDeclaration) String() string {
 }
 
 type TermDeclaration struct {
-	TermType LRGenericSymbol
+	TermType lexutil.TokenValue[LRSymbolId]
 
 	IsTerminal bool
 
@@ -54,7 +54,7 @@ type TermDeclaration struct {
 }
 
 func NewTermDeclaration(
-	termType LRGenericSymbol,
+	termType lexutil.TokenValue[LRSymbolId],
 	valueType *Token,
 	terms []*Token) *TermDeclaration {
 

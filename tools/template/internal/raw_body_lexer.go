@@ -198,7 +198,8 @@ func (lexer *rawBodyLexer) maybeTokenizeText() (BodyToken, error) {
 	// https://github.com/golang/go/issues/24475
 	value = strings.ReplaceAll(value, "`", "`+\"`\"+`")
 
-	return NewAtom(TextToken, loc, value, false, false), nil
+	pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+	return NewAtom(TextToken, pos, value, false, false), nil
 }
 
 func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
@@ -228,21 +229,21 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		return nil, err
 	}
 
-	symbolStr, symbolId, _, err := lexer.MaybeTokenizeSymbol(
-		directiveReader)
+	token, err := lexer.MaybeTokenizeSymbol(directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
 
-	if symbolStr != "" {
+	if token != nil {
 		content, err = ioutil.ReadAll(directiveReader)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
 
+		pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
 		return NewAtom(
-			SymbolId(symbolId),
-			loc,
+			SymbolId(token.SymbolId),
+			pos,
 			string(content),
 			trimLeading,
 			trimTrailing), nil
@@ -319,42 +320,43 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			id)
 	}
 
+	pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
 	switch id {
 	case "":
 		return nil, lexutil.NewLocationError(
 			loc,
 			"invalid directive. directive type not specified")
 	case "end":
-		return NewTToken(EndToken, loc, trimLeading, trimTrailing), nil
+		return NewTToken(EndToken, pos, trimLeading, trimTrailing), nil
 	case "default":
-		return NewTToken(DefaultToken, loc, trimLeading, trimTrailing), nil
+		return NewTToken(DefaultToken, pos, trimLeading, trimTrailing), nil
 	case "else":
-		return NewTToken(ElseToken, loc, trimLeading, trimTrailing), nil
+		return NewTToken(ElseToken, pos, trimLeading, trimTrailing), nil
 	case "for":
-		return NewValue(ForToken, loc, param, trimLeading, trimTrailing), nil
+		return NewValue(ForToken, pos, param, trimLeading, trimTrailing), nil
 	case "switch":
-		return NewValue(SwitchToken, loc, param, trimLeading, trimTrailing), nil
+		return NewValue(SwitchToken, pos, param, trimLeading, trimTrailing), nil
 	case "case":
-		return NewValue(CaseToken, loc, param, trimLeading, trimTrailing), nil
+		return NewValue(CaseToken, pos, param, trimLeading, trimTrailing), nil
 	case "if":
-		return NewValue(IfToken, loc, param, trimLeading, trimTrailing), nil
+		return NewValue(IfToken, pos, param, trimLeading, trimTrailing), nil
 	case "else if":
-		return NewValue(ElseIfToken, loc, param, trimLeading, trimTrailing), nil
+		return NewValue(ElseIfToken, pos, param, trimLeading, trimTrailing), nil
 	case "continue":
 		return NewAtom(
 			ContinueToken,
-			loc,
+			pos,
 			param,
 			trimLeading,
 			trimTrailing), nil
 	case "break":
-		return NewAtom(BreakToken, loc, param, trimLeading, trimTrailing), nil
+		return NewAtom(BreakToken, pos, param, trimLeading, trimTrailing), nil
 	case "return":
-		return NewAtom(ReturnToken, loc, param, trimLeading, trimTrailing), nil
+		return NewAtom(ReturnToken, pos, param, trimLeading, trimTrailing), nil
 	case "error":
-		return NewAtom(ErrorToken, loc, param, trimLeading, trimTrailing), nil
+		return NewAtom(ErrorToken, pos, param, trimLeading, trimTrailing), nil
 	case "embed":
-		return NewAtom(EmbedToken, loc, param, trimLeading, trimTrailing), nil
+		return NewAtom(EmbedToken, pos, param, trimLeading, trimTrailing), nil
 	}
 
 	return nil, lexutil.NewLocationError(
@@ -403,9 +405,11 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 			if value != nil {
 				val = value.Value
 			}
+
+			pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
 			return NewAtom(
 				SubstitutionToken,
-				loc,
+				pos,
 				val,
 				false,
 				false), nil
@@ -418,7 +422,8 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 			}
 
 			value := string(content[2 : len(content)-1])
-			return NewAtom(SubstitutionToken, loc, value, false, false), nil
+			pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+			return NewAtom(SubstitutionToken, pos, value, false, false), nil
 
 		} else if content[1] == '$' {
 			panic("Programming error")

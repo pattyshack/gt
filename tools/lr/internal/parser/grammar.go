@@ -32,18 +32,9 @@ type LRToken interface {
 	Loc() lexutil.Location
 }
 
-type LRGenericSymbol struct {
-	LRSymbolId
-	StartPos lexutil.Location
-}
-
-func (t LRGenericSymbol) Id() LRSymbolId { return t.LRSymbolId }
-
-func (t LRGenericSymbol) Loc() lexutil.Location { return t.StartPos }
-
 type LRLexer interface {
 	// Note: Return io.EOF to indicate end of stream
-	// Token with unspecified value type should return LRGenericSymbol
+	// Token with unspecified value type should return lexutil.TokenValue[LRSymbolId]
 	Next() (LRToken, error)
 
 	CurrentLocation() lexutil.Location
@@ -64,7 +55,7 @@ type LRAdditionalSectionsReducer interface {
 
 type LRAdditionalSectionReducer interface {
 	// 32:41: additional_section -> ...
-	ToAdditionalSection(SectionMarker_ LRGenericSymbol, Identifier_ *Token, SectionContent_ *Token) (*AdditionalSection, error)
+	ToAdditionalSection(SectionMarker_ lexutil.TokenValue[LRSymbolId], Identifier_ *Token, SectionContent_ *Token) (*AdditionalSection, error)
 }
 
 type LRDefsReducer interface {
@@ -72,24 +63,24 @@ type LRDefsReducer interface {
 	AddToDefs(Defs_ []Definition, Def_ Definition) ([]Definition, error)
 
 	// 36:4: defs -> add_explicit: ...
-	AddExplicitToDefs(Defs_ []Definition, Def_ Definition, char LRGenericSymbol) ([]Definition, error)
+	AddExplicitToDefs(Defs_ []Definition, Def_ Definition, char lexutil.TokenValue[LRSymbolId]) ([]Definition, error)
 
 	// 37:4: defs -> def: ...
 	DefToDefs(Def_ Definition) ([]Definition, error)
 
 	// 38:4: defs -> explicit_def: ...
-	ExplicitDefToDefs(Def_ Definition, char LRGenericSymbol) ([]Definition, error)
+	ExplicitDefToDefs(Def_ Definition, char lexutil.TokenValue[LRSymbolId]) ([]Definition, error)
 }
 
 type LRDefReducer interface {
 	// 42:4: def -> term_decl: ...
-	TermDeclToDef(Rword_ LRGenericSymbol, char LRGenericSymbol, Identifier_ *Token, char2 LRGenericSymbol, NonemptyIdOrCharList_ []*Token) (Definition, error)
+	TermDeclToDef(Rword_ lexutil.TokenValue[LRSymbolId], char lexutil.TokenValue[LRSymbolId], Identifier_ *Token, char2 lexutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
 
 	// 43:4: def -> untyped_term_decl: ...
-	UntypedTermDeclToDef(Rword_ LRGenericSymbol, NonemptyIdOrCharList_ []*Token) (Definition, error)
+	UntypedTermDeclToDef(Rword_ lexutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
 
 	// 45:4: def -> start_decl: ...
-	StartDeclToDef(Start_ LRGenericSymbol, NonemptyIdentList_ []*Token) (Definition, error)
+	StartDeclToDef(Start_ lexutil.TokenValue[LRSymbolId], NonemptyIdentList_ []*Token) (Definition, error)
 
 	// 46:4: def -> rule: ...
 	RuleToDef(Rule_ *Rule) (Definition, error)
@@ -132,10 +123,10 @@ type LRRuleReducer interface {
 
 type LRClauseReducer interface {
 	// 69:2: clause -> passthrough_id: ...
-	PassthroughIdToClause(char LRGenericSymbol, Identifier_ *Token) (*Clause, error)
+	PassthroughIdToClause(char lexutil.TokenValue[LRSymbolId], Identifier_ *Token) (*Clause, error)
 
 	// 70:2: clause -> passthrough_char: ...
-	PassthroughCharToClause(char LRGenericSymbol, Character_ *Token) (*Clause, error)
+	PassthroughCharToClause(char lexutil.TokenValue[LRSymbolId], Character_ *Token) (*Clause, error)
 
 	// 71:2: clause -> unlabeled: ...
 	UnlabeledToClause(IdOrCharList_ []*Token) (*Clause, error)
@@ -146,7 +137,7 @@ type LRClauseReducer interface {
 
 type LRClausesReducer interface {
 	// 75:4: clauses -> add: ...
-	AddToClauses(Clauses_ []*Clause, char LRGenericSymbol, Clause_ *Clause) ([]*Clause, error)
+	AddToClauses(Clauses_ []*Clause, char lexutil.TokenValue[LRSymbolId], Clause_ *Clause) ([]*Clause, error)
 
 	// 76:4: clauses -> clause: ...
 	ClauseToClauses(Clause_ *Clause) ([]*Clause, error)
@@ -550,7 +541,7 @@ const (
 type LRSymbol struct {
 	SymbolId_ LRSymbolId
 
-	Generic_ LRGenericSymbol
+	Generic_ lexutil.TokenValue[LRSymbolId]
 
 	AdditionalSection  *AdditionalSection
 	AdditionalSections []*AdditionalSection
@@ -574,12 +565,12 @@ func NewSymbol(token LRToken) (*LRSymbol, error) {
 	symbol = &LRSymbol{SymbolId_: token.Id()}
 	switch token.Id() {
 	case _LREndMarker, LRTokenToken, LRTypeToken, LRStartToken, '<', '>', '|', ';', '=', LRSectionMarkerToken:
-		val, ok := token.(LRGenericSymbol)
+		val, ok := token.(lexutil.TokenValue[LRSymbolId])
 		if !ok {
 			return nil, lexutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
-					"expecting LRGenericSymbol",
+					"expecting lexutil.TokenValue[LRSymbolId]",
 				token.Id())
 		}
 		symbol.Generic_ = val
@@ -693,9 +684,12 @@ func (stack *_LRPseudoSymbolStack) Top() (*LRSymbol, error) {
 					"unexpected lex error: %w",
 					err)
 			}
-			token = LRGenericSymbol{
-				LRSymbolId: _LREndMarker,
-				StartPos:   stack.lexer.CurrentLocation(),
+			token = lexutil.TokenValue[LRSymbolId]{
+				SymbolId: _LREndMarker,
+				StartEndPos: lexutil.StartEndPos{
+					StartPos: stack.lexer.CurrentLocation(),
+					EndPos:   stack.lexer.CurrentLocation(),
+				},
 			}
 		}
 		item, err := NewSymbol(token)

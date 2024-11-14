@@ -12,7 +12,7 @@ func (ReducerImpl) ToFile(
 	pkg *Value,
 	imports *Value,
 	template *TemplateDeclaration,
-	sectionMarker GenericSymbol,
+	sectionMarker lexutil.TokenValue[SymbolId],
 	body []Statement) (
 	*File,
 	error) {

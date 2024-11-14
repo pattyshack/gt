@@ -33,6 +33,23 @@ func (obj *importObject) String() string {
 	return obj.prefix + obj.alias + "." + obj.name
 }
 
+type genericImportObject struct {
+	name       *importObject
+	parameters []fmt.Stringer
+}
+
+func (obj *genericImportObject) String() string {
+	result := obj.name.String() + "["
+	for idx, param := range obj.parameters {
+		if idx != 0 {
+			result += ", "
+		}
+		result += param.String()
+	}
+
+	return result + "]"
+}
+
 type GoImports struct {
 	imports map[string]*importEntry
 }
@@ -44,7 +61,9 @@ func NewGoImports() *GoImports {
 }
 
 // This supports accessing objects of the form:
-//     *(\[\])*(\*)*)*(<full module path>\.)?<object>({})?
+//
+//	*(\[\])*(\*)*)*(<full module path>\.)?<object>({})?
+//
 // map objects are not supported
 func (imports *GoImports) Obj(fullName string) *importObject {
 	match := nameRe.FindStringSubmatch(fullName)
@@ -70,6 +89,16 @@ func (imports *GoImports) Obj(fullName string) *importObject {
 	}
 
 	return &importObject{entry, prefix, name}
+}
+
+func (imports *GoImports) GenericObj(
+	name string,
+	parameters ...fmt.Stringer,
+) *genericImportObject {
+	return &genericImportObject{
+		name:       imports.Obj(name),
+		parameters: parameters,
+	}
 }
 
 func (imports *GoImports) assignAlias() error {

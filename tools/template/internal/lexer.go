@@ -113,11 +113,11 @@ func (lexer *headerLexer) Next() (Token, error) {
 
 	switch value {
 	case "package":
-		return lexer.tokenizePackage(token.StartPos)
+		return lexer.tokenizePackage(token.StartEndPos)
 	case "import":
-		return lexer.tokenizeImport(token.StartPos)
+		return lexer.tokenizeImport(token.StartEndPos)
 	case "template":
-		return lexer.tokenizeTemplateDecl(token.StartPos)
+		return lexer.tokenizeTemplateDecl(token.StartEndPos)
 	case "":
 		// try to tokenize symbol below
 	default:
@@ -127,25 +127,29 @@ func (lexer *headerLexer) Next() (Token, error) {
 			value)
 	}
 
-	symbolStr, _, loc, err := lexer.sectionMarker.MaybeTokenizeSymbol(
-		lexer.reader)
+	token, err = lexer.sectionMarker.MaybeTokenizeSymbol(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbolStr != "" {
-		return GenericSymbol{
-			SymbolId: SectionMarkerToken,
-			StartPos: loc,
-		}, nil
+	if token == nil {
+		return nil, lexutil.NewLocationError(
+			lexer.reader.Location,
+			"Unexpected character")
 	}
 
-	return nil, lexutil.NewLocationError(
-		lexer.reader.Location,
-		"Unexpected character")
+	return lexutil.TokenValue[SymbolId]{
+		SymbolId:    SectionMarkerToken,
+		StartEndPos: token.StartEndPos,
+	}, nil
 }
 
-func (lexer *headerLexer) tokenizePackage(pkgLoc lexutil.Location) (Token, error) {
+func (lexer *headerLexer) tokenizePackage(
+	pkgPos lexutil.StartEndPos,
+) (
+	Token,
+	error,
+) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
@@ -166,22 +170,28 @@ func (lexer *headerLexer) tokenizePackage(pkgLoc lexutil.Location) (Token, error
 			"Unexpected character")
 	}
 
-	return NewValue(PackageToken, pkgLoc, token.Value, false, false), nil
+	pkgPos.EndPos = token.EndPos
+	return NewValue(PackageToken, pkgPos, token.Value, false, false), nil
 }
 
-func (lexer *headerLexer) tokenizeImport(importLoc lexutil.Location) (Token, error) {
+func (lexer *headerLexer) tokenizeImport(
+	importPos lexutil.StartEndPos,
+) (
+	Token,
+	error,
+) {
 	err := lexutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	symbolStr, _, _, err := lexer.importMarker.MaybeTokenizeSymbol(
+	token, err := lexer.importMarker.MaybeTokenizeSymbol(
 		lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbolStr == "" {
+	if token == nil {
 		return nil, lexutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
@@ -194,11 +204,13 @@ func (lexer *headerLexer) tokenizeImport(importLoc lexutil.Location) (Token, err
 
 	value = value[:len(value)-1]
 
-	return NewValue(ImportToken, importLoc, string(value), false, false), nil
+	importPos.EndPos = lexer.reader.Location
+	return NewValue(ImportToken, importPos, string(value), false, false), nil
 }
 
 func (lexer *headerLexer) tokenizeTemplateDecl(
-	declLoc lexutil.Location) (
+	declPos lexutil.StartEndPos,
+) (
 	Token,
 	error,
 ) {
@@ -228,13 +240,13 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		return nil, err
 	}
 
-	lcurl, _, _, err := lexer.templateDeclMarker.MaybeTokenizeSymbol(
+	lcurl, err := lexer.templateDeclMarker.MaybeTokenizeSymbol(
 		lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if lcurl == "" {
+	if lcurl == nil {
 		return nil, lexutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
@@ -315,7 +327,8 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		args = append(args, Argument{string(argName.Value), string(typeName)})
 	}
 
-	return NewTemplateDeclaration(declLoc, template.Value, args), nil
+	declPos.EndPos = lexer.reader.Location
+	return NewTemplateDeclaration(declPos, template.Value, args), nil
 }
 
 // Strip all comments from the header section of template.  Note that

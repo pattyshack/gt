@@ -88,19 +88,16 @@ func (lexer *rawLexer) Next() (LRToken, error) {
 }
 
 func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (LRToken, error) {
-	symbolStr, symbolId, loc, err := lexer.MaybeTokenizeSymbol(lexer.reader)
+	token, err := lexer.MaybeTokenizeSymbol(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	if symbolStr == "" {
+	if token == nil {
 		return nil, nil
 	}
 
-	return LRGenericSymbol{
-		LRSymbolId: LRSymbolId(symbolId),
-		StartPos:   loc,
-	}, nil
+	return *token, nil
 }
 
 func (lexer *rawLexer) maybeTokenizeCharacter() (LRToken, error) {

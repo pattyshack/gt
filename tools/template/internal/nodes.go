@@ -18,7 +18,7 @@ type Statement interface {
 }
 
 type TToken struct {
-	GenericSymbol
+	lexutil.TokenValue[SymbolId]
 
 	// When true, and the previous statement is text, remove the whitespaces
 	// in the text that are adjacent to this statement, potentially up to and
@@ -33,14 +33,18 @@ type TToken struct {
 
 func NewTToken(
 	id SymbolId,
-	loc lexutil.Location,
+	pos lexutil.StartEndPos,
 	trimLeading bool,
 	trimTrailing bool) *TToken {
 
 	return &TToken{
-		GenericSymbol{id, loc},
-		trimLeading,
-		trimTrailing,
+		TokenValue: lexutil.TokenValue[SymbolId]{
+			SymbolId:    id,
+			StartEndPos: pos,
+			Value:       "",
+		},
+		trimLeadingWhitespaces:  trimLeading,
+		trimTrailingWhitespaces: trimTrailing,
 	}
 }
 
@@ -60,12 +64,12 @@ type Value struct {
 
 func NewValue(
 	id SymbolId,
-	loc lexutil.Location,
+	pos lexutil.StartEndPos,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Value {
 
-	return &Value{NewTToken(id, loc, trimLeading, trimTrailing), val}
+	return &Value{NewTToken(id, pos, trimLeading, trimTrailing), val}
 }
 
 type Atom struct {
@@ -76,12 +80,12 @@ type Atom struct {
 
 func NewAtom(
 	id SymbolId,
-	loc lexutil.Location,
+	pos lexutil.StartEndPos,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Atom {
 
-	return &Atom{NewTToken(id, loc, trimLeading, trimTrailing), val}
+	return &Atom{NewTToken(id, pos, trimLeading, trimTrailing), val}
 }
 
 func (Atom) IsStatement() {}
@@ -137,21 +141,25 @@ type Argument struct {
 }
 
 type TemplateDeclaration struct {
-	GenericSymbol
+	lexutil.TokenValue[SymbolId]
 
 	TemplateName string
 	Arguments    []Argument
 }
 
 func NewTemplateDeclaration(
-	loc lexutil.Location,
+	pos lexutil.StartEndPos,
 	name string,
 	args []Argument) *TemplateDeclaration {
 
 	return &TemplateDeclaration{
-		GenericSymbol{TemplateDeclToken, loc},
-		name,
-		args,
+		TokenValue: lexutil.TokenValue[SymbolId]{
+			SymbolId:    TemplateDeclToken,
+			StartEndPos: pos,
+			Value:       "",
+		},
+		TemplateName: name,
+		Arguments:    args,
 	}
 }
 

@@ -28,7 +28,7 @@ template File {
     ReduceType              string
 
     SymbolType              string
-    GenericSymbolType       string
+    GenericSymbol           interface{}
 
     StackItemType           string
     StackType               string
@@ -39,7 +39,8 @@ template File {
     EndSymbolId             string
     WildcardSymbolId        string
 
-    LocationType            interface{}
+    Location                interface{}
+    StartEndPos             interface{}
     TokenType               string
 
     LexerType               string
@@ -123,34 +124,18 @@ nextId := func() int {
 
 type $TokenType interface {
     Id() $SymbolIdType
-    Loc() $LocationType
+    Loc() $Location
 [[-if GenerateEndPos]]
-    End() $LocationType
+    End() $Location
 [[-end]]
 }
-
-type $GenericSymbolType struct {
-    $SymbolIdType
-    StartPos $LocationType
-[[-if GenerateEndPos]]
-    EndPos $LocationType
-[[-end]]
-}
-
-func (t $GenericSymbolType) Id() $SymbolIdType { return t.$SymbolIdType }
-
-func (t $GenericSymbolType) Loc() $LocationType { return t.StartPos }
-
-[[-if GenerateEndPos]]
-func (t $GenericSymbolType) End() $LocationType { return t.EndPos }
-[[-end]]
 
 type $LexerType interface {
     // Note: Return io.EOF to indicate end of stream
-    // Token with unspecified value type should return $GenericSymbolType
+    // Token with unspecified value type should return $GenericSymbol
     Next() ($TokenType, error)
 
-    CurrentLocation() $LocationType
+    CurrentLocation() $Location
 }
 
 [[-for _, rule := range Grammar.NonTerminals-]]
@@ -486,7 +471,7 @@ const (
 type $SymbolType struct {
     SymbolId_ $SymbolIdType
 
-    Generic_ $GenericSymbolType
+    Generic_ $GenericSymbol
 
 [[-for _, valueType := range OrderedValueTypes-]]
     [[-if valueType.Name == lr.Generic-]]
@@ -558,8 +543,8 @@ func (s *$SymbolType) Id() $SymbolIdType {
     return s.SymbolId_
 }
 
-func (s *$SymbolType) Loc() $LocationType {
-    type locator interface { Loc() $LocationType }
+func (s *$SymbolType) Loc() $Location {
+    type locator interface { Loc() $Location }
     switch s.SymbolId_ {
 [[-for _, field := range OrderedValueTypes-]]
     [[-if field.Name == lr.Generic-]]
@@ -585,8 +570,8 @@ $(term.CodeGenSymbolConst)
 }
 
 [[-if GenerateEndPos]]
-func (s *$SymbolType) End() $LocationType {
-    type locator interface { End() $LocationType }
+func (s *$SymbolType) End() $Location {
+    type locator interface { End() $Location }
     switch s.SymbolId_ {
 [[-for _, field := range OrderedValueTypes-]]
     [[-if field.Name == lr.Generic-]]
@@ -627,9 +612,12 @@ func (stack *$SymbolStackType) Top() (*$SymbolType, error) {
                   "unexpected lex error: %w",
                   err)
             }
-            token = $GenericSymbolType{
-              $SymbolIdType: $EndSymbolId,
-              StartPos: stack.lexer.CurrentLocation(),
+            token = $GenericSymbol{
+              SymbolId: $EndSymbolId,
+              StartEndPos: $StartEndPos{
+                StartPos: stack.lexer.CurrentLocation(),
+                EndPos: stack.lexer.CurrentLocation(),
+              },
             }
         }
         item, err := NewSymbol(token)

@@ -20,6 +20,12 @@ var (
 	}
 )
 
+type String string
+
+func (s String) String() string {
+  return string(s)
+}
+
 type NameGenerator struct {
 	prefix string
 
@@ -128,10 +134,15 @@ func GenerateGoLRCode(
 
 	endSymbol := nameGen.Internal("EndMarker")
 	wildcardSymbol := nameGen.Internal("WildcardMarker")
-	genericSymbol := nameGen.Public("GenericSymbol")
+
+	symbolIdType := nameGen.Public("SymbolId")
+
+	genericSymbol := imports.GenericObj(
+		"github.com/pattyshack/gt/lexutil.TokenValue",
+		String(symbolIdType))
 
 	orderedValueTypes := lr.ParamList{
-		&lr.Param{lr.Generic, imports.Obj(genericSymbol)},
+		&lr.Param{lr.Generic, genericSymbol},
 	}
 	for name, valueType := range cfg.ValueTypes {
 		orderedValueTypes = append(
@@ -201,15 +212,17 @@ func GenerateGoLRCode(
 		StateIdType:          nameGen.Internal("StateId"),
 		ReduceType:           nameGen.Internal("ReduceType"),
 		SymbolType:           nameGen.Public("Symbol"),
-		GenericSymbolType:    genericSymbol,
+		GenericSymbol:        genericSymbol,
 		StackItemType:        nameGen.Internal("StackItem"),
 		StackType:            nameGen.Internal("Stack"),
 		SymbolStackType:      nameGen.Internal("PseudoSymbolStack"),
-		SymbolIdType:         nameGen.Public("SymbolId"),
+		SymbolIdType:         symbolIdType,
 		EndSymbolId:          endSymbol,
 		WildcardSymbolId:     wildcardSymbol,
-		LocationType: imports.Obj(
+		Location: imports.Obj(
 			"github.com/pattyshack/gt/lexutil.Location"),
+		StartEndPos: imports.Obj(
+			"github.com/pattyshack/gt/lexutil.StartEndPos"),
 		TokenType:             nameGen.Public("Token"),
 		LexerType:             nameGen.Public("Lexer"),
 		ReducerType:           nameGen.Public("Reducer"),
