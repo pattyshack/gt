@@ -1453,3 +1453,57 @@ func PeekIntegerOrFloat(
 
 	return result, nil
 }
+
+func MaybeTokenizeIntegerOrFloatLiteral[SymbolId any](
+	reader BufferedByteLocationReader,
+	initialPeekWindowSize int,
+	internPool *stringutil.InternPool,
+	intSymbol SymbolId,
+	floatSymbol SymbolId,
+) (
+	*TokenValue[SymbolId],
+	bool, // invalid non-decimal int prefix with no digits
+	error,
+) {
+	result, err := PeekIntegerOrFloat(reader, initialPeekWindowSize)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if result.NumBytes == 0 {
+		return nil, false, nil
+	}
+
+	loc := reader.Location
+
+	value := ""
+	if result.HasDigits {
+		peeked, err := reader.Peek(result.NumBytes)
+		if err != nil {
+			panic("should never happen")
+		}
+
+		if len(peeked) < 3 { // intern short ints / floats
+			value = internPool.InternBytes(peeked)
+		} else {
+			value = string(peeked)
+		}
+	}
+
+	_, err = reader.Discard(result.NumBytes)
+	if err != nil {
+		panic("should never happen")
+	}
+
+	symbolId := intSymbol
+	if result.IsFloat {
+		symbolId = floatSymbol
+	}
+
+	return &TokenValue[SymbolId]{
+		SymbolId:    symbolId,
+		StartEndPos: NewStartEndPos(loc, reader.Location),
+		Value:       value,
+		SubType:     result.SubType,
+	}, !result.HasDigits, nil
+}
