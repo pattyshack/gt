@@ -35,7 +35,13 @@ type LexerImpl struct {
 	internPool *stringutil.InternPool
 }
 
-func NewLexer(filename string, input io.Reader) (Lexer, error) {
+func NewLexer(
+	filename string,
+	input io.Reader,
+) (
+	lexutil.Lexer[lexutil.Token[SymbolId]],
+	error,
+) {
 	content, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err

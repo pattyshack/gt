@@ -246,7 +246,10 @@ func (lexer *Lexer) CurrentLocation() lexutil.Location {
 	return tokens[0].Loc()
 }
 
-func NewLexer(filename string, reader io.Reader) LRLexer {
+func NewLexer(
+	filename string,
+	reader io.Reader,
+) lexutil.Lexer[lexutil.Token[LRSymbolId]] {
 	base := newRawLexer(filename, reader)
 	return &Lexer{
 		base:     base,

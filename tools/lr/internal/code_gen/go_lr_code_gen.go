@@ -200,6 +200,9 @@ func GenerateGoLRCode(
 		orderedSymbolNames = append(orderedSymbolNames, term.Name)
 	}
 
+	tokenType := imports.GenericObj(
+		"github.com/pattyshack/gt/lexutil.Token",
+		String(symbolIdType))
 	file := &go_template.File{
 		Package:              cfg.Package,
 		Imports:              imports,
@@ -223,10 +226,10 @@ func GenerateGoLRCode(
 			"github.com/pattyshack/gt/lexutil.Location"),
 		StartEndPos: imports.Obj(
 			"github.com/pattyshack/gt/lexutil.StartEndPos"),
-		TokenType: imports.GenericObj(
-			"github.com/pattyshack/gt/lexutil.Token",
-			String(symbolIdType)),
-		LexerType:             nameGen.Public("Lexer"),
+		TokenType: tokenType,
+		LexerType: imports.GenericObj(
+			"github.com/pattyshack/gt/lexutil.Lexer",
+			tokenType),
 		ReducerType:           nameGen.Public("Reducer"),
 		ErrHandlerType:        nameGen.Public("ParseErrorHandler"),
 		DefaultErrHandlerType: nameGen.Public("DefaultParseErrorHandler"),

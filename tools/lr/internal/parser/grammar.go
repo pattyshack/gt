@@ -27,14 +27,6 @@ const (
 	LRSectionContentToken = LRSymbolId(264)
 )
 
-type LRLexer interface {
-	// Note: Return io.EOF to indicate end of stream
-	// Token with unspecified value type should return lexutil.TokenValue[LRSymbolId]
-	Next() (lexutil.Token[LRSymbolId], error)
-
-	CurrentLocation() lexutil.Location
-}
-
 type LRGrammarReducer interface {
 	// 26:20: grammar -> ...
 	ToGrammar(Defs_ []Definition, AdditionalSections_ []*AdditionalSection) (*Grammar, error)
@@ -193,7 +185,7 @@ func LRExpectedTerminals(id _LRStateId) []LRSymbolId {
 	return nil
 }
 
-func LRParse(lexer LRLexer, reducer LRReducer) (*Grammar, error) {
+func LRParse(lexer lexutil.Lexer[lexutil.Token[LRSymbolId]], reducer LRReducer) (*Grammar, error) {
 
 	return LRParseWithCustomErrorHandler(
 		lexer,
@@ -202,7 +194,7 @@ func LRParse(lexer LRLexer, reducer LRReducer) (*Grammar, error) {
 }
 
 func LRParseWithCustomErrorHandler(
-	lexer LRLexer,
+	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]],
 	reducer LRReducer,
 	errHandler LRParseErrorHandler,
 ) (
@@ -223,7 +215,7 @@ func LRParseWithCustomErrorHandler(
 // ================================================================
 
 func _LRParse(
-	lexer LRLexer,
+	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]],
 	reducer LRReducer,
 	errHandler LRParseErrorHandler,
 	startState _LRStateId,
@@ -727,7 +719,7 @@ func (s *LRSymbol) End() lexutil.Location {
 }
 
 type _LRPseudoSymbolStack struct {
-	lexer LRLexer
+	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]]
 	top   []*LRSymbol
 }
 

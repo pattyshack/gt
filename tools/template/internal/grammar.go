@@ -34,14 +34,6 @@ const (
 	ErrorToken         = SymbolId(276)
 )
 
-type Lexer interface {
-	// Note: Return io.EOF to indicate end of stream
-	// Token with unspecified value type should return lexutil.TokenValue[SymbolId]
-	Next() (lexutil.Token[SymbolId], error)
-
-	CurrentLocation() lexutil.Location
-}
-
 type FileReducer interface {
 	// 22:8: file -> ...
 	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ lexutil.TokenValue[SymbolId], Body_ []Statement) (*File, error)
@@ -165,7 +157,7 @@ func ExpectedTerminals(id _StateId) []SymbolId {
 	return nil
 }
 
-func Parse(lexer Lexer, reducer Reducer) (*File, error) {
+func Parse(lexer lexutil.Lexer[lexutil.Token[SymbolId]], reducer Reducer) (*File, error) {
 
 	return ParseWithCustomErrorHandler(
 		lexer,
@@ -174,7 +166,7 @@ func Parse(lexer Lexer, reducer Reducer) (*File, error) {
 }
 
 func ParseWithCustomErrorHandler(
-	lexer Lexer,
+	lexer lexutil.Lexer[lexutil.Token[SymbolId]],
 	reducer Reducer,
 	errHandler ParseErrorHandler,
 ) (
@@ -195,7 +187,7 @@ func ParseWithCustomErrorHandler(
 // ================================================================
 
 func _Parse(
-	lexer Lexer,
+	lexer lexutil.Lexer[lexutil.Token[SymbolId]],
 	reducer Reducer,
 	errHandler ParseErrorHandler,
 	startState _StateId,
@@ -721,7 +713,7 @@ func (s *Symbol) End() lexutil.Location {
 }
 
 type _PseudoSymbolStack struct {
-	lexer Lexer
+	lexer lexutil.Lexer[lexutil.Token[SymbolId]]
 	top   []*Symbol
 }
 

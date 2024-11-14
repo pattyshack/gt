@@ -43,7 +43,7 @@ template File {
     StartEndPos             interface{}
     TokenType               interface{}
 
-    LexerType               string
+    LexerType               interface{}
     ReducerType             string
 
     ErrHandlerType          string
@@ -120,14 +120,6 @@ nextId := func() int {
     [[-end-]]
 [[-end]]
 )
-
-type $LexerType interface {
-    // Note: Return io.EOF to indicate end of stream
-    // Token with unspecified value type should return $GenericSymbol
-    Next() ($TokenType, error)
-
-    CurrentLocation() $Location
-}
 
 [[-for _, rule := range Grammar.NonTerminals-]]
     [[-if rule.NumReducerClauses == 0-]]
