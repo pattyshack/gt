@@ -75,6 +75,12 @@ func (sep StartEndPos) End() Location {
 	return sep.EndPos
 }
 
+type Locatable interface {
+	StartEnd() StartEndPos
+	Loc() Location
+	End() Location
+}
+
 type LocationError struct {
 	Loc Location
 	Err error
