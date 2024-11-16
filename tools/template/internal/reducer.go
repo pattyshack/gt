@@ -1,7 +1,7 @@
 package template
 
 import (
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 )
 
 type ReducerImpl struct{}
@@ -12,7 +12,7 @@ func (ReducerImpl) ToFile(
 	pkg *Value,
 	imports *Value,
 	template *TemplateDeclaration,
-	sectionMarker lexutil.TokenValue[SymbolId],
+	sectionMarker parseutil.TokenValue[SymbolId],
 	body []Statement) (
 	*File,
 	error) {
@@ -54,7 +54,7 @@ func (ReducerImpl) ToFor(
 	error) {
 
 	return &For{
-		StartEndPos: lexutil.NewStartEndPos(for_.StartPos, end.EndPos),
+		StartEndPos: parseutil.NewStartEndPos(for_.StartPos, end.EndPos),
 		Branch:      Branch{for_, body},
 	}, nil
 }
@@ -69,15 +69,15 @@ func (ReducerImpl) WithWhitespaceToSwitch(
 	error) {
 
 	for _, char := range whitespace.Value {
-		if !lexutil.IsWhitespace(char) {
-			return nil, lexutil.NewLocationError(
+		if !parseutil.IsWhitespace(char) {
+			return nil, parseutil.NewLocationError(
 				whitespace.Loc(),
 				"Text found between [[switch]] and [[case]]")
 		}
 	}
 
 	return &Switch{
-		lexutil.NewStartEndPos(switch_.StartPos, end.EndPos),
+		parseutil.NewStartEndPos(switch_.StartPos, end.EndPos),
 		switch_,
 		cases,
 		default_,
@@ -93,7 +93,7 @@ func (ReducerImpl) WithoutWhitespaceToSwitch(
 	error) {
 
 	return &Switch{
-		lexutil.NewStartEndPos(switch_.StartPos, end.EndPos),
+		parseutil.NewStartEndPos(switch_.StartPos, end.EndPos),
 		switch_,
 		cases,
 		default_,
@@ -142,7 +142,7 @@ func (ReducerImpl) ToIf(
 	error) {
 
 	return &If{
-		lexutil.NewStartEndPos(predicate.StartPos, end.EndPos),
+		parseutil.NewStartEndPos(predicate.StartPos, end.EndPos),
 		Branch{predicate, body},
 		elseIfs,
 		else_,

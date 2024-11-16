@@ -1,4 +1,4 @@
-package lexutil
+package parseutil
 
 type Lexer[T any] interface {
 	Next() (T, error)

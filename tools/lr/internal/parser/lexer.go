@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 	"github.com/pattyshack/gt/stringutil"
 )
 
@@ -14,9 +14,9 @@ const (
 )
 
 type rawLexer struct {
-	reader lexutil.BufferedByteLocationReader
+	reader parseutil.BufferedByteLocationReader
 
-	lexutil.ConstantSymbols[LRSymbolId]
+	parseutil.ConstantSymbols[LRSymbolId]
 
 	internPool *stringutil.InternPool
 }
@@ -40,21 +40,21 @@ func newRawLexer(filename string, reader io.Reader) *rawLexer {
 
 	pool := stringutil.NewInternPool()
 	return &rawLexer{
-		reader: lexutil.NewBufferedByteLocationReader(
+		reader: parseutil.NewBufferedByteLocationReader(
 			filename,
 			reader,
 			1024*1024),
-		ConstantSymbols: lexutil.NewConstantSymbols(markersAndSymbols, pool),
+		ConstantSymbols: parseutil.NewConstantSymbols(markersAndSymbols, pool),
 		internPool:      pool,
 	}
 }
 
-func (lexer *rawLexer) CurrentLocation() lexutil.Location {
+func (lexer *rawLexer) CurrentLocation() parseutil.Location {
 	return lexer.reader.Location
 }
 
-func (lexer *rawLexer) Next() (lexutil.Token[LRSymbolId], error) {
-	err := lexutil.StripLeadingWhitespacesAndComments(lexer.reader)
+func (lexer *rawLexer) Next() (parseutil.Token[LRSymbolId], error) {
+	err := parseutil.StripLeadingWhitespacesAndComments(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (lexer *rawLexer) Next() (lexutil.Token[LRSymbolId], error) {
 		return nil, err
 	}
 
-	var token lexutil.Token[LRSymbolId]
+	var token parseutil.Token[LRSymbolId]
 	token, err = lexer.maybeTokenizeKeywordOrSymbol()
 	if token != nil || err != nil {
 		return token, err
@@ -87,7 +87,7 @@ func (lexer *rawLexer) Next() (lexutil.Token[LRSymbolId], error) {
 	return nil, fmt.Errorf("Unexpected character at %s", lexer.reader.Location)
 }
 
-func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (lexutil.Token[LRSymbolId], error) {
+func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (parseutil.Token[LRSymbolId], error) {
 	token, err := lexer.MaybeTokenizeSymbol(lexer.reader)
 	if err != nil {
 		return nil, err
@@ -100,8 +100,8 @@ func (lexer *rawLexer) maybeTokenizeKeywordOrSymbol() (lexutil.Token[LRSymbolId]
 	return *token, nil
 }
 
-func (lexer *rawLexer) maybeTokenizeCharacter() (lexutil.Token[LRSymbolId], error) {
-	token, errMsg, err := lexutil.MaybeTokenizeRuneLiteral(
+func (lexer *rawLexer) maybeTokenizeCharacter() (parseutil.Token[LRSymbolId], error) {
+	token, errMsg, err := parseutil.MaybeTokenizeRuneLiteral(
 		lexer.reader,
 		8,
 		lexer.internPool,
@@ -115,16 +115,16 @@ func (lexer *rawLexer) maybeTokenizeCharacter() (lexutil.Token[LRSymbolId], erro
 	}
 
 	if errMsg != "" {
-		return nil, lexutil.NewLocationError(token.StartPos, errMsg)
+		return nil, parseutil.NewLocationError(token.StartPos, errMsg)
 	}
 
 	return token, nil
 }
 
-func (lexer *rawLexer) maybeTokenizeIdentifier() (lexutil.Token[LRSymbolId], error) {
-	// NOTE: cannot return this directly since nil token gets wrapped by lexutil.Token[LRSymbolId],
+func (lexer *rawLexer) maybeTokenizeIdentifier() (parseutil.Token[LRSymbolId], error) {
+	// NOTE: cannot return this directly since nil token gets wrapped by parseutil.Token[LRSymbolId],
 	// which then becomes "non-nil" ...
-	token, err := lexutil.MaybeTokenizeIdentifier(
+	token, err := parseutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		initialPeekSize,
 		lexer.internPool,
@@ -140,7 +140,7 @@ func (lexer *rawLexer) maybeTokenizeIdentifier() (lexutil.Token[LRSymbolId], err
 	return token, nil
 }
 
-func (lexer *rawLexer) maybeTokenizeSectionContent() (lexutil.Token[LRSymbolId], error) {
+func (lexer *rawLexer) maybeTokenizeSectionContent() (parseutil.Token[LRSymbolId], error) {
 	peek, _ := lexer.reader.Peek(1)
 	if string(peek) != "{" {
 		return nil, nil
@@ -189,12 +189,12 @@ func (lexer *rawLexer) maybeTokenizeSectionContent() (lexutil.Token[LRSymbolId],
 
 type Lexer struct {
 	base     *rawLexer
-	buffered *lexutil.BufferedReader[lexutil.Token[LRSymbolId]]
+	buffered *parseutil.BufferedReader[parseutil.Token[LRSymbolId]]
 }
 
 // This merges LRIdentifierSymbol Arrow token pairs into a single RULE_DEF
 // token and LRIdentifierSymbol Colon token pairs into a single LABEL token.
-func (lexer *Lexer) Next() (lexutil.Token[LRSymbolId], error) {
+func (lexer *Lexer) Next() (parseutil.Token[LRSymbolId], error) {
 	tokens, err := lexer.buffered.Peek(5)
 	if len(tokens) < 1 {
 		return nil, err
@@ -237,7 +237,7 @@ func (lexer *Lexer) Next() (lexutil.Token[LRSymbolId], error) {
 	return curr, nil
 }
 
-func (lexer *Lexer) CurrentLocation() lexutil.Location {
+func (lexer *Lexer) CurrentLocation() parseutil.Location {
 	tokens, err := lexer.buffered.Peek(1)
 	if err != nil || len(tokens) == 0 {
 		return lexer.base.reader.Location
@@ -249,10 +249,10 @@ func (lexer *Lexer) CurrentLocation() lexutil.Location {
 func NewLexer(
 	filename string,
 	reader io.Reader,
-) lexutil.Lexer[lexutil.Token[LRSymbolId]] {
+) parseutil.Lexer[parseutil.Token[LRSymbolId]] {
 	base := newRawLexer(filename, reader)
 	return &Lexer{
 		base:     base,
-		buffered: lexutil.NewBufferedReader(lexutil.NewLexerReader(base), 1000),
+		buffered: parseutil.NewBufferedReader(parseutil.NewLexerReader(base), 1000),
 	}
 }

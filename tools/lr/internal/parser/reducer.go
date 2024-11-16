@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 )
 
 var _ LRReducer = &Reducer{}
@@ -34,7 +34,7 @@ func (Reducer) NilToAdditionalSections() ([]*AdditionalSection, error) {
 }
 
 func (Reducer) ToAdditionalSection(
-	marker lexutil.TokenValue[LRSymbolId],
+	marker parseutil.TokenValue[LRSymbolId],
 	name *Token,
 	content *Token) (
 	*AdditionalSection,
@@ -55,7 +55,7 @@ func (Reducer) AddToDefs(
 func (Reducer) AddExplicitToDefs(
 	defs []Definition,
 	def Definition,
-	terminator lexutil.TokenValue[LRSymbolId]) (
+	terminator parseutil.TokenValue[LRSymbolId]) (
 	[]Definition, error) {
 
 	return append(defs, def), nil
@@ -67,7 +67,7 @@ func (Reducer) DefToDefs(def Definition) ([]Definition, error) {
 
 func (Reducer) ExplicitDefToDefs(
 	def Definition,
-	terminator lexutil.TokenValue[LRSymbolId]) (
+	terminator parseutil.TokenValue[LRSymbolId]) (
 	[]Definition,
 	error) {
 
@@ -75,10 +75,10 @@ func (Reducer) ExplicitDefToDefs(
 }
 
 func (Reducer) TermDeclToDef(
-	rword lexutil.TokenValue[LRSymbolId],
-	lt lexutil.TokenValue[LRSymbolId],
+	rword parseutil.TokenValue[LRSymbolId],
+	lt parseutil.TokenValue[LRSymbolId],
 	value *Token,
-	gt lexutil.TokenValue[LRSymbolId],
+	gt parseutil.TokenValue[LRSymbolId],
 	terms []*Token) (
 	Definition,
 	error) {
@@ -87,7 +87,7 @@ func (Reducer) TermDeclToDef(
 }
 
 func (Reducer) UntypedTermDeclToDef(
-	rword lexutil.TokenValue[LRSymbolId],
+	rword parseutil.TokenValue[LRSymbolId],
 	terms []*Token) (
 	Definition,
 	error) {
@@ -96,7 +96,7 @@ func (Reducer) UntypedTermDeclToDef(
 }
 
 func (Reducer) StartDeclToDef(
-	startKw lexutil.TokenValue[LRSymbolId],
+	startKw parseutil.TokenValue[LRSymbolId],
 	ruleNames []*Token) (
 	Definition,
 	error) {
@@ -108,11 +108,11 @@ func (Reducer) RuleToDef(rule *Rule) (Definition, error) {
 	return rule, nil
 }
 
-func (Reducer) TokenToRword(tokenKw lexutil.TokenValue[LRSymbolId]) (lexutil.TokenValue[LRSymbolId], error) {
+func (Reducer) TokenToRword(tokenKw parseutil.TokenValue[LRSymbolId]) (parseutil.TokenValue[LRSymbolId], error) {
 	return tokenKw, nil
 }
 
-func (Reducer) TypeToRword(typeKw lexutil.TokenValue[LRSymbolId]) (lexutil.TokenValue[LRSymbolId], error) {
+func (Reducer) TypeToRword(typeKw parseutil.TokenValue[LRSymbolId]) (parseutil.TokenValue[LRSymbolId], error) {
 	return typeKw, nil
 }
 
@@ -219,7 +219,7 @@ func (Reducer) ToRule(
 
 func (Reducer) AddToClauses(
 	clauses []*Clause,
-	or lexutil.TokenValue[LRSymbolId],
+	or parseutil.TokenValue[LRSymbolId],
 	clause *Clause) (
 	[]*Clause,
 	error) {
@@ -231,14 +231,14 @@ func (Reducer) ClauseToClauses(clause *Clause) ([]*Clause, error) {
 }
 
 func (Reducer) PassthroughIdToClause(
-	eq lexutil.TokenValue[LRSymbolId],
+	eq parseutil.TokenValue[LRSymbolId],
 	id *Token,
 ) (*Clause, error) {
 	return NewClause(nil, []*Token{id}, true), nil
 }
 
 func (Reducer) PassthroughCharToClause(
-	eq lexutil.TokenValue[LRSymbolId],
+	eq parseutil.TokenValue[LRSymbolId],
 	char *Token,
 ) (*Clause, error) {
 	return NewClause(nil, []*Token{char}, true), nil

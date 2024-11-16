@@ -3,24 +3,24 @@ package parser
 import (
 	"strings"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 )
 
 type Definition interface {
-	Loc() lexutil.Location
+	Loc() parseutil.Location
 	String() string
 }
 
-type Token = lexutil.TokenValue[LRSymbolId]
+type Token = parseutil.TokenValue[LRSymbolId]
 
 type StartDeclaration struct {
-	lexutil.StartEndPos
+	parseutil.StartEndPos
 
 	Ids []*Token
 }
 
 func NewStartDeclaration(
-	start lexutil.TokenValue[LRSymbolId],
+	start parseutil.TokenValue[LRSymbolId],
 	ids []*Token) *StartDeclaration {
 
 	pos := start.StartEndPos
@@ -43,9 +43,9 @@ func (sd *StartDeclaration) String() string {
 }
 
 type TermDeclaration struct {
-	lexutil.StartEndPos
+	parseutil.StartEndPos
 
-	TermType lexutil.TokenValue[LRSymbolId]
+	TermType parseutil.TokenValue[LRSymbolId]
 
 	IsTerminal bool
 
@@ -55,7 +55,7 @@ type TermDeclaration struct {
 }
 
 func NewTermDeclaration(
-	termType lexutil.TokenValue[LRSymbolId],
+	termType parseutil.TokenValue[LRSymbolId],
 	valueType *Token,
 	terms []*Token) *TermDeclaration {
 
@@ -100,7 +100,7 @@ type Clause struct {
 	Passthrough bool
 
 	// set by NewRule
-	lexutil.Location
+	parseutil.Location
 	Parent *Rule
 
 	SortId int
@@ -136,11 +136,11 @@ func (RuleDef) Id() LRSymbolId {
 	return LRRuleDefToken
 }
 
-func (def *RuleDef) Loc() lexutil.Location {
+func (def *RuleDef) Loc() parseutil.Location {
 	return def.Name.Loc()
 }
 
-func (def *RuleDef) End() lexutil.Location {
+func (def *RuleDef) End() parseutil.Location {
 	return def.ValueType.Loc()
 }
 
@@ -170,7 +170,7 @@ func NewRule(name *RuleDef, clauses []*Clause) *Rule {
 	return rule
 }
 
-func (r *Rule) Loc() lexutil.Location {
+func (r *Rule) Loc() parseutil.Location {
 	return r.Name.StartPos
 }
 

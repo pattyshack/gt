@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 	"github.com/pattyshack/gt/tools/lr/internal/parser"
 )
 
@@ -17,7 +17,7 @@ const (
 
 type Clause struct {
 	SortId int // 0 (and negatives) are reserved for the start rules.
-	lexutil.Location
+	parseutil.Location
 
 	Label string
 
@@ -32,7 +32,7 @@ type Clause struct {
 
 type Term struct {
 	Name string
-	lexutil.Location
+	parseutil.Location
 
 	SymbolId parser.LRSymbolId
 
@@ -40,7 +40,7 @@ type Term struct {
 
 	ValueType string
 
-	RuleLocation      lexutil.Location
+	RuleLocation      parseutil.Location
 	NumReducerClauses int
 	Clauses           []*Clause
 
@@ -180,7 +180,7 @@ func classifyDefinitions(
 
 	startRules := []string{}
 	if start != nil {
-		ids := map[string]lexutil.Location{}
+		ids := map[string]parseutil.Location{}
 		for _, id := range start.Ids {
 			prev, ok := ids[id.Value]
 			if ok {

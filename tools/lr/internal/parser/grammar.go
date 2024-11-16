@@ -4,7 +4,7 @@ package parser
 
 import (
 	fmt "fmt"
-	lexutil "github.com/pattyshack/gt/lexutil"
+	parseutil "github.com/pattyshack/gt/parseutil"
 	io "io"
 )
 
@@ -42,7 +42,7 @@ type LRAdditionalSectionsReducer interface {
 
 type LRAdditionalSectionReducer interface {
 	// 32:41: additional_section -> ...
-	ToAdditionalSection(SectionMarker_ lexutil.TokenValue[LRSymbolId], Identifier_ *Token, SectionContent_ *Token) (*AdditionalSection, error)
+	ToAdditionalSection(SectionMarker_ parseutil.TokenValue[LRSymbolId], Identifier_ *Token, SectionContent_ *Token) (*AdditionalSection, error)
 }
 
 type LRDefsReducer interface {
@@ -50,24 +50,24 @@ type LRDefsReducer interface {
 	AddToDefs(Defs_ []Definition, Def_ Definition) ([]Definition, error)
 
 	// 36:4: defs -> add_explicit: ...
-	AddExplicitToDefs(Defs_ []Definition, Def_ Definition, char lexutil.TokenValue[LRSymbolId]) ([]Definition, error)
+	AddExplicitToDefs(Defs_ []Definition, Def_ Definition, char parseutil.TokenValue[LRSymbolId]) ([]Definition, error)
 
 	// 37:4: defs -> def: ...
 	DefToDefs(Def_ Definition) ([]Definition, error)
 
 	// 38:4: defs -> explicit_def: ...
-	ExplicitDefToDefs(Def_ Definition, char lexutil.TokenValue[LRSymbolId]) ([]Definition, error)
+	ExplicitDefToDefs(Def_ Definition, char parseutil.TokenValue[LRSymbolId]) ([]Definition, error)
 }
 
 type LRDefReducer interface {
 	// 42:4: def -> term_decl: ...
-	TermDeclToDef(Rword_ lexutil.TokenValue[LRSymbolId], char lexutil.TokenValue[LRSymbolId], Identifier_ *Token, char2 lexutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
+	TermDeclToDef(Rword_ parseutil.TokenValue[LRSymbolId], char parseutil.TokenValue[LRSymbolId], Identifier_ *Token, char2 parseutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
 
 	// 43:4: def -> untyped_term_decl: ...
-	UntypedTermDeclToDef(Rword_ lexutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
+	UntypedTermDeclToDef(Rword_ parseutil.TokenValue[LRSymbolId], NonemptyIdOrCharList_ []*Token) (Definition, error)
 
 	// 45:4: def -> start_decl: ...
-	StartDeclToDef(Start_ lexutil.TokenValue[LRSymbolId], NonemptyIdentList_ []*Token) (Definition, error)
+	StartDeclToDef(Start_ parseutil.TokenValue[LRSymbolId], NonemptyIdentList_ []*Token) (Definition, error)
 
 	// 46:4: def -> rule: ...
 	RuleToDef(Rule_ *Rule) (Definition, error)
@@ -110,10 +110,10 @@ type LRRuleReducer interface {
 
 type LRClauseReducer interface {
 	// 69:2: clause -> passthrough_id: ...
-	PassthroughIdToClause(char lexutil.TokenValue[LRSymbolId], Identifier_ *Token) (*Clause, error)
+	PassthroughIdToClause(char parseutil.TokenValue[LRSymbolId], Identifier_ *Token) (*Clause, error)
 
 	// 70:2: clause -> passthrough_char: ...
-	PassthroughCharToClause(char lexutil.TokenValue[LRSymbolId], Character_ *Token) (*Clause, error)
+	PassthroughCharToClause(char parseutil.TokenValue[LRSymbolId], Character_ *Token) (*Clause, error)
 
 	// 71:2: clause -> unlabeled: ...
 	UnlabeledToClause(IdOrCharList_ []*Token) (*Clause, error)
@@ -124,7 +124,7 @@ type LRClauseReducer interface {
 
 type LRClausesReducer interface {
 	// 75:4: clauses -> add: ...
-	AddToClauses(Clauses_ []*Clause, char lexutil.TokenValue[LRSymbolId], Clause_ *Clause) ([]*Clause, error)
+	AddToClauses(Clauses_ []*Clause, char parseutil.TokenValue[LRSymbolId], Clause_ *Clause) ([]*Clause, error)
 
 	// 76:4: clauses -> clause: ...
 	ClauseToClauses(Clause_ *Clause) ([]*Clause, error)
@@ -145,13 +145,13 @@ type LRReducer interface {
 }
 
 type LRParseErrorHandler interface {
-	Error(nextToken lexutil.Token[LRSymbolId], parseStack _LRStack) error
+	Error(nextToken parseutil.Token[LRSymbolId], parseStack _LRStack) error
 }
 
 type LRDefaultParseErrorHandler struct{}
 
-func (LRDefaultParseErrorHandler) Error(nextToken lexutil.Token[LRSymbolId], stack _LRStack) error {
-	return lexutil.NewLocationError(
+func (LRDefaultParseErrorHandler) Error(nextToken parseutil.Token[LRSymbolId], stack _LRStack) error {
+	return parseutil.NewLocationError(
 		nextToken.Loc(),
 		"syntax error: unexpected symbol %s. expecting %v",
 		nextToken.Id(),
@@ -185,7 +185,7 @@ func LRExpectedTerminals(id _LRStateId) []LRSymbolId {
 	return nil
 }
 
-func LRParse(lexer lexutil.Lexer[lexutil.Token[LRSymbolId]], reducer LRReducer) (*Grammar, error) {
+func LRParse(lexer parseutil.Lexer[parseutil.Token[LRSymbolId]], reducer LRReducer) (*Grammar, error) {
 
 	return LRParseWithCustomErrorHandler(
 		lexer,
@@ -194,7 +194,7 @@ func LRParse(lexer lexutil.Lexer[lexutil.Token[LRSymbolId]], reducer LRReducer) 
 }
 
 func LRParseWithCustomErrorHandler(
-	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]],
+	lexer parseutil.Lexer[parseutil.Token[LRSymbolId]],
 	reducer LRReducer,
 	errHandler LRParseErrorHandler,
 ) (
@@ -215,7 +215,7 @@ func LRParseWithCustomErrorHandler(
 // ================================================================
 
 func _LRParse(
-	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]],
+	lexer parseutil.Lexer[parseutil.Token[LRSymbolId]],
 	reducer LRReducer,
 	errHandler LRParseErrorHandler,
 	startState _LRStateId,
@@ -528,7 +528,7 @@ const (
 type LRSymbol struct {
 	SymbolId_ LRSymbolId
 
-	Generic_ lexutil.TokenValue[LRSymbolId]
+	Generic_ parseutil.TokenValue[LRSymbolId]
 
 	AdditionalSection  *AdditionalSection
 	AdditionalSections []*AdditionalSection
@@ -543,7 +543,7 @@ type LRSymbol struct {
 	Tokens             []*Token
 }
 
-func NewSymbol(token lexutil.Token[LRSymbolId]) (*LRSymbol, error) {
+func NewSymbol(token parseutil.Token[LRSymbolId]) (*LRSymbol, error) {
 	symbol, ok := token.(*LRSymbol)
 	if ok {
 		return symbol, nil
@@ -552,19 +552,19 @@ func NewSymbol(token lexutil.Token[LRSymbolId]) (*LRSymbol, error) {
 	symbol = &LRSymbol{SymbolId_: token.Id()}
 	switch token.Id() {
 	case _LREndMarker, LRTokenToken, LRTypeToken, LRStartToken, '<', '>', '|', ';', '=', LRSectionMarkerToken:
-		val, ok := token.(lexutil.TokenValue[LRSymbolId])
+		val, ok := token.(parseutil.TokenValue[LRSymbolId])
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
-					"expecting lexutil.TokenValue[LRSymbolId]",
+					"expecting parseutil.TokenValue[LRSymbolId]",
 				token.Id())
 		}
 		symbol.Generic_ = val
 	case LRRuleDefToken:
 		val, ok := token.(*RuleDef)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *RuleDef",
@@ -574,7 +574,7 @@ func NewSymbol(token lexutil.Token[LRSymbolId]) (*LRSymbol, error) {
 	case LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
 		val, ok := token.(*Token)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *Token",
@@ -582,7 +582,7 @@ func NewSymbol(token lexutil.Token[LRSymbolId]) (*LRSymbol, error) {
 		}
 		symbol.Token = val
 	default:
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			token.Loc(),
 			"unexpected token type: %s",
 			token.Id())
@@ -594,8 +594,8 @@ func (s *LRSymbol) Id() LRSymbolId {
 	return s.SymbolId_
 }
 
-func (s *LRSymbol) Loc() lexutil.Location {
-	type locator interface{ Loc() lexutil.Location }
+func (s *LRSymbol) Loc() parseutil.Location {
+	type locator interface{ Loc() parseutil.Location }
 	switch s.SymbolId_ {
 	case LRAdditionalSectionType:
 		loc, ok := interface{}(s.AdditionalSection).(locator)
@@ -656,8 +656,8 @@ func (s *LRSymbol) Loc() lexutil.Location {
 	return s.Generic_.Loc()
 }
 
-func (s *LRSymbol) End() lexutil.Location {
-	type locator interface{ End() lexutil.Location }
+func (s *LRSymbol) End() parseutil.Location {
+	type locator interface{ End() parseutil.Location }
 	switch s.SymbolId_ {
 	case LRAdditionalSectionType:
 		loc, ok := interface{}(s.AdditionalSection).(locator)
@@ -719,7 +719,7 @@ func (s *LRSymbol) End() lexutil.Location {
 }
 
 type _LRPseudoSymbolStack struct {
-	lexer lexutil.Lexer[lexutil.Token[LRSymbolId]]
+	lexer parseutil.Lexer[parseutil.Token[LRSymbolId]]
 	top   []*LRSymbol
 }
 
@@ -728,14 +728,14 @@ func (stack *_LRPseudoSymbolStack) Top() (*LRSymbol, error) {
 		token, err := stack.lexer.Next()
 		if err != nil {
 			if err != io.EOF {
-				return nil, lexutil.NewLocationError(
+				return nil, parseutil.NewLocationError(
 					stack.lexer.CurrentLocation(),
 					"unexpected lex error: %w",
 					err)
 			}
-			token = lexutil.TokenValue[LRSymbolId]{
+			token = parseutil.TokenValue[LRSymbolId]{
 				SymbolId: _LREndMarker,
-				StartEndPos: lexutil.StartEndPos{
+				StartEndPos: parseutil.StartEndPos{
 					StartPos: stack.lexer.CurrentLocation(),
 					EndPos:   stack.lexer.CurrentLocation(),
 				},

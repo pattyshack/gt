@@ -4,7 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 	"github.com/pattyshack/gt/stringutil"
 )
 
@@ -24,11 +24,11 @@ var (
 )
 
 type currentLexer interface {
-	Next() (lexutil.Token[SymbolId], error)
+	Next() (parseutil.Token[SymbolId], error)
 }
 
 type LexerImpl struct {
-	reader lexutil.BufferedByteLocationReader
+	reader parseutil.BufferedByteLocationReader
 
 	currentLexer
 
@@ -39,7 +39,7 @@ func NewLexer(
 	filename string,
 	input io.Reader,
 ) (
-	lexutil.Lexer[lexutil.Token[SymbolId]],
+	parseutil.Lexer[parseutil.Token[SymbolId]],
 	error,
 ) {
 	content, err := ioutil.ReadAll(input)
@@ -49,7 +49,7 @@ func NewLexer(
 
 	content = stripHeaderComments(content)
 
-	reader := lexutil.NewBufferedByteLocationReaderFromSlice(
+	reader := parseutil.NewBufferedByteLocationReaderFromSlice(
 		filename,
 		content)
 	internPool := stringutil.NewInternPool()
@@ -59,9 +59,9 @@ func NewLexer(
 		currentLexer: &headerLexer{
 			reader:        reader,
 			internPool:    internPool,
-			sectionMarker: lexutil.NewConstantSymbols(sectionMarker, internPool),
-			importMarker:  lexutil.NewConstantSymbols(importMarker, internPool),
-			templateDeclMarker: lexutil.NewConstantSymbols(
+			sectionMarker: parseutil.NewConstantSymbols(sectionMarker, internPool),
+			importMarker:  parseutil.NewConstantSymbols(importMarker, internPool),
+			templateDeclMarker: parseutil.NewConstantSymbols(
 				templateDeclMarker,
 				internPool),
 		},
@@ -69,11 +69,11 @@ func NewLexer(
 	}, nil
 }
 
-func (lexer *LexerImpl) CurrentLocation() lexutil.Location {
+func (lexer *LexerImpl) CurrentLocation() parseutil.Location {
 	return lexer.reader.Location
 }
 
-func (lexer *LexerImpl) Next() (lexutil.Token[SymbolId], error) {
+func (lexer *LexerImpl) Next() (parseutil.Token[SymbolId], error) {
 	token, err := lexer.currentLexer.Next()
 	if err != nil {
 		return nil, err
@@ -89,21 +89,21 @@ func (lexer *LexerImpl) Next() (lexutil.Token[SymbolId], error) {
 }
 
 type headerLexer struct {
-	reader     lexutil.BufferedByteLocationReader
+	reader     parseutil.BufferedByteLocationReader
 	internPool *stringutil.InternPool
 
-	sectionMarker      lexutil.ConstantSymbols[struct{}]
-	importMarker       lexutil.ConstantSymbols[struct{}]
-	templateDeclMarker lexutil.ConstantSymbols[struct{}]
+	sectionMarker      parseutil.ConstantSymbols[struct{}]
+	importMarker       parseutil.ConstantSymbols[struct{}]
+	templateDeclMarker parseutil.ConstantSymbols[struct{}]
 }
 
-func (lexer *headerLexer) Next() (lexutil.Token[SymbolId], error) {
-	err := lexutil.StripLeadingWhitespaces(lexer.reader)
+func (lexer *headerLexer) Next() (parseutil.Token[SymbolId], error) {
+	err := parseutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := lexutil.MaybeTokenizeIdentifier(
+	token, err := parseutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		initialPeekSize,
 		lexer.internPool,
@@ -127,7 +127,7 @@ func (lexer *headerLexer) Next() (lexutil.Token[SymbolId], error) {
 	case "":
 		// try to tokenize symbol below
 	default:
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			token.StartPos,
 			"Unexpected IDENTIFIER %s",
 			value)
@@ -139,29 +139,29 @@ func (lexer *headerLexer) Next() (lexutil.Token[SymbolId], error) {
 	}
 
 	if token == nil {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
 	}
 
-	return lexutil.TokenValue[SymbolId]{
+	return parseutil.TokenValue[SymbolId]{
 		SymbolId:    SectionMarkerToken,
 		StartEndPos: token.StartEndPos,
 	}, nil
 }
 
 func (lexer *headerLexer) tokenizePackage(
-	pkgPos lexutil.StartEndPos,
+	pkgPos parseutil.StartEndPos,
 ) (
-	lexutil.Token[SymbolId],
+	parseutil.Token[SymbolId],
 	error,
 ) {
-	err := lexutil.StripLeadingWhitespaces(lexer.reader)
+	err := parseutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := lexutil.MaybeTokenizeIdentifier(
+	token, err := parseutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		initialPeekSize,
 		lexer.internPool,
@@ -171,7 +171,7 @@ func (lexer *headerLexer) tokenizePackage(
 	}
 
 	if token == nil {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
 	}
@@ -181,12 +181,12 @@ func (lexer *headerLexer) tokenizePackage(
 }
 
 func (lexer *headerLexer) tokenizeImport(
-	importPos lexutil.StartEndPos,
+	importPos parseutil.StartEndPos,
 ) (
-	lexutil.Token[SymbolId],
+	parseutil.Token[SymbolId],
 	error,
 ) {
-	err := lexutil.StripLeadingWhitespaces(lexer.reader)
+	err := parseutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +198,7 @@ func (lexer *headerLexer) tokenizeImport(
 	}
 
 	if token == nil {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
 	}
@@ -215,18 +215,18 @@ func (lexer *headerLexer) tokenizeImport(
 }
 
 func (lexer *headerLexer) tokenizeTemplateDecl(
-	declPos lexutil.StartEndPos,
+	declPos parseutil.StartEndPos,
 ) (
-	lexutil.Token[SymbolId],
+	parseutil.Token[SymbolId],
 	error,
 ) {
 
-	err := lexutil.StripLeadingWhitespaces(lexer.reader)
+	err := parseutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
 
-	template, err := lexutil.MaybeTokenizeIdentifier(
+	template, err := parseutil.MaybeTokenizeIdentifier(
 		lexer.reader,
 		initialPeekSize,
 		lexer.internPool,
@@ -236,12 +236,12 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	}
 
 	if template == nil {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
 	}
 
-	err = lexutil.StripLeadingWhitespaces(lexer.reader)
+	err = parseutil.StripLeadingWhitespaces(lexer.reader)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 	}
 
 	if lcurl == nil {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			lexer.reader.Location,
 			"Unexpected character")
 	}
@@ -265,12 +265,12 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 
 	body = body[:len(body)-1]
 
-	declReader := lexutil.NewBufferedByteLocationReaderFromSlice("", body)
+	declReader := parseutil.NewBufferedByteLocationReaderFromSlice("", body)
 	declReader.Location = loc
 
 	args := []Argument{}
 	for {
-		err := lexutil.StripLeadingWhitespaces(declReader)
+		err := parseutil.StripLeadingWhitespaces(declReader)
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -296,10 +296,10 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		line = line[:len(line)-1]
-		lineReader := lexutil.NewBufferedByteLocationReaderFromSlice("", line)
+		lineReader := parseutil.NewBufferedByteLocationReaderFromSlice("", line)
 		lineReader.Location = loc
 
-		argName, err := lexutil.MaybeTokenizeIdentifier(
+		argName, err := parseutil.MaybeTokenizeIdentifier(
 			lineReader,
 			initialPeekSize,
 			lexer.internPool,
@@ -309,12 +309,12 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		if argName == nil {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				lineReader.Location,
 				"Expecting argument name")
 		}
 
-		err = lexutil.StripLeadingWhitespaces(lineReader)
+		err = parseutil.StripLeadingWhitespaces(lineReader)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
@@ -325,7 +325,7 @@ func (lexer *headerLexer) tokenizeTemplateDecl(
 		}
 
 		if len(typeName) == 0 {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				lineReader.Location,
 				"Expecting argument type")
 		}
@@ -499,7 +499,7 @@ func (lexer *bodyLexer) fillTokensAndMaybeTrimWhitespaces() {
 	}
 }
 
-func (lexer *bodyLexer) Next() (lexutil.Token[SymbolId], error) {
+func (lexer *bodyLexer) Next() (parseutil.Token[SymbolId], error) {
 	lexer.fillTokensAndMaybeTrimWhitespaces()
 
 	if len(lexer.lookAhead) > 0 {

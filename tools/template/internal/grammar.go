@@ -4,7 +4,7 @@ package template
 
 import (
 	fmt "fmt"
-	lexutil "github.com/pattyshack/gt/lexutil"
+	parseutil "github.com/pattyshack/gt/parseutil"
 	io "io"
 )
 
@@ -36,7 +36,7 @@ const (
 
 type FileReducer interface {
 	// 22:8: file -> ...
-	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ lexutil.TokenValue[SymbolId], Body_ []Statement) (*File, error)
+	ToFile(Package_ *Value, OptionalImports_ *Value, TemplateDecl_ *TemplateDeclaration, SectionMarker_ parseutil.TokenValue[SymbolId], Body_ []Statement) (*File, error)
 }
 
 type OptionalImportsReducer interface {
@@ -117,13 +117,13 @@ type Reducer interface {
 }
 
 type ParseErrorHandler interface {
-	Error(nextToken lexutil.Token[SymbolId], parseStack _Stack) error
+	Error(nextToken parseutil.Token[SymbolId], parseStack _Stack) error
 }
 
 type DefaultParseErrorHandler struct{}
 
-func (DefaultParseErrorHandler) Error(nextToken lexutil.Token[SymbolId], stack _Stack) error {
-	return lexutil.NewLocationError(
+func (DefaultParseErrorHandler) Error(nextToken parseutil.Token[SymbolId], stack _Stack) error {
+	return parseutil.NewLocationError(
 		nextToken.Loc(),
 		"syntax error: unexpected symbol %s. expecting %v",
 		nextToken.Id(),
@@ -157,7 +157,7 @@ func ExpectedTerminals(id _StateId) []SymbolId {
 	return nil
 }
 
-func Parse(lexer lexutil.Lexer[lexutil.Token[SymbolId]], reducer Reducer) (*File, error) {
+func Parse(lexer parseutil.Lexer[parseutil.Token[SymbolId]], reducer Reducer) (*File, error) {
 
 	return ParseWithCustomErrorHandler(
 		lexer,
@@ -166,7 +166,7 @@ func Parse(lexer lexutil.Lexer[lexutil.Token[SymbolId]], reducer Reducer) (*File
 }
 
 func ParseWithCustomErrorHandler(
-	lexer lexutil.Lexer[lexutil.Token[SymbolId]],
+	lexer parseutil.Lexer[parseutil.Token[SymbolId]],
 	reducer Reducer,
 	errHandler ParseErrorHandler,
 ) (
@@ -187,7 +187,7 @@ func ParseWithCustomErrorHandler(
 // ================================================================
 
 func _Parse(
-	lexer lexutil.Lexer[lexutil.Token[SymbolId]],
+	lexer parseutil.Lexer[parseutil.Token[SymbolId]],
 	reducer Reducer,
 	errHandler ParseErrorHandler,
 	startState _StateId,
@@ -524,7 +524,7 @@ const (
 type Symbol struct {
 	SymbolId_ SymbolId
 
-	Generic_ lexutil.TokenValue[SymbolId]
+	Generic_ parseutil.TokenValue[SymbolId]
 
 	Atom         *Atom
 	Branch       *Branch
@@ -537,7 +537,7 @@ type Symbol struct {
 	Value        *Value
 }
 
-func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
+func NewSymbol(token parseutil.Token[SymbolId]) (*Symbol, error) {
 	symbol, ok := token.(*Symbol)
 	if ok {
 		return symbol, nil
@@ -548,7 +548,7 @@ func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
 		val, ok := token.(*Atom)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *Atom",
@@ -556,19 +556,19 @@ func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 		}
 		symbol.Atom = val
 	case _EndMarker, SectionMarkerToken:
-		val, ok := token.(lexutil.TokenValue[SymbolId])
+		val, ok := token.(parseutil.TokenValue[SymbolId])
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
-					"expecting lexutil.TokenValue[SymbolId]",
+					"expecting parseutil.TokenValue[SymbolId]",
 				token.Id())
 		}
 		symbol.Generic_ = val
 	case TemplateDeclToken:
 		val, ok := token.(*TemplateDeclaration)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *TemplateDeclaration",
@@ -578,7 +578,7 @@ func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 	case DefaultToken, ElseToken, EndToken:
 		val, ok := token.(*TToken)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *TToken",
@@ -588,7 +588,7 @@ func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 	case PackageToken, ImportToken, ForToken, SwitchToken, CaseToken, IfToken, ElseIfToken:
 		val, ok := token.(*Value)
 		if !ok {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				token.Loc(),
 				"invalid value type for token %s. "+
 					"expecting *Value",
@@ -596,7 +596,7 @@ func NewSymbol(token lexutil.Token[SymbolId]) (*Symbol, error) {
 		}
 		symbol.Value = val
 	default:
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			token.Loc(),
 			"unexpected token type: %s",
 			token.Id())
@@ -608,8 +608,8 @@ func (s *Symbol) Id() SymbolId {
 	return s.SymbolId_
 }
 
-func (s *Symbol) Loc() lexutil.Location {
-	type locator interface{ Loc() lexutil.Location }
+func (s *Symbol) Loc() parseutil.Location {
+	type locator interface{ Loc() parseutil.Location }
 	switch s.SymbolId_ {
 	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
 		loc, ok := interface{}(s.Atom).(locator)
@@ -660,8 +660,8 @@ func (s *Symbol) Loc() lexutil.Location {
 	return s.Generic_.Loc()
 }
 
-func (s *Symbol) End() lexutil.Location {
-	type locator interface{ End() lexutil.Location }
+func (s *Symbol) End() parseutil.Location {
+	type locator interface{ End() parseutil.Location }
 	switch s.SymbolId_ {
 	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
 		loc, ok := interface{}(s.Atom).(locator)
@@ -713,7 +713,7 @@ func (s *Symbol) End() lexutil.Location {
 }
 
 type _PseudoSymbolStack struct {
-	lexer lexutil.Lexer[lexutil.Token[SymbolId]]
+	lexer parseutil.Lexer[parseutil.Token[SymbolId]]
 	top   []*Symbol
 }
 
@@ -722,14 +722,14 @@ func (stack *_PseudoSymbolStack) Top() (*Symbol, error) {
 		token, err := stack.lexer.Next()
 		if err != nil {
 			if err != io.EOF {
-				return nil, lexutil.NewLocationError(
+				return nil, parseutil.NewLocationError(
 					stack.lexer.CurrentLocation(),
 					"unexpected lex error: %w",
 					err)
 			}
-			token = lexutil.TokenValue[SymbolId]{
+			token = parseutil.TokenValue[SymbolId]{
 				SymbolId: _EndMarker,
-				StartEndPos: lexutil.StartEndPos{
+				StartEndPos: parseutil.StartEndPos{
 					StartPos: stack.lexer.CurrentLocation(),
 					EndPos:   stack.lexer.CurrentLocation(),
 				},

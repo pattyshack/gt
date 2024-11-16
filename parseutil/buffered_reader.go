@@ -1,4 +1,4 @@
-package lexutil
+package parseutil
 
 import (
 	"fmt"

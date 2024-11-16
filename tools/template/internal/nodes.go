@@ -1,7 +1,7 @@
 package template
 
 import (
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 )
 
 // Note: in case of text, we need to modify the value and escape ` and /
@@ -13,11 +13,11 @@ import (
 type Statement interface {
 	IsStatement()
 
-	lexutil.Token[SymbolId]
+	parseutil.Token[SymbolId]
 }
 
 type TToken struct {
-	lexutil.TokenValue[SymbolId]
+	parseutil.TokenValue[SymbolId]
 
 	// When true, and the previous statement is text, remove the whitespaces
 	// in the text that are adjacent to this statement, potentially up to and
@@ -32,12 +32,12 @@ type TToken struct {
 
 func NewTToken(
 	id SymbolId,
-	pos lexutil.StartEndPos,
+	pos parseutil.StartEndPos,
 	trimLeading bool,
 	trimTrailing bool) *TToken {
 
 	return &TToken{
-		TokenValue: lexutil.TokenValue[SymbolId]{
+		TokenValue: parseutil.TokenValue[SymbolId]{
 			SymbolId:    id,
 			StartEndPos: pos,
 			Value:       "",
@@ -63,7 +63,7 @@ type Value struct {
 
 func NewValue(
 	id SymbolId,
-	pos lexutil.StartEndPos,
+	pos parseutil.StartEndPos,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Value {
@@ -79,7 +79,7 @@ type Atom struct {
 
 func NewAtom(
 	id SymbolId,
-	pos lexutil.StartEndPos,
+	pos parseutil.StartEndPos,
 	val string,
 	trimLeading bool,
 	trimTrailing bool) *Atom {
@@ -95,7 +95,7 @@ type Branch struct {
 }
 
 type For struct {
-	lexutil.StartEndPos
+	parseutil.StartEndPos
 
 	Branch
 }
@@ -105,7 +105,7 @@ func (For) IsStatement() {}
 func (For) Id() SymbolId { return ForType }
 
 type Switch struct {
-	lexutil.StartEndPos
+	parseutil.StartEndPos
 
 	Switch  *Value
 	Cases   []*Branch
@@ -117,7 +117,7 @@ func (Switch) IsStatement() {}
 func (Switch) Id() SymbolId { return SwitchType }
 
 type If struct {
-	lexutil.StartEndPos
+	parseutil.StartEndPos
 
 	If      Branch
 	ElseIfs []*Branch
@@ -134,19 +134,19 @@ type Argument struct {
 }
 
 type TemplateDeclaration struct {
-	lexutil.TokenValue[SymbolId]
+	parseutil.TokenValue[SymbolId]
 
 	TemplateName string
 	Arguments    []Argument
 }
 
 func NewTemplateDeclaration(
-	pos lexutil.StartEndPos,
+	pos parseutil.StartEndPos,
 	name string,
 	args []Argument) *TemplateDeclaration {
 
 	return &TemplateDeclaration{
-		TokenValue: lexutil.TokenValue[SymbolId]{
+		TokenValue: parseutil.TokenValue[SymbolId]{
 			SymbolId:    TemplateDeclToken,
 			StartEndPos: pos,
 			Value:       "",

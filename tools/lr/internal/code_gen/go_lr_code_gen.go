@@ -138,7 +138,7 @@ func GenerateGoLRCode(
 	symbolIdType := nameGen.Public("SymbolId")
 
 	genericSymbol := imports.GenericObj(
-		"github.com/pattyshack/gt/lexutil.TokenValue",
+		"github.com/pattyshack/gt/parseutil.TokenValue",
 		String(symbolIdType))
 
 	orderedValueTypes := lr.ParamList{
@@ -201,7 +201,7 @@ func GenerateGoLRCode(
 	}
 
 	tokenType := imports.GenericObj(
-		"github.com/pattyshack/gt/lexutil.Token",
+		"github.com/pattyshack/gt/parseutil.Token",
 		String(symbolIdType))
 	file := &go_template.File{
 		Package:              cfg.Package,
@@ -223,12 +223,12 @@ func GenerateGoLRCode(
 		EndSymbolId:          endSymbol,
 		WildcardSymbolId:     wildcardSymbol,
 		Location: imports.Obj(
-			"github.com/pattyshack/gt/lexutil.Location"),
+			"github.com/pattyshack/gt/parseutil.Location"),
 		StartEndPos: imports.Obj(
-			"github.com/pattyshack/gt/lexutil.StartEndPos"),
+			"github.com/pattyshack/gt/parseutil.StartEndPos"),
 		TokenType: tokenType,
 		LexerType: imports.GenericObj(
-			"github.com/pattyshack/gt/lexutil.Lexer",
+			"github.com/pattyshack/gt/parseutil.Lexer",
 			tokenType),
 		ReducerType:           nameGen.Public("Reducer"),
 		ErrHandlerType:        nameGen.Public("ParseErrorHandler"),
@@ -242,7 +242,7 @@ func GenerateGoLRCode(
 		Sprintf:               imports.Obj("fmt.Sprintf"),
 		Errorf:                imports.Obj("fmt.Errorf"),
 		NewLocationError: imports.Obj(
-			"github.com/pattyshack/gt/lexutil.NewLocationError"),
+			"github.com/pattyshack/gt/parseutil.NewLocationError"),
 		EOF:                       imports.Obj("io.EOF"),
 		OrderedSymbolNames:        orderedSymbolNames,
 		Grammar:                   grammar,

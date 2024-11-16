@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pattyshack/gt/lexutil"
+	"github.com/pattyshack/gt/parseutil"
 	"github.com/pattyshack/gt/stringutil"
 )
 
@@ -55,7 +55,7 @@ func init() {
 }
 
 type BodyToken interface {
-	lexutil.Token[SymbolId]
+	parseutil.Token[SymbolId]
 
 	// When true, and the previous statement is text, remove the whitespaces
 	// in the text that are adjacent to this statement, potentially up to and
@@ -69,25 +69,25 @@ type BodyToken interface {
 }
 
 type rawBodyLexer struct {
-	reader lexutil.BufferedByteLocationReader
+	reader parseutil.BufferedByteLocationReader
 
 	internPool *stringutil.InternPool
 
-	lexutil.ConstantSymbols[SymbolId]
+	parseutil.ConstantSymbols[SymbolId]
 }
 
 func newRawBodyLexer(
-	reader lexutil.BufferedByteLocationReader,
+	reader parseutil.BufferedByteLocationReader,
 	internPool *stringutil.InternPool,
 ) *rawBodyLexer {
 	return &rawBodyLexer{
 		reader:          reader,
 		internPool:      internPool,
-		ConstantSymbols: lexutil.NewConstantSymbols(directiveSymbols, internPool),
+		ConstantSymbols: parseutil.NewConstantSymbols(directiveSymbols, internPool),
 	}
 }
 
-func (lexer *rawBodyLexer) CurrentLocation() lexutil.Location {
+func (lexer *rawBodyLexer) CurrentLocation() parseutil.Location {
 	return lexer.reader.Location
 }
 
@@ -102,7 +102,7 @@ func (lexer *rawBodyLexer) Next() (BodyToken, error) {
 		return token, err
 	}
 
-	return nil, lexutil.NewLocationError(
+	return nil, parseutil.NewLocationError(
 		lexer.reader.Location,
 		"Unexpected character")
 }
@@ -198,7 +198,7 @@ func (lexer *rawBodyLexer) maybeTokenizeText() (BodyToken, error) {
 	// https://github.com/golang/go/issues/24475
 	value = strings.ReplaceAll(value, "`", "`+\"`\"+`")
 
-	pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+	pos := parseutil.NewStartEndPos(loc, lexer.reader.Location)
 	return NewAtom(TextToken, pos, value, false, false), nil
 }
 
@@ -221,10 +221,10 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		content = content[:len(content)-1]
 	}
 
-	directiveReader := lexutil.NewBufferedByteLocationReaderFromSlice("", content)
+	directiveReader := parseutil.NewBufferedByteLocationReaderFromSlice("", content)
 	directiveReader.Location = loc
 
-	err = lexutil.StripLeadingWhitespaces(directiveReader)
+	err = parseutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			return nil, err
 		}
 
-		pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+		pos := parseutil.NewStartEndPos(loc, lexer.reader.Location)
 		return NewAtom(
 			SymbolId(token.SymbolId),
 			pos,
@@ -249,7 +249,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 			trimTrailing), nil
 	}
 
-	idToken, err := lexutil.MaybeTokenizeIdentifier(
+	idToken, err := parseutil.MaybeTokenizeIdentifier(
 		directiveReader,
 		initialPeekSize,
 		lexer.internPool,
@@ -263,7 +263,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		id = idToken.Value
 	}
 
-	err = lexutil.StripLeadingWhitespaces(directiveReader)
+	err = parseutil.StripLeadingWhitespaces(directiveReader)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -271,7 +271,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 	param := ""
 	// check for "else if" compound identifier
 	if id == "else" {
-		secondToken, err := lexutil.MaybeTokenizeIdentifier(
+		secondToken, err := parseutil.MaybeTokenizeIdentifier(
 			directiveReader,
 			initialPeekSize,
 			lexer.internPool,
@@ -288,7 +288,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		if second == "if" {
 			id = "else if"
 
-			err = lexutil.StripLeadingWhitespaces(directiveReader)
+			err = parseutil.StripLeadingWhitespaces(directiveReader)
 			if err != nil && err != io.EOF {
 				return nil, err
 			}
@@ -306,7 +306,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 
 	_, ok := parameterlessOnlyDirectives[id]
 	if ok && len(param) > 0 {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			loc,
 			"unexpected parameter specified in [[%s]] directive",
 			id)
@@ -314,16 +314,16 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 
 	_, ok = parameteredOnlyDirectives[id]
 	if ok && param == "" {
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			loc,
 			"expected parameter not specified in [[%s]] directive",
 			id)
 	}
 
-	pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+	pos := parseutil.NewStartEndPos(loc, lexer.reader.Location)
 	switch id {
 	case "":
-		return nil, lexutil.NewLocationError(
+		return nil, parseutil.NewLocationError(
 			loc,
 			"invalid directive. directive type not specified")
 	case "end":
@@ -359,7 +359,7 @@ func (lexer *rawBodyLexer) tokenizeNonSubstituteDirective() (BodyToken, error) {
 		return NewAtom(EmbedToken, pos, param, trimLeading, trimTrailing), nil
 	}
 
-	return nil, lexutil.NewLocationError(
+	return nil, parseutil.NewLocationError(
 		loc,
 		"invalid directive. unknown directive type %s",
 		id)
@@ -392,7 +392,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 				panic(err) // Should never happen
 			}
 
-			value, err := lexutil.MaybeTokenizeIdentifier(
+			value, err := parseutil.MaybeTokenizeIdentifier(
 				lexer.reader,
 				initialPeekSize,
 				lexer.internPool,
@@ -406,7 +406,7 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 				val = value.Value
 			}
 
-			pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+			pos := parseutil.NewStartEndPos(loc, lexer.reader.Location)
 			return NewAtom(
 				SubstitutionToken,
 				pos,
@@ -422,13 +422,13 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 			}
 
 			value := string(content[2 : len(content)-1])
-			pos := lexutil.NewStartEndPos(loc, lexer.reader.Location)
+			pos := parseutil.NewStartEndPos(loc, lexer.reader.Location)
 			return NewAtom(SubstitutionToken, pos, value, false, false), nil
 
 		} else if content[1] == '$' {
 			panic("Programming error")
 		} else {
-			return nil, lexutil.NewLocationError(
+			return nil, parseutil.NewLocationError(
 				lexer.reader.Location,
 				"invalid substitute directive")
 		}
@@ -442,17 +442,17 @@ func (lexer *rawBodyLexer) maybeTokenizeDirective() (BodyToken, error) {
 // This respect golang scoping, string, char and comments, i.e.,
 // {} [] () “ "" ” /**/ //
 func readDirective(
-	reader lexutil.BufferedByteLocationReader,
+	reader parseutil.BufferedByteLocationReader,
 	startIdx int,
 	terminal string,
 ) (
 	[]byte,
-	lexutil.Location,
+	parseutil.Location,
 	error,
 ) {
 
 	if terminal == "" {
-		return nil, lexutil.Location{}, lexutil.NewLocationError(
+		return nil, parseutil.Location{}, parseutil.NewLocationError(
 			reader.Location,
 			"Invalid terminal")
 	}
@@ -461,7 +461,7 @@ func readDirective(
 		terminal[0] != ')' &&
 		terminal[0] != ']' &&
 		terminal[0] != '\n' {
-		return nil, lexutil.Location{}, lexutil.NewLocationError(
+		return nil, parseutil.Location{}, parseutil.NewLocationError(
 			reader.Location,
 			"Invalid terminal: "+terminal)
 	}
@@ -474,14 +474,14 @@ func readDirective(
 
 	bytes, err := reader.Peek(peekRange)
 	if err != nil && err != io.EOF {
-		return nil, lexutil.Location{}, lexutil.LocationError{
+		return nil, parseutil.Location{}, parseutil.LocationError{
 			Loc: reader.Location,
 			Err: err,
 		}
 	}
 
 	if len(bytes) <= startIdx {
-		return nil, lexutil.Location{}, lexutil.NewLocationError(
+		return nil, parseutil.Location{}, parseutil.NewLocationError(
 			reader.Location,
 			"lex error: \"%s\" not found",
 			terminal)
@@ -545,7 +545,7 @@ func readDirective(
 							panic(err) // should never happen
 						}
 
-						return nil, lexutil.Location{}, lexutil.NewLocationError(
+						return nil, parseutil.Location{}, parseutil.NewLocationError(
 							reader.Location,
 							"lex error: no matching pair for %c",
 							char)
@@ -587,11 +587,11 @@ func readDirective(
 
 		bytes, err = reader.Peek(peekRange)
 		if err != nil && err != io.EOF {
-			return nil, lexutil.Location{}, err
+			return nil, parseutil.Location{}, err
 		}
 
 		if prevLen == len(bytes) { // not found
-			return nil, lexutil.Location{}, lexutil.NewLocationError(
+			return nil, parseutil.Location{}, parseutil.NewLocationError(
 				reader.Location,
 				"lex error: \"%s\" not found",
 				terminal)
