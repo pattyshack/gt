@@ -38,12 +38,16 @@ type TrimTokenLexer[SymbolId comparable] struct {
 
 func NewTrimTokenLexer[SymbolId comparable](
 	base Lexer[Token[SymbolId]],
-	trimSymbol SymbolId,
+	trimSymbols ...SymbolId,
 ) Lexer[Token[SymbolId]] {
-	return &TrimTokenLexer[SymbolId]{
-		base:       base,
-		trimSymbol: trimSymbol,
+	lexer := base
+	for _, symbol := range trimSymbols {
+		lexer = &TrimTokenLexer[SymbolId]{
+			base:       lexer,
+			trimSymbol: symbol,
+		}
 	}
+	return lexer
 }
 
 func (lexer *TrimTokenLexer[SymbolId]) CurrentLocation() Location {

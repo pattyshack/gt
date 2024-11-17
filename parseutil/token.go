@@ -48,7 +48,7 @@ func (tv TokenValue[SymbolId]) Val() string {
 }
 
 func (tv TokenValue[SymbolId]) String() string {
-	return fmt.Sprintf("%s: %v (%s)", tv.StartPos, tv.SymbolId, tv.Value)
+	return fmt.Sprintf("%v (%s): %s", tv.SymbolId, tv.Value, tv.StartPos)
 }
 
 type TokenCount[SymbolId any] struct {
@@ -63,5 +63,5 @@ func (tc TokenCount[SymbolId]) Id() SymbolId {
 }
 
 func (tc TokenCount[SymbolId]) String() string {
-	return fmt.Sprintf("%s: %v (%d)", tc.StartPos, tc.SymbolId, tc.Count)
+	return fmt.Sprintf("%v (%d): %s", tc.SymbolId, tc.Count, tc.StartPos)
 }
