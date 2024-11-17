@@ -151,3 +151,55 @@ func NewMergeTokenCountLexer[SymbolId comparable](
 		},
 		10)
 }
+
+// When the lexer encounters an implicit terminal token, emit the token only
+// if the previous token's id is in the allowed set.
+type ImplicitTerminalLexer[SymbolId comparable] struct {
+	base Lexer[Token[SymbolId]]
+
+	terminal SymbolId
+	allowed  map[SymbolId]struct{}
+
+	previous SymbolId
+}
+
+func (lexer *ImplicitTerminalLexer[SymbolId]) CurrentLocation() Location {
+	return lexer.base.CurrentLocation()
+}
+
+func (lexer *ImplicitTerminalLexer[SymbolId]) Next() (Token[SymbolId], error) {
+	for {
+		token, err := lexer.base.Next()
+		if err != nil {
+			return nil, err
+		}
+
+		if token.Id() != lexer.terminal {
+			lexer.previous = token.Id()
+			return token, nil
+		}
+
+		_, ok := lexer.allowed[lexer.previous]
+		if ok {
+			lexer.previous = lexer.terminal
+			return token, nil
+		}
+	}
+}
+
+func NewImplicitTerminalLexer[SymbolId comparable](
+	base Lexer[Token[SymbolId]],
+	terminal SymbolId,
+	allow []SymbolId,
+) Lexer[Token[SymbolId]] {
+	allowed := make(map[SymbolId]struct{}, len(allow))
+	for _, symbol := range allow {
+		allowed[symbol] = struct{}{}
+	}
+
+	return &ImplicitTerminalLexer[SymbolId]{
+		base:     base,
+		terminal: terminal,
+		allowed:  allowed,
+	}
+}
