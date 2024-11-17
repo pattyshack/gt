@@ -25,9 +25,8 @@ const (
 )
 
 type Token[SymbolId any] interface {
+	Locatable
 	Id() SymbolId
-	Loc() Location
-	End() Location
 }
 
 type TokenValue[SymbolId any] struct {
