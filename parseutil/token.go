@@ -64,3 +64,18 @@ func (tc TokenCount[SymbolId]) Id() SymbolId {
 func (tc TokenCount[SymbolId]) String() string {
 	return fmt.Sprintf("%v (%d): %s", tc.SymbolId, tc.Count, tc.StartPos)
 }
+
+type TokenError[SymbolId any] struct {
+	SymbolId SymbolId
+	StartEndPos
+
+	Error error
+}
+
+func (te TokenError[SymbolId]) Id() SymbolId {
+	return te.SymbolId
+}
+
+func (te TokenError[SymbolId]) String() string {
+	return fmt.Sprintf("%v (%s): %s", te.SymbolId, te.Error, te.StartPos)
+}

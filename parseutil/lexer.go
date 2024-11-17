@@ -1,5 +1,9 @@
 package parseutil
 
+import (
+	"io"
+)
+
 type Lexer[T any] interface {
 	Next() (T, error)
 	CurrentLocation() Location
@@ -202,4 +206,36 @@ func NewImplicitTerminalLexer[SymbolId comparable](
 		terminal: terminal,
 		allowed:  allowed,
 	}
+}
+
+type SubSegmentLexer[SymbolId any] struct {
+	tokens []Token[SymbolId]
+	end    Location
+}
+
+func NewSubSegmentLexer[SymbolId any](
+	subSegment []Token[SymbolId],
+	end Location,
+) Lexer[Token[SymbolId]] {
+	return &SubSegmentLexer[SymbolId]{
+		tokens: subSegment,
+		end:    end,
+	}
+}
+
+func (lexer *SubSegmentLexer[SymbolId]) CurrentLocation() Location {
+	if len(lexer.tokens) == 0 {
+		return lexer.end
+	}
+	return lexer.tokens[0].Loc()
+}
+
+func (lexer *SubSegmentLexer[SymbolId]) Next() (Token[SymbolId], error) {
+	if len(lexer.tokens) == 0 {
+		return nil, io.EOF
+	}
+
+	head := lexer.tokens[0]
+	lexer.tokens = lexer.tokens[1:]
+	return head, nil
 }
