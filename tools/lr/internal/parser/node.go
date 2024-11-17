@@ -128,6 +128,8 @@ func (clause *Clause) String() string {
 }
 
 type RuleDef struct {
+	parseutil.StartEndPos
+
 	Name      *Token
 	ValueType *Token
 }

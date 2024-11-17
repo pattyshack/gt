@@ -165,9 +165,11 @@ func (Reducer) NilToIdOrCharList() ([]*Token, error) {
 
 func (Reducer) ToRule(
 	ruleDef *RuleDef,
-	clauses []*Clause) (
+	clauses []*Clause,
+) (
 	*Rule,
-	error) {
+	error,
+) {
 
 	numReducerClauses := 0
 	for _, clause := range clauses {

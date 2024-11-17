@@ -608,6 +608,58 @@ func (s *Symbol) Id() SymbolId {
 	return s.SymbolId_
 }
 
+func (s *Symbol) StartEnd() parseutil.StartEndPos {
+	type locator interface{ StartEnd() parseutil.StartEndPos }
+	switch s.SymbolId_ {
+	case TextToken, SubstitutionToken, EmbedToken, CopySectionToken, CommentToken, ContinueToken, BreakToken, ReturnToken, ErrorToken:
+		loc, ok := interface{}(s.Atom).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case OptionalDefaultType, OptionalElseType:
+		loc, ok := interface{}(s.Branch).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case CaseListType, ElseIfListType:
+		loc, ok := interface{}(s.Branches).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case FileType:
+		loc, ok := interface{}(s.File).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case StatementType, AtomType, ForType, SwitchType, IfType:
+		loc, ok := interface{}(s.Statement).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case BodyType:
+		loc, ok := interface{}(s.Statements).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case TemplateDeclToken:
+		loc, ok := interface{}(s.TemplateDecl).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case DefaultToken, ElseToken, EndToken:
+		loc, ok := interface{}(s.Token).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case PackageToken, ImportToken, ForToken, SwitchToken, CaseToken, IfToken, ElseIfToken, OptionalImportsType:
+		loc, ok := interface{}(s.Value).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	}
+	return s.Generic_.StartEnd()
+}
+
 func (s *Symbol) Loc() parseutil.Location {
 	type locator interface{ Loc() parseutil.Location }
 	switch s.SymbolId_ {

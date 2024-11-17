@@ -526,6 +526,32 @@ func (s *$SymbolType) Id() $SymbolIdType {
     return s.SymbolId_
 }
 
+func (s *$SymbolType) StartEnd() $StartEndPos {
+    type locator interface { StartEnd() $StartEndPos }
+    switch s.SymbolId_ {
+[[-for _, field := range OrderedValueTypes-]]
+    [[-if field.Name == lr.Generic-]]
+        [[-continue-]]
+    [[-end-]]
+    [[-$ terms := valueTerms[field.Name]]]
+    [[-if len(terms) == 0]]
+      [[-continue]]
+    [[-end]]
+    case 
+    [[-for idx, term := range terms -]]
+$(term.CodeGenSymbolConst)
+        [[-if idx != len(terms)-1 -]], [[end-]]
+    [[-end-]]
+:
+        loc, ok := interface{}(s.$(field.Name)).(locator)
+        if ok {
+            return loc.StartEnd()
+        }
+[[-end]]
+    }
+    return s.Generic_.StartEnd()
+}
+
 func (s *$SymbolType) Loc() $Location {
     type locator interface { Loc() $Location }
     switch s.SymbolId_ {

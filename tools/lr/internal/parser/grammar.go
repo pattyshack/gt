@@ -594,6 +594,68 @@ func (s *LRSymbol) Id() LRSymbolId {
 	return s.SymbolId_
 }
 
+func (s *LRSymbol) StartEnd() parseutil.StartEndPos {
+	type locator interface{ StartEnd() parseutil.StartEndPos }
+	switch s.SymbolId_ {
+	case LRAdditionalSectionType:
+		loc, ok := interface{}(s.AdditionalSection).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRAdditionalSectionsType:
+		loc, ok := interface{}(s.AdditionalSections).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRClauseType:
+		loc, ok := interface{}(s.Clause).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRClausesType:
+		loc, ok := interface{}(s.Clauses).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRDefType:
+		loc, ok := interface{}(s.Definition).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRDefsType:
+		loc, ok := interface{}(s.Definitions).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRGrammarType:
+		loc, ok := interface{}(s.Grammar).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRRuleType:
+		loc, ok := interface{}(s.Rule).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRRuleDefToken:
+		loc, ok := interface{}(s.RuleDef).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRLabelToken, LRCharacterToken, LRIdentifierToken, LRSectionContentToken:
+		loc, ok := interface{}(s.Token).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	case LRNonemptyIdentListType, LRNonemptyIdOrCharListType, LRIdOrCharListType:
+		loc, ok := interface{}(s.Tokens).(locator)
+		if ok {
+			return loc.StartEnd()
+		}
+	}
+	return s.Generic_.StartEnd()
+}
+
 func (s *LRSymbol) Loc() parseutil.Location {
 	type locator interface{ Loc() parseutil.Location }
 	switch s.SymbolId_ {

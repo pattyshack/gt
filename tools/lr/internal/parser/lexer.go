@@ -211,7 +211,8 @@ func (lexer *Lexer) Next() (parseutil.Token[LRSymbolId], error) {
 		lexer.buffered.Discard(2)
 
 		return &RuleDef{
-			Name: curr.(*Token),
+			StartEndPos: curr.StartEnd(),
+			Name:        curr.(*Token),
 		}, nil
 	} else if next.Id() == ':' {
 		curr.(*Token).SymbolId = LRLabelToken
@@ -225,8 +226,9 @@ func (lexer *Lexer) Next() (parseutil.Token[LRSymbolId], error) {
 		tokens[4].Id() == Arrow {
 
 		def := &RuleDef{
-			Name:      curr.(*Token),
-			ValueType: tokens[2].(*Token),
+			StartEndPos: parseutil.NewStartEndPos(curr.Loc(), tokens[4].End()),
+			Name:        curr.(*Token),
+			ValueType:   tokens[2].(*Token),
 		}
 
 		lexer.buffered.Discard(5)
